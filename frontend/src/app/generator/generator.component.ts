@@ -9,16 +9,21 @@ import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
   styleUrls: ['./generator.component.css']
 })
 export class GeneratorComponent implements AfterViewInit {
-  name = new FormControl('');
 
-  @ViewChild('preview', {static: false}) previewCanvas;
-  @Input() public width = 600;
+  textTop = new FormControl('');
+
+  name = new FormControl('');
+  textBottom = new FormControl('');
 
   constructor() {
   }
 
+  @ViewChild('preview', {static: false}) previewCanvas;
+  @Input() public width = 600;
   @Input() public height = 700;
+
   private cx: CanvasRenderingContext2D;
+
 
   public ngAfterViewInit(): void {
     const canvasEl: HTMLCanvasElement = this.previewCanvas.nativeElement;
@@ -109,6 +114,41 @@ export class GeneratorComponent implements AfterViewInit {
       this.cx.lineTo(currentPos.x, currentPos.y);
       this.cx.stroke();
     }
+  }
+
+  topChanged(e: Event): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, 50);
+    ctx.fillStyle = '#00000';
+    ctx.font = '30px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.textTop.value, canvas.width / 2, 50);
+  }
+
+  bottomChanged(e: Event): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, this.height - 100, canvas.width, 50);
+    ctx.fillStyle = '#00000';
+    ctx.font = '30px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.textBottom.value, canvas.width / 2, this.height - 50);
+  }
+
+  clearCanvas(): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, this.height);
+  }
+
+  downloadCanvas(): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const image = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'meme.png';
+    link.href = image;
+    link.click();
   }
 }
 
