@@ -15,6 +15,9 @@ import {MatListModule} from '@angular/material/list';
 import {MatGridListModule} from '@angular/material/grid-list';
 import {MatCardModule} from '@angular/material/card';
 import {MatMenuModule} from '@angular/material/menu';
+import {GeneratorComponent} from './generator/generator.component';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatInputModule} from '@angular/material/input';
 
 
 @NgModule({
@@ -22,6 +25,7 @@ import {MatMenuModule} from '@angular/material/menu';
     AppComponent,
     DashboardComponent,
     NavbarComponent,
+    GeneratorComponent,
   ],
   imports: [
     BrowserModule,
@@ -36,6 +40,9 @@ import {MatMenuModule} from '@angular/material/menu';
     MatGridListModule,
     MatCardModule,
     MatMenuModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
