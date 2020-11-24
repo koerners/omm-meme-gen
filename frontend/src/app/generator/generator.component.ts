@@ -2,6 +2,7 @@ import {AfterViewInit, Component, Input, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {fromEvent} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
+import {ColorEvent} from 'ngx-color';
 
 @Component({
   selector: 'app-generator',
@@ -15,7 +16,16 @@ export class GeneratorComponent implements AfterViewInit {
   name = new FormControl('');
   textBottom = new FormControl('');
 
+  colorOptions = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#795548', '#607d8b'];
+  colorText: string;
+  colorPen: string;
+  colorBackground: string;
+
+
   constructor() {
+    this.colorBackground = '#f44336';
+    this.colorText = '#f44336';
+    this.colorPen = '#f44336';
   }
 
   @ViewChild('preview', {static: false}) previewCanvas;
@@ -23,7 +33,6 @@ export class GeneratorComponent implements AfterViewInit {
   @Input() public height = 700;
 
   private cx: CanvasRenderingContext2D;
-
 
   public ngAfterViewInit(): void {
     const canvasEl: HTMLCanvasElement = this.previewCanvas.nativeElement;
@@ -120,7 +129,7 @@ export class GeneratorComponent implements AfterViewInit {
     const canvas = this.previewCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, 50);
-    ctx.fillStyle = '#00000';
+    ctx.fillStyle = this.colorText;
     ctx.font = '30px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(this.textTop.value, canvas.width / 2, 50);
@@ -130,7 +139,7 @@ export class GeneratorComponent implements AfterViewInit {
     const canvas = this.previewCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, this.height - 100, canvas.width, 50);
-    ctx.fillStyle = '#00000';
+    ctx.fillStyle = this.colorText;
     ctx.font = '30px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(this.textBottom.value, canvas.width / 2, this.height - 50);
@@ -149,6 +158,18 @@ export class GeneratorComponent implements AfterViewInit {
     link.download = 'meme.png';
     link.href = image;
     link.click();
+  }
+
+  textColorChanged($event: ColorEvent): void {
+    this.colorText = $event.color.hex;
+  }
+
+  penColorChanged($event: ColorEvent): void {
+    this.colorPen = $event.color.hex;
+  }
+
+  backgroundColorChanged($event: ColorEvent): void {
+    this.colorBackground = $event.color.hex;
   }
 }
 

@@ -18,6 +18,7 @@ import {MatMenuModule} from '@angular/material/menu';
 import {GeneratorComponent} from './generator/generator.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatInputModule} from '@angular/material/input';
+import {ColorCircleModule} from 'ngx-color/circle';
 
 
 @NgModule({
@@ -42,7 +43,8 @@ import {MatInputModule} from '@angular/material/input';
     MatMenuModule,
     ReactiveFormsModule,
     MatInputModule,
-    FormsModule
+    FormsModule,
+    ColorCircleModule
   ],
   providers: [],
   bootstrap: [AppComponent]
