@@ -16,16 +16,16 @@ export class GeneratorComponent implements AfterViewInit {
   name = new FormControl('');
   textBottom = new FormControl('');
 
-  colorOptions = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722', '#795548', '#607d8b'];
+  colorOptions = ['#000000', '#808080', '#C0C0C0', '#FFFFFF', '#800000', '#FF0000', '#808000', '#FFFF00', '#008000', '#00FF00', '#008080', '#00FFFF', '#000080', '#0000FF', '#800080', '#FF00FF', '#795548', '#607d8b'];
   colorText: string;
   colorPen: string;
   colorBackground: string;
 
 
   constructor() {
-    this.colorBackground = '#f44336';
-    this.colorText = '#f44336';
-    this.colorPen = '#f44336';
+    this.colorBackground = '#FFFFFF';
+    this.colorText = '#000000';
+    this.colorPen = '#000000';
   }
 
   @ViewChild('preview', {static: false}) previewCanvas;
@@ -43,7 +43,7 @@ export class GeneratorComponent implements AfterViewInit {
 
     this.cx.lineWidth = 3;
     this.cx.lineCap = 'round';
-    this.cx.strokeStyle = '#000';
+    this.cx.strokeStyle = this.colorPen;
 
     this.captureEvents(canvasEl);
   }
@@ -65,7 +65,6 @@ export class GeneratorComponent implements AfterViewInit {
       console.log(event1);
       const img = new Image();
       img.src = event1.target.result as string;
-      console.log(img);
       img.onload = () => {
         ctx.drawImage(img, 0, 100, 600, 500);
       };
@@ -166,6 +165,9 @@ export class GeneratorComponent implements AfterViewInit {
 
   penColorChanged($event: ColorEvent): void {
     this.colorPen = $event.color.hex;
+    const canvas = this.previewCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = this.colorPen;
   }
 
   backgroundColorChanged($event: ColorEvent): void {
