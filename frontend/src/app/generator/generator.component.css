@@ -19,3 +19,7 @@
 .dashboard-card-content {
   text-align: center;
 }
+
+canvas {
+  background-color: white;
+}
