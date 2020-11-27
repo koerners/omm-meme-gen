@@ -1,6 +1,8 @@
 import {Component} from '@angular/core';
 import {map} from 'rxjs/operators';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
+import {LoginService} from '../services/login.service';
+import {User} from '../User';
 
 @Component({
   selector: 'app-dashboard',
@@ -28,7 +30,12 @@ export class DashboardComponent {
       ];
     })
   );
+  private user: User;
 
-  constructor(private breakpointObserver: BreakpointObserver) {
+  constructor(private breakpointObserver: BreakpointObserver, public loginService: LoginService) {
+    this.loginService.login({});
+    this.user = new User();
   }
+
 }
+

@@ -19,7 +19,12 @@ import {GeneratorComponent} from './generator/generator.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatInputModule} from '@angular/material/input';
 import {ColorCircleModule} from 'ngx-color/circle';
-
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
+import {HttpConfigInterceptor} from './interceptor/httpconfig.interceptor';
+import {ErrorDialogComponent} from './error-dialog/errordialog.component';
+import {ErrorDialogService} from './error-dialog/errordialog.service';
+import {LoginService} from './services/login.service';
+import {MatDialogModule} from '@angular/material/dialog';
 
 @NgModule({
   declarations: [
@@ -27,6 +32,7 @@ import {ColorCircleModule} from 'ngx-color/circle';
     DashboardComponent,
     NavbarComponent,
     GeneratorComponent,
+    ErrorDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -44,9 +50,17 @@ import {ColorCircleModule} from 'ngx-color/circle';
     ReactiveFormsModule,
     MatInputModule,
     FormsModule,
-    ColorCircleModule
+    ColorCircleModule,
+    HttpClientModule,
+    MatDialogModule,
   ],
-  providers: [],
+  providers: [
+    {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},
+    ErrorDialogService,
+    LoginService
+  ],
+  entryComponents: [ErrorDialogComponent],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+}
