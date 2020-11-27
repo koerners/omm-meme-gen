@@ -1,0 +1,55 @@
+<form [formGroup]="addressForm" novalidate>
+  <mat-card class="shipping-card">
+    <mat-card-header style="position: relative; right: 20px;">
+      <mat-card-title *ngIf="!isLogin">Register</mat-card-title>
+      <mat-card-title *ngIf="isLogin">Login</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="row">
+        <mat-radio-group formControlName="registered" >
+          <mat-radio-button  value="false" (change)="updateForm()">I am already registered</mat-radio-button>
+          <mat-radio-button value="true" (change)="updateForm()">I am new around here</mat-radio-button>
+        </mat-radio-group>
+      </div>
+
+
+      <div class="row" *ngIf="!isLogin">
+        <div class="col">
+          <mat-form-field class="full-width">
+
+            <input matInput placeholder="Username" formControlName="username">
+            <mat-error *ngIf="addressForm.controls['username'].hasError('required')">
+              Username is <strong>required</strong>
+            </mat-error>
+
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <mat-form-field class="full-width">
+            <input matInput placeholder="E-Mail" formControlName="email">
+            <mat-error *ngIf="addressForm.controls['email'].hasError('required')">
+              Email is <strong>required</strong>
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <mat-form-field class="full-width">
+            <input matInput placeholder="Password" formControlName="password" type="password">
+            <mat-error *ngIf="addressForm.controls['password'].hasError('required')">
+              Password is <strong>required</strong>
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+    </mat-card-content>
+    <mat-card-actions>
+        <button *ngIf="!isLogin"  [disabled]="!addressForm.valid" mat-raised-button color="primary" type="button" (click)="register()">Register</button>
+        <button *ngIf="isLogin"  [disabled]="!addressForm.valid" mat-raised-button color="primary" type="button" (click)="login()">Login</button>
+    </mat-card-actions>
+  </mat-card>
+</form>
