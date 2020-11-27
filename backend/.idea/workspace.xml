@@ -20,7 +20,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="25fb5cbf-ccab-4238-96de-d0c7d5787edc" name="Default Changelist" comment="Skeleton Backend">
+      <change afterPath="$PROJECT_DIR$/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meme_api/permissions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/meme_api/serializers.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meme_api/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/meme_api/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/meme_api/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/meme_api/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,6 +84,8 @@
       <option name="presentableId" value="Default" />
       <updated>1606161524388</updated>
       <workItem from="1606161559459" duration="1226000" />
+      <workItem from="1606473529926" duration="1342000" />
+      <workItem from="1606478451358" duration="2706000" />
     </task>
     <task id="LOCAL-00001" summary="Skeleton Backend">
       <created>1606161816457</created>
@@ -100,31 +110,36 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Skeleton Backend" />
     <option name="LAST_COMMIT_MESSAGE" value="Skeleton Backend" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="2517" height="404" key="GridCell.Tab.0.bottom" timestamp="1606166154013">
+    <state width="2517" height="404" key="GridCell.Tab.0.bottom" timestamp="1606481123320">
       <screen x="0" y="30" width="2560" height="1410" />
     </state>
-    <state width="2517" height="404" key="GridCell.Tab.0.bottom/0.30.2560.1410@0.30.2560.1410" timestamp="1606166154013" />
-    <state width="2517" height="404" key="GridCell.Tab.0.center" timestamp="1606166154012">
+    <state width="2517" height="404" key="GridCell.Tab.0.bottom/0.30.2560.1410@0.30.2560.1410" timestamp="1606481123320" />
+    <state width="2517" height="404" key="GridCell.Tab.0.center" timestamp="1606481123320">
       <screen x="0" y="30" width="2560" height="1410" />
     </state>
-    <state width="2517" height="404" key="GridCell.Tab.0.center/0.30.2560.1410@0.30.2560.1410" timestamp="1606166154012" />
-    <state width="2517" height="404" key="GridCell.Tab.0.left" timestamp="1606166154012">
+    <state width="2517" height="404" key="GridCell.Tab.0.center/0.30.2560.1410@0.30.2560.1410" timestamp="1606481123320" />
+    <state width="2517" height="404" key="GridCell.Tab.0.left" timestamp="1606481123320">
       <screen x="0" y="30" width="2560" height="1410" />
     </state>
-    <state width="2517" height="404" key="GridCell.Tab.0.left/0.30.2560.1410@0.30.2560.1410" timestamp="1606166154012" />
-    <state width="2517" height="404" key="GridCell.Tab.0.right" timestamp="1606166154012">
+    <state width="2517" height="404" key="GridCell.Tab.0.left/0.30.2560.1410@0.30.2560.1410" timestamp="1606481123320" />
+    <state width="2517" height="404" key="GridCell.Tab.0.right" timestamp="1606481123320">
       <screen x="0" y="30" width="2560" height="1410" />
     </state>
-    <state width="2517" height="404" key="GridCell.Tab.0.right/0.30.2560.1410@0.30.2560.1410" timestamp="1606166154012" />
+    <state width="2517" height="404" key="GridCell.Tab.0.right/0.30.2560.1410@0.30.2560.1410" timestamp="1606481123320" />
     <state x="872" y="455" key="Vcs.Push.Dialog.v2" timestamp="1606161817898">
       <screen x="0" y="30" width="2560" height="1410" />
     </state>
     <state x="872" y="455" key="Vcs.Push.Dialog.v2/0.30.2560.1410@0.30.2560.1410" timestamp="1606161817898" />
+    <state x="1097" y="649" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1606473533303">
+      <screen x="0" y="30" width="2560" height="1410" />
+    </state>
+    <state x="1097" y="649" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.30.2560.1410@0.30.2560.1410" timestamp="1606473533303" />
   </component>
 </project>
