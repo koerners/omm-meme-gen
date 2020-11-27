@@ -32,9 +32,8 @@ export class DashboardComponent {
   );
   private user: User;
 
-  constructor(private breakpointObserver: BreakpointObserver, public loginService: LoginService) {
-    this.loginService.login({});
-    this.user = new User();
+  constructor(private breakpointObserver: BreakpointObserver) {
+
   }
 
 }

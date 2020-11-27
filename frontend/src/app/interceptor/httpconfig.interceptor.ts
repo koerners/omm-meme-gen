@@ -22,7 +22,7 @@ export class HttpConfigInterceptor implements HttpInterceptor {
         let data = {};
         data = {
           reason: error.statusText,
-          status: error.status
+          status: error.error
         };
         this.errorDialogService.openDialog(data);
         return throwError(error);
