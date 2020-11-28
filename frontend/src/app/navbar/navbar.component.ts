@@ -3,6 +3,7 @@ import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {Observable} from 'rxjs';
 import {map, shareReplay} from 'rxjs/operators';
 import {LoginService} from '../services/login.service';
+import {User} from '../User';
 
 @Component({
   selector: 'app-navbar',
@@ -18,20 +19,27 @@ export class NavbarComponent {
     );
   title = 'Meme Generator';
   isLoggedIn = false;
+  loggedOnUser: User;
 
   constructor(private breakpointObserver: BreakpointObserver, private loginService: LoginService) {
     if (localStorage.getItem('access') !== null) {
       this.isLoggedIn = true;
     }
     this.loginService.logOnStatusChange.subscribe(value => {
-      console.log(value);
       this.isLoggedIn = value;
     });
+
+    this.loginService.userStatusChange.subscribe((user: User) => {
+      this.loggedOnUser = user;
+    });
+
+    this.loginService.updateUser();
   }
 
-  logOut() {
+  logOut(): void {
     localStorage.removeItem('access');
     this.loginService.toggleLogin(false);
+    this.loginService.updateUser();
 
   }
 }

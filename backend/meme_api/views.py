@@ -23,11 +23,16 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 def current_user(request):
     user = request.user
-    return Response({
-        'id': user.id,
-        'username': user.last_name,
-        'email': user.email,
-    })
+    if not user.is_anonymous:
+        return Response({
+            'id': user.id,
+            'username': user.last_name,
+            'email': user.email,
+        })
+    else:
+        return Response({
+            'username': "Anonymus"
+        })
 
 
 @api_view(['GET'])
