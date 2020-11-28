@@ -18,6 +18,7 @@ export class RegisterService {
   register(data: User) {
     console.log(data);
     data = {username: data.email, password: data.password};
+    localStorage.removeItem('access');
     return this.http.post(environment.apiUrl + '/users/', data);
   }
 

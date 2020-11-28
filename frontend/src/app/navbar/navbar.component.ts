@@ -2,6 +2,7 @@ import {Component} from '@angular/core';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {Observable} from 'rxjs';
 import {map, shareReplay} from 'rxjs/operators';
+import {LoginService} from '../services/login.service';
 
 @Component({
   selector: 'app-navbar',
@@ -16,8 +17,21 @@ export class NavbarComponent {
       shareReplay()
     );
   title = 'Meme Generator';
+  isLoggedIn = false;
 
-  constructor(private breakpointObserver: BreakpointObserver) {
+  constructor(private breakpointObserver: BreakpointObserver, private loginService: LoginService) {
+    if (localStorage.getItem('access') !== null) {
+      this.isLoggedIn = true;
+    }
+    this.loginService.sidebarVisibilityChange.subscribe(value => {
+      console.log(value);
+      this.isLoggedIn = value;
+    });
   }
 
+  logOut() {
+    localStorage.removeItem('access');
+    this.loginService.toggleLogin(false);
+
+  }
 }

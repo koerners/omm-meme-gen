@@ -3,6 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {User} from '../User';
 import {Router} from '@angular/router';
 import {environment} from '../../environments/environment';
+import {Subject} from 'rxjs';
 
 class AuthToken {
   access: string;
@@ -11,8 +12,14 @@ class AuthToken {
 
 @Injectable()
 export class LoginService {
+  sidebarVisibilityChange: Subject<boolean> = new Subject<boolean>();
 
   constructor(private http: HttpClient, private router: Router) {
+
+  }
+
+  toggleLogin(bool) {
+    this.sidebarVisibilityChange.next(bool);
   }
 
   login(user: User) {
@@ -20,6 +27,7 @@ export class LoginService {
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
       this.router.navigate(['/dashboard']);
+      this.toggleLogin(true);
     });
   }
 
