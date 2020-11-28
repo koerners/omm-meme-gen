@@ -7,11 +7,24 @@ import {catchError, map} from 'rxjs/operators';
 
 @Injectable()
 export class HttpConfigInterceptor implements HttpInterceptor {
+  private request: HttpRequest<any>;
+
   constructor(public errorDialogService: ErrorDialogService) {
   }
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    return next.handle(request).pipe(
+
+    this.request = request;
+    const idToken = localStorage.getItem('access');
+    if (idToken) {
+      const cloned = request.clone({
+        headers: request.headers.set('Authorization',
+          'Bearer ' + idToken)
+      });
+      this.request = cloned;
+    }
+
+    return next.handle(this.request).pipe(
       map((event: HttpEvent<any>) => {
         if (event instanceof HttpResponse) {
           console.log('event--->>>', event);
@@ -22,7 +35,7 @@ export class HttpConfigInterceptor implements HttpInterceptor {
         let data = {};
         data = {
           reason: error.statusText,
-          status: error.status
+          status: error.error
         };
         this.errorDialogService.openDialog(data);
         return throwError(error);

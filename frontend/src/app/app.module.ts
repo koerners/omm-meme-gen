@@ -25,6 +25,11 @@ import {ErrorDialogComponent} from './error-dialog/errordialog.component';
 import {ErrorDialogService} from './error-dialog/errordialog.service';
 import {LoginService} from './services/login.service';
 import {MatDialogModule} from '@angular/material/dialog';
+import {RegisterComponent} from './register/register.component';
+import {MatSelectModule} from '@angular/material/select';
+import {MatRadioModule} from '@angular/material/radio';
+import {RegisterService} from './services/register.service';
+import {MemeService} from './services/meme.service';
 
 @NgModule({
   declarations: [
@@ -33,6 +38,7 @@ import {MatDialogModule} from '@angular/material/dialog';
     NavbarComponent,
     GeneratorComponent,
     ErrorDialogComponent,
+    RegisterComponent,
   ],
   imports: [
     BrowserModule,
@@ -53,11 +59,15 @@ import {MatDialogModule} from '@angular/material/dialog';
     ColorCircleModule,
     HttpClientModule,
     MatDialogModule,
+    MatSelectModule,
+    MatRadioModule,
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},
     ErrorDialogService,
-    LoginService
+    LoginService,
+    RegisterService,
+    MemeService
   ],
   entryComponents: [ErrorDialogComponent],
   bootstrap: [AppComponent]

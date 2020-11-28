@@ -1,5 +1,8 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
+import {User} from '../User';
+import {Router} from '@angular/router';
+import {environment} from '../../environments/environment';
 
 class AuthToken {
   access: string;
@@ -9,19 +12,19 @@ class AuthToken {
 @Injectable()
 export class LoginService {
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private router: Router) {
   }
 
-  login(authData) {
-    this.get_token({}).subscribe((data: AuthToken) => {
+  login(user: User) {
+    this.get_token(user).subscribe((data: AuthToken) => {
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
+      this.router.navigate(['/dashboard']);
     });
   }
 
-  get_token(data) {
-    data = {username: 'admin', password: 'admin'};
-    return this.http.post('http://127.0.0.1:8000/api/token/', data);
+  get_token(user: User) {
+    return this.http.post(environment.apiUrl + '/api/token/', {username: user.email, password: user.password});
   }
 
 }
