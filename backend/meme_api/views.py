@@ -1,7 +1,10 @@
 from django.contrib.auth.models import User, Group
+from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework import viewsets
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from meme_api.models import Meme
 from meme_api.permissions import IsOwnerOrReadOnly
@@ -14,7 +17,32 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    #permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['GET'])
+def current_user(request):
+    user = request.user
+    if not user.is_anonymous:
+        return Response({
+            'id': user.id,
+            'username': user.last_name,
+            'email': user.email,
+        })
+    else:
+        return Response({
+            'username': "Anonymus"
+        })
+
+
+@api_view(['GET'])
+def user_memes(request):
+    user = request.user
+    data = Meme.objects.filter(owner=user).order_by('-created').values()
+    print(data)
+
+    return JsonResponse(list(data), safe=False)
+
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -33,7 +61,7 @@ class MemeList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
 class MemeDetail(generics.RetrieveUpdateDestroyAPIView):

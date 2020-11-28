@@ -7,7 +7,7 @@ from meme_api.models import Meme
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ['url', 'username', 'email', 'groups', 'password']
+        fields = ['url', 'username', 'email', 'last_name', 'password']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):

@@ -16,9 +16,11 @@ export class RegisterService {
 
 
   register(data: User) {
-    console.log(data);
-    data = {username: data.email, password: data.password};
-    return this.http.post(environment.apiUrl + '/users/', data);
+    let payload;
+    payload = {username: data.email, password: data.password, email: data.email, last_name: data.username};
+    localStorage.removeItem('access');
+    return this.http.post(environment.apiUrl + '/users/', payload);
+
   }
 
 }
