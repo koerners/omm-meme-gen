@@ -12,14 +12,15 @@ class AuthToken {
 
 @Injectable()
 export class LoginService {
-  sidebarVisibilityChange: Subject<boolean> = new Subject<boolean>();
+  logOnStatusChange: Subject<boolean> = new Subject<boolean>();
+  userStatusChange: Subject<User> = new Subject<User>();
 
   constructor(private http: HttpClient, private router: Router) {
 
   }
 
   toggleLogin(bool) {
-    this.sidebarVisibilityChange.next(bool);
+    this.logOnStatusChange.next(bool);
   }
 
   login(user: User) {
@@ -28,6 +29,7 @@ export class LoginService {
       localStorage.setItem('refresh', data.refresh);
       this.router.navigate(['/dashboard']);
       this.toggleLogin(true);
+
     });
   }
 

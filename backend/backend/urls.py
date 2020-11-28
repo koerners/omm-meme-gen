@@ -22,5 +22,7 @@ urlpatterns = [
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('memes/', views.MemeList.as_view()),
     path('memes/<int:pk>', views.MemeDetail.as_view()),
+    path('self/', views.current_user),
+    path('self/memes/', views.user_memes),
 
 ]

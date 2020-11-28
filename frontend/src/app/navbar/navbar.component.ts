@@ -23,7 +23,7 @@ export class NavbarComponent {
     if (localStorage.getItem('access') !== null) {
       this.isLoggedIn = true;
     }
-    this.loginService.sidebarVisibilityChange.subscribe(value => {
+    this.loginService.logOnStatusChange.subscribe(value => {
       console.log(value);
       this.isLoggedIn = value;
     });
