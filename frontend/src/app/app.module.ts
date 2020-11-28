@@ -29,6 +29,7 @@ import {RegisterComponent} from './register/register.component';
 import {MatSelectModule} from '@angular/material/select';
 import {MatRadioModule} from '@angular/material/radio';
 import {RegisterService} from './services/register.service';
+import {MemeService} from './services/meme.service';
 
 @NgModule({
   declarations: [
@@ -65,7 +66,8 @@ import {RegisterService} from './services/register.service';
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},
     ErrorDialogService,
     LoginService,
-    RegisterService
+    RegisterService,
+    MemeService
   ],
   entryComponents: [ErrorDialogComponent],
   bootstrap: [AppComponent]

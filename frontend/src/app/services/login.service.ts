@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {User} from '../User';
 import {Router} from '@angular/router';
+import {environment} from '../../environments/environment';
 
 class AuthToken {
   access: string;
@@ -23,7 +24,7 @@ export class LoginService {
   }
 
   get_token(user: User) {
-    return this.http.post('http://127.0.0.1:8000/api/token/', {username: user.email, password: user.password});
+    return this.http.post(environment.apiUrl + '/api/token/', {username: user.email, password: user.password});
   }
 
 }

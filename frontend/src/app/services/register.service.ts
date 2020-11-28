@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {User} from '../User';
+import {environment} from '../../environments/environment';
 
 class AuthToken {
   access: string;
@@ -17,7 +18,7 @@ export class RegisterService {
   register(data: User) {
     console.log(data);
     data = {username: data.email, password: data.password};
-    return this.http.post('http://127.0.0.1:8000/users/', data);
+    return this.http.post(environment.apiUrl + '/users/', data);
   }
 
 }
