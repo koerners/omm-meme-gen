@@ -35,7 +35,9 @@ export class LoginService {
     });
   }
 
-  login(user: User): void {
+
+
+  login(user: User) {
     this.get_token(user).subscribe((data: AuthToken) => {
       localStorage.setItem('access', data.access);
       localStorage.setItem('refresh', data.refresh);
@@ -45,7 +47,8 @@ export class LoginService {
     });
   }
 
-  get_token(user: User): any {
+
+  get_token(user: User) {
     return this.http.post(environment.apiUrl + '/api/token/', {username: user.email, password: user.password});
   }
 

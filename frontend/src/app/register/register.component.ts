@@ -1,9 +1,11 @@
 import {Component} from '@angular/core';
+import {ChangeDetectorRef, Component} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import {ErrorDialogService} from '../error-dialog/errordialog.service';
 import {User} from '../User';
 import {RegisterService} from '../services/register.service';
 import {LoginService} from '../services/login.service';
+import {MatRadioChange} from '@angular/material/radio';
 
 
 @Component({
@@ -22,6 +24,7 @@ export class RegisterComponent {
   private user: User;
   isLogin = true;
   hasRegistered = false;
+
 
 
   // tslint:disable-next-line:max-line-length
@@ -44,6 +47,7 @@ export class RegisterComponent {
         this.errorDialogService.openDialog(data);
         this.isLogin = true;
         this.hasRegistered = true;
+
       });
 
     } else {

@@ -20,6 +20,7 @@ export class RegisterService {
     payload = {username: data.email, password: data.password, email: data.email, last_name: data.username};
     localStorage.removeItem('access');
     return this.http.post(environment.apiUrl + '/users/', payload);
+
   }
 
 }

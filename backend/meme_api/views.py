@@ -44,6 +44,7 @@ def user_memes(request):
     return JsonResponse(list(data), safe=False)
 
 
+
 class GroupViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
