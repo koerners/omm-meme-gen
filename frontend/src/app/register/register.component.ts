@@ -1,11 +1,9 @@
 import {Component} from '@angular/core';
-import {ChangeDetectorRef, Component} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import {ErrorDialogService} from '../error-dialog/errordialog.service';
 import {User} from '../User';
 import {RegisterService} from '../services/register.service';
 import {LoginService} from '../services/login.service';
-import {MatRadioChange} from '@angular/material/radio';
 
 
 @Component({
