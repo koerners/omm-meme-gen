@@ -10,6 +10,7 @@
       <a (click)="logOut()" *ngIf="isLoggedIn" mat-list-item routerLink="register">Logout</a>
       <a mat-list-item routerLink="dashboard">Dashboard</a>
       <a mat-list-item routerLink="generator">Generate</a>
+      <a mat-list-item *ngIf="loggedOnUser" style="position: absolute; bottom: 10px;">{{loggedOnUser.username}}</a>
     </mat-nav-list>
   </mat-sidenav>
   <mat-sidenav-content>
