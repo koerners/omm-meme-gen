@@ -1,6 +1,13 @@
 import {Injectable} from '@angular/core';
 import {ErrorDialogService} from '../error-dialog/errordialog.service';
-import {HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse} from '@angular/common/http';
+import {
+  HttpErrorResponse,
+  HttpEvent,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest,
+  HttpResponse
+} from '@angular/common/http';
 
 import {Observable, throwError} from 'rxjs';
 import {catchError, map} from 'rxjs/operators';
@@ -17,11 +24,10 @@ export class HttpConfigInterceptor implements HttpInterceptor {
     this.request = request;
     const idToken = localStorage.getItem('access');
     if (idToken) {
-      const cloned = request.clone({
+      this.request = request.clone({
         headers: request.headers.set('Authorization',
           'Bearer ' + idToken)
       });
-      this.request = cloned;
     }
 
     return next.handle(this.request).pipe(

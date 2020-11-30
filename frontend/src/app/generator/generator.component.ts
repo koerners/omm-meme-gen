@@ -20,19 +20,16 @@ export class GeneratorComponent implements AfterViewInit {
   colorText: string;
   colorPen: string;
   colorBackground: string;
-
+  @ViewChild('preview', {static: false}) previewCanvas;
+  @Input() public width = 600;
+  @Input() public height = 700;
+  private cx: CanvasRenderingContext2D;
 
   constructor() {
     this.colorBackground = '#FFFFFF';
     this.colorText = '#000000';
     this.colorPen = '#000000';
   }
-
-  @ViewChild('preview', {static: false}) previewCanvas;
-  @Input() public width = 600;
-  @Input() public height = 700;
-
-  private cx: CanvasRenderingContext2D;
 
   public ngAfterViewInit(): void {
     const canvasEl: HTMLCanvasElement = this.previewCanvas.nativeElement;
@@ -70,6 +67,56 @@ export class GeneratorComponent implements AfterViewInit {
       };
     };
 
+  }
+
+  topChanged(e: Event): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, 50);
+    ctx.fillStyle = this.colorText;
+    ctx.font = '30px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.textTop.value, canvas.width / 2, 50);
+  }
+
+  bottomChanged(e: Event): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, this.height - 100, canvas.width, 50);
+    ctx.fillStyle = this.colorText;
+    ctx.font = '30px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.textBottom.value, canvas.width / 2, this.height - 50);
+  }
+
+  clearCanvas(): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, this.height);
+  }
+
+  downloadCanvas(): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const image = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'meme.png';
+    link.href = image;
+    link.click();
+  }
+
+  textColorChanged($event: ColorEvent): void {
+    this.colorText = $event.color.hex;
+  }
+
+  penColorChanged($event: ColorEvent): void {
+    this.colorPen = $event.color.hex;
+    const canvas = this.previewCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = this.colorPen;
+  }
+
+  backgroundColorChanged($event: ColorEvent): void {
+    this.colorBackground = $event.color.hex;
   }
 
   private captureEvents(canvasEl: HTMLCanvasElement): void {
@@ -122,56 +169,6 @@ export class GeneratorComponent implements AfterViewInit {
       this.cx.lineTo(currentPos.x, currentPos.y);
       this.cx.stroke();
     }
-  }
-
-  topChanged(e: Event): void {
-    const canvas = this.previewCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, 50);
-    ctx.fillStyle = this.colorText;
-    ctx.font = '30px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(this.textTop.value, canvas.width / 2, 50);
-  }
-
-  bottomChanged(e: Event): void {
-    const canvas = this.previewCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, this.height - 100, canvas.width, 50);
-    ctx.fillStyle = this.colorText;
-    ctx.font = '30px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(this.textBottom.value, canvas.width / 2, this.height - 50);
-  }
-
-  clearCanvas(): void {
-    const canvas = this.previewCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, this.height);
-  }
-
-  downloadCanvas(): void {
-    const canvas = this.previewCanvas.nativeElement;
-    const image = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = 'meme.png';
-    link.href = image;
-    link.click();
-  }
-
-  textColorChanged($event: ColorEvent): void {
-    this.colorText = $event.color.hex;
-  }
-
-  penColorChanged($event: ColorEvent): void {
-    this.colorPen = $event.color.hex;
-    const canvas = this.previewCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = this.colorPen;
-  }
-
-  backgroundColorChanged($event: ColorEvent): void {
-    this.colorBackground = $event.color.hex;
   }
 }
 
