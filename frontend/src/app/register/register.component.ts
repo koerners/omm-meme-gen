@@ -18,19 +18,16 @@ export class RegisterComponent {
     password: [null, [Validators.required, Validators.minLength(5), Validators.maxLength(50)]],
     registered: ['false'],
   });
-
-  private user: User;
   isLogin = true;
   hasRegistered = false;
-
-
+  private user: User;
 
   // tslint:disable-next-line:max-line-length
   constructor(private fb: FormBuilder, public errorDialogService: ErrorDialogService, public registerService: RegisterService, public loginService: LoginService) {
 
   }
 
-  register() {
+  register(): void {
     if (this.addressForm.valid) {
       this.user = new User();
       this.user.username = this.addressForm.value.username;
@@ -58,7 +55,7 @@ export class RegisterComponent {
     }
   }
 
-  login() {
+  login(): void {
     this.user = new User();
     this.user.email = this.addressForm.value.email;
     this.user.password = this.addressForm.value.password;
@@ -67,11 +64,9 @@ export class RegisterComponent {
   }
 
 
-  updateForm() {
+  updateForm(): void {
     this.isLogin = (/true/i).test(this.addressForm.getRawValue().registered);
     console.log(this.isLogin);
-
-
   }
 }
 

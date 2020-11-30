@@ -8,7 +8,7 @@ export class MemeService {
   constructor(private http: HttpClient) {
   }
 
-  getAll() {
+  getAll(): any {
     return this.http.get(environment.apiUrl + '/memes/');
   }
 

@@ -15,7 +15,7 @@ export class RegisterService {
   }
 
 
-  register(data: User) {
+  register(data: User): any {
     let payload;
     payload = {username: data.email, password: data.password, email: data.email, last_name: data.username};
     localStorage.removeItem('access');
