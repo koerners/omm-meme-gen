@@ -6,4 +6,7 @@ export class Meme {
   imageString: string;
   creation: string;
   private: boolean;
+  title: string;
+  upvotes: number;
+  downvotes: number;
 }
