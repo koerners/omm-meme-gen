@@ -38,11 +38,20 @@ export class HttpConfigInterceptor implements HttpInterceptor {
         return event;
       }),
       catchError((error: HttpErrorResponse) => {
-        let data = {};
-        data = {
-          reason: error.statusText,
-          status: error.error
-        };
+        let data: {};
+        if (error.status === 0){
+          data = {
+            reason: 'HTTP Error',
+            status: 'The server is not reachable.'
+          };
+        }
+        else {
+          data = {
+            reason: error.statusText,
+            status: error.error
+          };
+        }
+
         this.errorDialogService.openDialog(data);
         return throwError(error);
       }));
