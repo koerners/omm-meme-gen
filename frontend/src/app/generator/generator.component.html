@@ -29,6 +29,8 @@
               <mat-icon>more_vert</mat-icon>
             </button>
             <mat-menu #menu="matMenu" xPosition="before">
+              <button (click)="saveCanvas()" mat-menu-item>Save to Account</button>
+              <button (click)="saveCanvasAsDraft()" mat-menu-item>Save as Draft</button>
               <button (click)="downloadCanvas()" mat-menu-item>Download</button>
               <button (click)="clearCanvas()" mat-menu-item>Clear</button>
             </mat-menu>
@@ -41,6 +43,7 @@
 
 
         </mat-card-content>
+
       </mat-card>
     </mat-grid-tile>
     <mat-grid-tile colspan="6" rowspan="1">
