@@ -2,6 +2,7 @@ import {Component, Input, OnInit, ViewChild} from '@angular/core';
 import {Meme} from '../Meme';
 import {MemeService} from '../services/meme.service';
 import {ActivatedRoute} from '@angular/router';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-detail-view',
@@ -11,8 +12,9 @@ import {ActivatedRoute} from '@angular/router';
 export class DetailViewComponent implements OnInit {
   public meme = new Meme();
   selectedId: number;
+  comments: any;
 
-  constructor(private memeService: MemeService, private route: ActivatedRoute) {
+  constructor(private memeService: MemeService, private route: ActivatedRoute, private snackBar: MatSnackBar) {
   }
 
 
@@ -25,8 +27,29 @@ export class DetailViewComponent implements OnInit {
       this.meme.title = data.title;
       this.meme.upvotes = data.upvotes;
       this.meme.downvotes = data.downvotes;
+      this.meme.owner = data.owner;
 
 
+    });
+  }
+
+  upvote(): void {
+    this.openSnackBar('Meme upvoted', 'Dismiss');
+  }
+
+  downvote(): void {
+    this.openSnackBar('Meme downvoted', 'Dismiss');
+
+  }
+
+  postComment(): void {
+    this.openSnackBar('Comment posted', 'Dismiss');
+
+  }
+
+  openSnackBar(message: string, action: string): void {
+    this.snackBar.open(message, action, {
+      duration: 2000,
     });
   }
 }
