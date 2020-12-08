@@ -28,8 +28,11 @@ import {MatDialogModule} from '@angular/material/dialog';
 import {RegisterComponent} from './register/register.component';
 import {MatSelectModule} from '@angular/material/select';
 import {MatRadioModule} from '@angular/material/radio';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
+
 import {RegisterService} from './services/register.service';
 import {MemeService} from './services/meme.service';
+import { DetailViewComponent } from './detail-view/detail-view.component';
 
 @NgModule({
   declarations: [
@@ -39,6 +42,7 @@ import {MemeService} from './services/meme.service';
     GeneratorComponent,
     ErrorDialogComponent,
     RegisterComponent,
+    DetailViewComponent,
   ],
   imports: [
     BrowserModule,
@@ -61,6 +65,7 @@ import {MemeService} from './services/meme.service';
     MatDialogModule,
     MatSelectModule,
     MatRadioModule,
+    MatSnackBarModule,
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},

@@ -3,6 +3,8 @@ import {FormControl} from '@angular/forms';
 import {fromEvent} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
+import {Meme} from '../Meme';
+import {MemeService} from '../services/meme.service';
 
 @Component({
   selector: 'app-generator',
@@ -25,7 +27,7 @@ export class GeneratorComponent implements AfterViewInit {
   @Input() public height = 700;
   private cx: CanvasRenderingContext2D;
 
-  constructor() {
+  constructor(private memeService: MemeService) {
     this.colorBackground = '#FFFFFF';
     this.colorText = '#000000';
     this.colorPen = '#000000';
@@ -172,6 +174,21 @@ export class GeneratorComponent implements AfterViewInit {
       this.cx.lineTo(currentPos.x, currentPos.y);
       this.cx.stroke();
     }
+  }
+
+  saveCanvas(): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const image = canvas.toDataURL('image/png');
+    const meme = new Meme();
+    meme.imageString = image;
+    meme.private = true;
+    meme.title = this.name.value;
+    this.memeService.saveMeme(meme);
+
+  }
+
+  saveCanvasAsDraft(): void {
+
   }
 }
 
