@@ -46,23 +46,26 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   selectFile(event: any): void {
+    // An image is uploaded from the users desktop
     if (!event.target.files[0] || event.target.files[0].length === 0) {
+      // if no image
       return;
     }
     const mimeType = event.target.files[0].type;
     if (mimeType.match(/image\/*/) == null) {
+      // Check if image
       return;
     }
     const canvas = this.previewCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     const reader = new FileReader();
-
+    // Read in image
     reader.readAsDataURL(event.target.files[0]);
     reader.onload = event1 => {
-      console.log(event1);
       const img = new Image();
       img.src = event1.target.result as string;
       img.onload = () => {
+        // Image to canvas
         ctx.drawImage(img, 0, 100, 600, 500);
       };
     };
@@ -72,7 +75,7 @@ export class GeneratorComponent implements AfterViewInit {
   topChanged(e: Event): void {
     const canvas = this.previewCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, 50);
+    ctx.clearRect(0, 0, canvas.width, 80);
     ctx.fillStyle = this.colorText;
     ctx.font = '30px Arial';
     ctx.textAlign = 'center';
@@ -82,7 +85,7 @@ export class GeneratorComponent implements AfterViewInit {
   bottomChanged(e: Event): void {
     const canvas = this.previewCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, this.height - 100, canvas.width, 50);
+    ctx.clearRect(0, this.height - 100, canvas.width, 80);
     ctx.fillStyle = this.colorText;
     ctx.font = '30px Arial';
     ctx.textAlign = 'center';
