@@ -4,7 +4,7 @@ import {fromEvent} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
 import {Meme} from '../Meme';
-import {MemeService} from "../services/meme.service";
+import {MemeService} from '../services/meme.service';
 
 @Component({
   selector: 'app-generator',

@@ -15,14 +15,8 @@ export class DetailViewComponent implements OnInit {
   constructor(private memeService: MemeService, private route: ActivatedRoute) {
   }
 
-  @ViewChild('preview', {static: false}) previewCanvas;
-  @Input() public width = 600;
-  @Input() public height = 700;
 
   ngOnInit(): void {
-
-    const canvas = this.previewCanvas.nativeElement;
-
     const heroId = String(this.route.snapshot.paramMap.get('id'));
     console.log('id', heroId);
     this.memeService.loadMeme(heroId).subscribe(data => {

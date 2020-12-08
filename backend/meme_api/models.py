@@ -6,7 +6,7 @@ class Meme(models.Model):
     title = models.CharField(max_length=100, blank=True, default='')
     id = models.AutoField(primary_key=True)
     owner = models.ForeignKey('auth.User', related_name='meme', on_delete=models.CASCADE)
-    image_string = models.CharField(max_length=99999, default='')
+    image_string = models.CharField(max_length=9999999999999999999, default='')
     upvotes = models.IntegerField(default=0)
     downvotes = models.IntegerField(default=0)
 
