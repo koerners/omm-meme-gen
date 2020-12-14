@@ -29,6 +29,7 @@ import {RegisterComponent} from './register/register.component';
 import {MatSelectModule} from '@angular/material/select';
 import {MatRadioModule} from '@angular/material/radio';
 import {RegisterService} from './services/register.service';
+import {WebcamModule} from 'ngx-webcam';
 import {MemeService} from './services/meme.service';
 
 @NgModule({
@@ -61,6 +62,7 @@ import {MemeService} from './services/meme.service';
     MatDialogModule,
     MatSelectModule,
     MatRadioModule,
+    WebcamModule
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},

@@ -1,29 +1,53 @@
-import {AfterViewInit, Component, Input, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, Input, ViewChild, ElementRef} from '@angular/core';
 import {FormControl} from '@angular/forms';
-import {fromEvent} from 'rxjs';
+import {fromEvent, Subject, Observable} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
+import {WebcamImage, WebcamInitError} from 'ngx-webcam';
 
 @Component({
   selector: 'app-generator',
   templateUrl: './generator.component.html',
   styleUrls: ['./generator.component.css']
 })
-export class GeneratorComponent implements AfterViewInit {
+export class GeneratorComponent implements AfterViewInit{
+
+
 
   textTop = new FormControl('');
+
 
   name = new FormControl('');
   textBottom = new FormControl('');
 
-  colorOptions = ['#000000', '#808080', '#C0C0C0', '#FFFFFF', '#800000', '#FF0000', '#808000', '#FFFF00', '#008000', '#00FF00', '#008080', '#00FFFF', '#000080', '#0000FF', '#800080', '#FF00FF', '#795548', '#607d8b'];
+  colorOptions: string[] = ['#000000', '#808080', '#C0C0C0', '#FFFFFF', '#800000', '#FF0000', '#808000', '#FFFF00', '#008000', '#00FF00', '#008080', '#00FFFF', '#000080', '#0000FF', '#800080', '#FF00FF', '#795548', '#607d8b'];
   colorText: string;
   colorPen: string;
   colorBackground: string;
-  @ViewChild('preview', {static: false}) previewCanvas;
+
+  cameraOn = false;
+
+  @ViewChild('preview', {static: false}) previewCanvas: ElementRef<HTMLCanvasElement>;
   @Input() public width = 600;
   @Input() public height = 700;
   private cx: CanvasRenderingContext2D;
+
+
+  private canvasStored: any;
+
+  public errors: WebcamInitError[] = [];
+  public videoOptions: MediaTrackConstraints = {
+     width: {ideal: 1024},
+     height: {ideal: 576}
+  };
+  // latest snapshot
+  public webcamImageArray: WebcamImage[];
+  public webcamImage: WebcamImage = null;
+
+  // webcam snapshot trigger
+  private trigger: Subject<void> = new Subject<void>();
+
+
 
   constructor() {
     this.colorBackground = '#FFFFFF';
@@ -43,7 +67,9 @@ export class GeneratorComponent implements AfterViewInit {
     this.cx.strokeStyle = this.colorPen;
 
     this.captureEvents(canvasEl);
+
   }
+
 
   selectFile(event: any): void {
     if (!event.target.files[0] || event.target.files[0].length === 0) {
@@ -169,6 +195,57 @@ export class GeneratorComponent implements AfterViewInit {
       this.cx.lineTo(currentPos.x, currentPos.y);
       this.cx.stroke();
     }
+  }
+
+  loadFromWebcam(): void {
+    console.log('opening webcam');
+    if (this.cameraOn === false){
+      this.canvasStored = this.previewCanvas;
+      this.cameraOn = true;
+    }
+  }
+
+  loadFromURL(): void {
+    console.log('pressed url');
+
+  }
+
+  loadScreenshotOfURL(): void {
+    console.log('pressed screenshot');
+
+  }
+
+  loadFromAPI(): void {
+    console.log('pressed api');
+  }
+  public get triggerObservable(): Observable<void> {
+    return this.trigger.asObservable();
+  }
+  public handleImage(webcamImage: WebcamImage): void {
+    console.log('received webcam image', webcamImage);
+    this.webcamImage = webcamImage;
+  }
+
+  public triggerSnapshot(): void {
+    this.trigger.next();
+  }
+  public handleInitError(error: WebcamInitError): void {
+    if (error.mediaStreamError && error.mediaStreamError.name === 'NotAllowedError') {
+      console.warn('Camera access was not allowed by user!');
+    }
+  }
+
+
+  showOnCanvas(): void {
+    Promise.resolve().then(() => this.cameraOn = false);
+    console.log(this);
+    const ctx = this.previewCanvas.nativeElement.getContext('2d');
+    const img = new Image();
+    img.src = this.webcamImage.imageAsDataUrl;
+    ctx.drawImage(img, 0, 100, 600, 500);
+
+    // const reader = new FileReader();
+    // console.log(this.webcamImage.imageAsDataUrl);
   }
 }
 

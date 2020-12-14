@@ -8,17 +8,19 @@
             Image Selection
           </mat-card-title>
         </mat-card-header>
-        <mat-card-content class="dashboard-card-content">
-          <div>
+        <input #file style="display: none;" (change)=" selectFile($event)" accept="image/*" type="file">
+        <button mat-raised-button  id="FileSelect" (click)="file.click()">Select File</button>
 
+        <button mat-raised-button class="butn" id="WebcamSelect" (click)="loadFromWebcam()">Open Webcam for taking an Image</button>
 
-            <input (change)=" selectFile($event)" accept="image/*" type="file">
+        <button mat-raised-button class="butn" id="URLSelect" (click)="loadFromURL()">Load an image from an URL</button>
 
+        <button mat-raised-button class="butn" id="ScreenshotSelect" (click)="loadScreenshotOfURL()">Upload Screenshot from URL</button>
 
-          </div>
-        </mat-card-content>
+        <button mat-raised-button class="butn" id="LoadFromAPI" (click)="loadFromAPI()">Load Random Image from IMGFlip</button>
       </mat-card>
     </mat-grid-tile>
+
 
     <mat-grid-tile colspan="4" rowspan="3">
       <mat-card class="dashboard-card">
@@ -35,9 +37,20 @@
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
-          <div>
-            <canvas #preview [style.background]="colorBackground"></canvas>
-          </div>
+
+            <canvas [hidden]="cameraOn" #preview [style.background]="colorBackground"></canvas>
+          <div [hidden]="!cameraOn">
+            <webcam height="{{height}}"
+                    width = "{{width}}"
+                    [trigger]="triggerObservable"
+                    (imageCapture)="handleImage($event)"
+                    [imageQuality]="1"
+                    (initError)="handleInitError($event)">
+
+            </webcam>
+            <button class="actionBtn" (click)="triggerSnapshot();">Take A Snapshot</button>
+            <button class="backBtn" (click)="showOnCanvas()">Go back to Canvas</button>
+         </div>
 
 
         </mat-card-content>
