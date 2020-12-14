@@ -43,7 +43,7 @@
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
-    <mat-grid-tile colspan="6" rowspan="1">
+    <mat-grid-tile colspan="6" rowspan="2">
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
@@ -72,6 +72,39 @@
                   <mat-label>Text Bottom</mat-label>
                   <input (keyup)="bottomChanged($event)" [formControl]="textBottom" matInput type="text">
                 </mat-form-field>
+              </mat-grid-tile>
+            </mat-grid-list>
+
+
+
+            <mat-grid-list [rowHeight]="75" cols="3">
+              <mat-grid-tile colspan="1" rowspan="3">
+                <mat-form-field class="example-form-field">
+                  <mat-label>Font Size</mat-label>
+                  <label>
+                    <input (keyup)="[topChanged($event), bottomChanged($event)]" [formControl]="fontSize" matInput [value]="30" type="number">
+                  </label>
+                </mat-form-field>
+              </mat-grid-tile>
+
+              <mat-grid-tile colspan="1" rowspan="3">
+                <mat-form-field>
+                  <mat-label>Font Style</mat-label>
+                  <mat-select [formControl]="fontFamily" (selectionChange)="fontFamilyChanged($event)">
+                    <mat-option value="Arial">Arial</mat-option>
+                    <mat-option value="Verdana">Verdana</mat-option>
+                    <mat-option value="Times New Roman">Times New Roman</mat-option>
+                    <mat-option value="Courier New">Courier New</mat-option>
+                    <mat-option value="serif">serif</mat-option>
+                    <mat-option value="sans-serif">sans-serif</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </mat-grid-tile>
+
+              <mat-grid-tile colspan="1" rowspan="3">
+                <mat-button-toggle value="bold" (change)="boldButtonClicked($event)">Bold</mat-button-toggle>
+                <mat-button-toggle value="italic" (change)="italicButtonClicked($event)">Italic</mat-button-toggle>
+                <mat-button-toggle value="underline" (change)="underlineButtonClicked($event)">Underline</mat-button-toggle>
               </mat-grid-tile>
             </mat-grid-list>
 
