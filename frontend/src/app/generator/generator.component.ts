@@ -20,10 +20,10 @@ export class GeneratorComponent implements AfterViewInit {
   colorText: string;
   colorPen: string;
   colorBackground: string;
-  @ViewChild('preview', {static: false}) previewCanvas;
+  @ViewChild('previewBackground', {static: false}) backgroundCanvas;
+  @ViewChild('previewText', {static: false}) textAndDrawCanvas;
   @Input() public width = 600;
   @Input() public height = 700;
-  private cx: CanvasRenderingContext2D;
 
   constructor() {
     this.colorBackground = '#FFFFFF';
@@ -32,17 +32,25 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    const canvasEl: HTMLCanvasElement = this.previewCanvas.nativeElement;
-    this.cx = canvasEl.getContext('2d');
+    const canvasBackgroundEl: HTMLCanvasElement = this.backgroundCanvas.nativeElement;
+    canvasBackgroundEl.width = this.width;
+    canvasBackgroundEl.height = this.height;
+    const ctx = canvasBackgroundEl.getContext('2d');
+    ctx.fillStyle = this.colorBackground;
+    ctx.fillRect(0, 0, canvasBackgroundEl.width, canvasBackgroundEl.height);
 
-    canvasEl.width = this.width;
-    canvasEl.height = this.height;
+    this.captureEvents(canvasBackgroundEl);
 
-    this.cx.lineWidth = 3;
-    this.cx.lineCap = 'round';
-    this.cx.strokeStyle = this.colorPen;
+    const canvasTextAndDrawEl: HTMLCanvasElement = this.textAndDrawCanvas.nativeElement;
+    const canvasTextAndDrawCtx = canvasTextAndDrawEl.getContext('2d');
 
-    this.captureEvents(canvasEl);
+    canvasTextAndDrawEl.width = this.width;
+    canvasTextAndDrawEl.height = this.height;
+    canvasTextAndDrawCtx.lineWidth = 3;
+    canvasTextAndDrawCtx.lineCap = 'round';
+    canvasTextAndDrawCtx.strokeStyle = this.colorPen;
+
+    this.captureEvents(canvasTextAndDrawEl);
   }
 
   selectFile(event: any): void {
@@ -53,7 +61,7 @@ export class GeneratorComponent implements AfterViewInit {
     if (mimeType.match(/image\/*/) == null) {
       return;
     }
-    const canvas = this.previewCanvas.nativeElement;
+    const canvas = this.backgroundCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     const reader = new FileReader();
 
@@ -70,7 +78,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   topChanged(e: Event): void {
-    const canvas = this.previewCanvas.nativeElement;
+    const canvas = this.textAndDrawCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, 50);
     ctx.fillStyle = this.colorText;
@@ -80,7 +88,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   bottomChanged(e: Event): void {
-    const canvas = this.previewCanvas.nativeElement;
+    const canvas = this.textAndDrawCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, this.height - 100, canvas.width, 50);
     ctx.fillStyle = this.colorText;
@@ -90,13 +98,25 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   clearCanvas(): void {
-    const canvas = this.previewCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
+    this.colorBackground = '#FFFFFF';
+    let canvas = this.backgroundCanvas.nativeElement;
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = this.colorBackground;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    canvas = this.textAndDrawCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, this.height);
   }
 
   downloadCanvas(): void {
-    const canvas = this.previewCanvas.nativeElement;
+    const canvas = document.createElement('canvas');
+    canvas.width = this.width;
+    canvas.height = this.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(this.backgroundCanvas.nativeElement, 0, 0);
+    ctx.drawImage(this.textAndDrawCanvas.nativeElement, 0, 0);
+
     const image = canvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.download = 'meme.png';
@@ -110,13 +130,17 @@ export class GeneratorComponent implements AfterViewInit {
 
   penColorChanged($event: ColorEvent): void {
     this.colorPen = $event.color.hex;
-    const canvas = this.previewCanvas.nativeElement;
+    const canvas = this.textAndDrawCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.strokeStyle = this.colorPen;
   }
 
   backgroundColorChanged($event: ColorEvent): void {
     this.colorBackground = $event.color.hex;
+    const canvas = this.backgroundCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = this.colorBackground;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
   private captureEvents(canvasEl: HTMLCanvasElement): void {
@@ -158,16 +182,19 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   private drawOnCanvas(prevPos: { x: number, y: number }, currentPos: { x: number, y: number }): void {
-    if (!this.cx) {
+    const textAndDrawCanvasCtx = this.textAndDrawCanvas.nativeElement.getContext('2d');
+
+    if (!textAndDrawCanvasCtx) {
       return;
     }
 
-    this.cx.beginPath();
+
+    textAndDrawCanvasCtx.beginPath();
 
     if (prevPos) {
-      this.cx.moveTo(prevPos.x, prevPos.y); // from
-      this.cx.lineTo(currentPos.x, currentPos.y);
-      this.cx.stroke();
+      textAndDrawCanvasCtx.moveTo(prevPos.x, prevPos.y); // from
+      textAndDrawCanvasCtx.lineTo(currentPos.x, currentPos.y);
+      textAndDrawCanvasCtx.stroke();
     }
   }
 }

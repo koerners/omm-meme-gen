@@ -36,7 +36,8 @@
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
           <div>
-            <canvas #preview [style.background]="colorBackground"></canvas>
+            <canvas #previewBackground [style.background]="colorBackground" class="meme-canvas"></canvas>
+            <canvas #previewText class="meme-canvas"></canvas>
           </div>
 
 
