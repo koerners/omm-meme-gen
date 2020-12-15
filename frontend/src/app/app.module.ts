@@ -28,9 +28,15 @@ import {MatDialogModule} from '@angular/material/dialog';
 import {RegisterComponent} from './register/register.component';
 import {MatSelectModule} from '@angular/material/select';
 import {MatRadioModule} from '@angular/material/radio';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
+
+import {MatChipsModule} from '@angular/material/chips';
 import {RegisterService} from './services/register.service';
 import {WebcamModule} from 'ngx-webcam';
 import {MemeService} from './services/meme.service';
+import { DetailViewComponent } from './detail-view/detail-view.component';
+import {ObjectRecognitionService} from './services/object-recognition-service';
+import {MatTableModule} from '@angular/material/table';
 
 @NgModule({
   declarations: [
@@ -40,6 +46,7 @@ import {MemeService} from './services/meme.service';
     GeneratorComponent,
     ErrorDialogComponent,
     RegisterComponent,
+    DetailViewComponent,
   ],
   imports: [
     BrowserModule,
@@ -62,6 +69,9 @@ import {MemeService} from './services/meme.service';
     MatDialogModule,
     MatSelectModule,
     MatRadioModule,
+    MatSnackBarModule,
+    MatTableModule,
+    MatChipsModule,
     WebcamModule
   ],
   providers: [
@@ -69,7 +79,8 @@ import {MemeService} from './services/meme.service';
     ErrorDialogService,
     LoginService,
     RegisterService,
-    MemeService
+    MemeService,
+    ObjectRecognitionService
   ],
   entryComponents: [ErrorDialogComponent],
   bootstrap: [AppComponent]
