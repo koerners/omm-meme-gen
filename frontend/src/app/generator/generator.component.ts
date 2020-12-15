@@ -45,6 +45,7 @@ export class GeneratorComponent implements AfterViewInit {
 
   // webcam snapshot trigger
   private trigger: Subject<void> = new Subject<void>();
+
   constructor(private memeService: MemeService) {
     this.colorBackground = '#FFFFFF';
     this.colorText = '#000000';
