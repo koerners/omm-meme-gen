@@ -38,6 +38,7 @@
           <div>
             <canvas #previewBackground [style.background]="colorBackground" class="meme-canvas"></canvas>
             <canvas #previewText class="meme-canvas"></canvas>
+            <canvas #previewDraw class="meme-canvas"></canvas>
           </div>
 
 
@@ -63,7 +64,7 @@
               <mat-grid-tile colspan="1" rowspan="3">
                 <mat-form-field class="example-form-field">
                   <mat-label>Text Top</mat-label>
-                  <input (keyup)="topChanged($event)" [formControl]="textTop" matInput type="text">
+                  <input (keyup)="textChanged($event)" [formControl]="textTop" matInput type="text">
                 </mat-form-field>
               </mat-grid-tile>
 
@@ -71,7 +72,7 @@
               <mat-grid-tile colspan="1" rowspan="3">
                 <mat-form-field class="example-form-field">
                   <mat-label>Text Bottom</mat-label>
-                  <input (keyup)="bottomChanged($event)" [formControl]="textBottom" matInput type="text">
+                  <input (keyup)="textChanged($event)" [formControl]="textBottom" matInput type="text">
                 </mat-form-field>
               </mat-grid-tile>
             </mat-grid-list>
