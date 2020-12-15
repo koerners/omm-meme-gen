@@ -21,7 +21,6 @@
       </mat-card>
     </mat-grid-tile>
 
-
     <mat-grid-tile colspan="4" rowspan="3">
       <mat-card class="dashboard-card">
         <mat-card-header>
@@ -38,7 +37,6 @@
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
 
-            <canvas [hidden]="cameraOn" #preview [style.background]="colorBackground"></canvas>
           <div [hidden]="!cameraOn">
             <webcam height="{{height}}"
                     width = "{{width}}"
@@ -48,12 +46,15 @@
                     (initError)="handleInitError($event)">
 
             </webcam>
+            <br>
             <button class="actionBtn" (click)="triggerSnapshot();">Take A Snapshot</button>
-            <button class="backBtn" (click)="showOnCanvas()">Go back to Canvas</button>
-         </div>
+            <button class="bckBtn" (click)="showOnCanvas()">Go back to Canvas</button>
+          </div>
+          <canvas [hidden]="cameraOn"  #preview [style.background]="colorBackground"></canvas>
 
 
         </mat-card-content>
+
       </mat-card>
     </mat-grid-tile>
     <mat-grid-tile colspan="6" rowspan="1">
