@@ -3,6 +3,8 @@ import {FormControl} from '@angular/forms';
 import {fromEvent} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
+import {Meme} from '../Meme';
+import {MemeService} from '../services/meme.service';
 
 @Component({
   selector: 'app-generator',
@@ -26,7 +28,7 @@ export class GeneratorComponent implements AfterViewInit {
   @Input() public width = 600;
   @Input() public height = 700;
 
-  constructor() {
+  constructor(private memeService: MemeService) {
     this.colorBackground = '#FFFFFF';
     this.colorText = '#000000';
     this.colorPen = '#000000';
@@ -58,30 +60,33 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   selectFile(event: any): void {
+    // An image is uploaded from the users desktop
     if (!event.target.files[0] || event.target.files[0].length === 0) {
+      // if no image
       return;
     }
     const mimeType = event.target.files[0].type;
     if (mimeType.match(/image\/*/) == null) {
+      // Check if image
       return;
     }
     const canvas = this.backgroundCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     const reader = new FileReader();
-
+    // Read in image
     reader.readAsDataURL(event.target.files[0]);
     reader.onload = event1 => {
-      console.log(event1);
       const img = new Image();
       img.src = event1.target.result as string;
       img.onload = () => {
+        // Image to canvas
         ctx.drawImage(img, 0, 100, 600, 500);
       };
     };
 
   }
 
-  textChanged(e: Event): void {
+  textChanged(): void {
     const canvas = this.textCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -109,15 +114,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   downloadCanvas(): void {
-    const canvas = document.createElement('canvas');
-    canvas.width = this.width;
-    canvas.height = this.height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(this.backgroundCanvas.nativeElement, 0, 0);
-    ctx.drawImage(this.textCanvas.nativeElement, 0, 0);
-    ctx.drawImage(this.drawCanvas.nativeElement, 0, 0);
-
-    const image = canvas.toDataURL('image/png');
+    const image = this.createImageStringFromCanvas();
     const link = document.createElement('a');
     link.download = 'meme.png';
     link.href = image;
@@ -126,6 +123,7 @@ export class GeneratorComponent implements AfterViewInit {
 
   textColorChanged($event: ColorEvent): void {
     this.colorText = $event.color.hex;
+    this.textChanged();
   }
 
   penColorChanged($event: ColorEvent): void {
@@ -195,6 +193,33 @@ export class GeneratorComponent implements AfterViewInit {
       drawCanvasCtx.lineTo(currentPos.x, currentPos.y);
       drawCanvasCtx.stroke();
     }
+  }
+
+  createImageStringFromCanvas(): string {
+    const canvas = document.createElement('canvas');
+    canvas.width = this.width;
+    canvas.height = this.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(this.backgroundCanvas.nativeElement, 0, 0);
+    ctx.drawImage(this.textCanvas.nativeElement, 0, 0);
+    ctx.drawImage(this.drawCanvas.nativeElement, 0, 0);
+    const image = canvas.toDataURL('image/png');
+
+    return image;
+  }
+
+  saveCanvas(): void {
+    const image = this.createImageStringFromCanvas();
+    const meme = new Meme();
+    meme.imageString = image;
+    meme.private = true;
+    meme.title = this.name.value;
+    this.memeService.saveMeme(meme);
+
+  }
+
+  saveCanvasAsDraft(): void {
+
   }
 }
 
