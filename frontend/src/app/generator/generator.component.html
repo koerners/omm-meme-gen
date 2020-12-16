@@ -71,7 +71,7 @@
               <mat-grid-tile colspan="1" rowspan="3">
                 <mat-form-field class="example-form-field">
                   <mat-label>Text Bottom</mat-label>
-                  <input (keyup)="bottomChanged($event)" [formControl]="textBottom" matInput type="text">
+                  <input (keypress)="bottomChanged($event)" [formControl]="textBottom" matInput type="text">
                 </mat-form-field>
               </mat-grid-tile>
             </mat-grid-list>
@@ -83,7 +83,7 @@
                 <mat-form-field class="example-form-field">
                   <mat-label>Font Size</mat-label>
                   <label>
-                    <input (keyup)="[topChanged($event), bottomChanged($event)]" [formControl]="fontSize" matInput [value]="30" type="number">
+                    <input (keyup)="[topChanged($event), bottomChanged($event)]" (change)="[topChanged($event), bottomChanged($event)]" [formControl]="fontSize" matInput [value]="fontSize" type="number">
                   </label>
                 </mat-form-field>
               </mat-grid-tile>
