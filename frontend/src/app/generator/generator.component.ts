@@ -5,6 +5,8 @@ import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
 import {Meme} from '../Meme';
 import {MemeService} from '../services/meme.service';
+import {MatSelectChange} from '@angular/material/select';
+import {MatButtonToggleChange, MatButtonToggleModule} from '@angular/material/button-toggle';
 
 @Component({
   selector: 'app-generator',
@@ -14,9 +16,13 @@ import {MemeService} from '../services/meme.service';
 export class GeneratorComponent implements AfterViewInit {
 
   textTop = new FormControl('');
-
   name = new FormControl('');
   textBottom = new FormControl('');
+  fontSize = new FormControl('30');
+  fontFamily = new FormControl('Arial');
+  bold = new FormControl(false);
+  italic = new FormControl(false);
+  underline = new FormControl(false);
 
   colorOptions = ['#000000', '#808080', '#C0C0C0', '#FFFFFF', '#800000', '#FF0000', '#808000', '#FFFF00', '#008000', '#00FF00', '#008080', '#00FFFF', '#000080', '#0000FF', '#800080', '#FF00FF', '#795548', '#607d8b'];
   colorText: string;
@@ -75,23 +81,82 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   topChanged(e: Event): void {
-    const canvas = this.previewCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, 80);
-    ctx.fillStyle = this.colorText;
-    ctx.font = '30px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(this.textTop.value, canvas.width / 2, 50);
+    this.updateTopText();
   }
 
   bottomChanged(e: Event): void {
+    this.updateBottomText();
+  }
+
+  fontFamilyChanged(e: MatSelectChange): void {
+    this.updateTopText();
+    this.updateBottomText();
+  }
+
+  boldButtonClicked(e: MatButtonToggleChange): void {
+    this.bold.setValue(!this.bold.value);
+    this.updateTopText();
+    this.updateBottomText();
+  }
+
+  italicButtonClicked(e: MatButtonToggleChange): void {
+    this.italic.setValue(!this.italic.value);
+    this.updateTopText();
+    this.updateBottomText();
+  }
+
+  underlineButtonClicked(e: MatButtonToggleChange): void {
+    this.underline.setValue(!this.underline.value);
+    this.updateTopText();
+    this.updateBottomText();
+  }
+
+  updateTopText(): void {
     const canvas = this.previewCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, this.height - 100, canvas.width, 80);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = this.colorText;
-    ctx.font = '30px Arial';
+
+    // font string for bold and italic cause they have to go in ctx.font and dont have an own attribute
+    let fontStyle = '';
+    fontStyle += this.bold.value ? 'bold ' : '';
+    fontStyle += this.italic.value ? 'italic ' : '';
+    ctx.font = this.getFontStyle();
+    this.getFontStyle();
+    ctx.textAlign = 'center';
+    ctx.fillText(this.textTop.value, canvas.width / 2, 50);
+
+    // this is to underline the text since there seem to be no text-decorations in canvas
+    if (this.underline.value) {
+      const {width} = ctx.measureText(this.textTop.value);
+      ctx.fillRect((canvas.width / 2 - width / 2), 50, width, this.fontSize.value / 10);
+    }
+  }
+
+  updateBottomText(): void {
+    const canvas = this.previewCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, this.height - 100, canvas.width, canvas.height);
+    ctx.fillStyle = this.colorText;
+    ctx.font = this.getFontStyle();
     ctx.textAlign = 'center';
     ctx.fillText(this.textBottom.value, canvas.width / 2, this.height - 50);
+
+    // this is to underline the text since there seem to be no text-decorations in canvas
+    if (this.underline.value) {
+      const {width} = ctx.measureText(this.textBottom.value);
+      ctx.fillRect((canvas.width / 2 - width / 2), this.height - 50, width, this.fontSize.value / 10);
+    }
+  }
+
+  getFontStyle(): string {
+    // font string for bold and italic cause they have to go in ctx.font and dont have an own attribute
+    let fontStyle = '';
+    fontStyle += this.bold.value ? 'bold ' : '';
+    fontStyle += this.italic.value ? 'italic ' : '';
+    fontStyle += this.fontSize.value + 'px ';
+    fontStyle += this.fontFamily.value;
+    return fontStyle;
   }
 
   clearCanvas(): void {
