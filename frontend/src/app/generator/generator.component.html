@@ -18,6 +18,8 @@
         <button mat-raised-button class="butn" id="ScreenshotSelect" (click)="loadScreenshotOfURL()">Upload Screenshot from URL</button>
 
         <button mat-raised-button class="butn" id="LoadFromAPI" (click)="loadFromAPI()">Load Random Image from IMGFlip</button>
+          </div>
+        </mat-card-content>
       </mat-card>
     </mat-grid-tile>
 
@@ -38,6 +40,12 @@
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
+          <div>
+            <canvas [hidden]="cameraOn" #previewBackground [style.background]="colorBackground" class="meme-canvas"></canvas>
+            <canvas [hidden]="cameraOn"#previewFile class="meme-canvas"></canvas>
+            <canvas [hidden]="cameraOn" #previewText class="meme-canvas"></canvas>
+            <canvas [hidden]="cameraOn" #previewDraw class="meme-canvas"></canvas>
+          </div>
 
           <div [hidden]="!cameraOn">
             <webcam height="{{height}}"
@@ -52,14 +60,13 @@
             <button class="actionBtn" (click)="triggerSnapshot();">Take A Snapshot</button>
             <button class="bckBtn" (click)="showOnCanvas()">Go back to Canvas</button>
           </div>
-          <canvas [hidden]="cameraOn"  #preview [style.background]="colorBackground"></canvas>
 
 
         </mat-card-content>
 
       </mat-card>
     </mat-grid-tile>
-    <mat-grid-tile colspan="6" rowspan="1">
+    <mat-grid-tile colspan="6" rowspan="2">
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
@@ -78,7 +85,7 @@
               <mat-grid-tile colspan="1" rowspan="3">
                 <mat-form-field class="example-form-field">
                   <mat-label>Text Top</mat-label>
-                  <input (keyup)="topChanged($event)" [formControl]="textTop" matInput type="text">
+                  <input (keyup)="textChanged()" [formControl]="textTop" matInput type="text">
                 </mat-form-field>
               </mat-grid-tile>
 
@@ -86,8 +93,41 @@
               <mat-grid-tile colspan="1" rowspan="3">
                 <mat-form-field class="example-form-field">
                   <mat-label>Text Bottom</mat-label>
-                  <input (keyup)="bottomChanged($event)" [formControl]="textBottom" matInput type="text">
+                  <input (keyup)="textChanged()" [formControl]="textBottom" matInput type="text">
                 </mat-form-field>
+              </mat-grid-tile>
+            </mat-grid-list>
+
+
+
+            <mat-grid-list [rowHeight]="75" cols="3">
+              <mat-grid-tile colspan="1" rowspan="3">
+                <mat-form-field class="example-form-field">
+                  <mat-label>Font Size</mat-label>
+                  <label>
+                    <input (keyup)="textChanged()" (change)="textChanged()" [formControl]="fontSize" matInput [value]="fontSize" type="number">
+                  </label>
+                </mat-form-field>
+              </mat-grid-tile>
+
+              <mat-grid-tile colspan="1" rowspan="3">
+                <mat-form-field>
+                  <mat-label>Font Style</mat-label>
+                  <mat-select [formControl]="fontFamily" (selectionChange)="fontFamilyChanged($event)">
+                    <mat-option value="Arial">Arial</mat-option>
+                    <mat-option value="Verdana">Verdana</mat-option>
+                    <mat-option value="Times New Roman">Times New Roman</mat-option>
+                    <mat-option value="Courier New">Courier New</mat-option>
+                    <mat-option value="serif">serif</mat-option>
+                    <mat-option value="sans-serif">sans-serif</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </mat-grid-tile>
+
+              <mat-grid-tile colspan="1" rowspan="3">
+                <mat-button-toggle value="bold" (change)="boldButtonClicked($event)">Bold</mat-button-toggle>
+                <mat-button-toggle value="italic" (change)="italicButtonClicked($event)">Italic</mat-button-toggle>
+                <mat-button-toggle value="underline" (change)="underlineButtonClicked($event)">Underline</mat-button-toggle>
               </mat-grid-tile>
             </mat-grid-list>
 
