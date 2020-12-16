@@ -14,7 +14,6 @@
 
           <input #file hidden (change)=" selectFile($event)" accept="image/*" type="file">
           <button mat-raised-button class="butn" id="fileSelect" (click)="file.click()">Upload an Image</button>
-URLSelect
 
           <button mat-raised-button class="butn" id="URLSelect" (click)="loadFromURL()">Load an image from an URL</button>
 
@@ -50,7 +49,7 @@ URLSelect
             <canvas [hidden]="cameraOn" #previewDraw class="meme-canvas"></canvas>
           </div>
 
-          <div [hidden]="!cameraOn">
+          <div *ngIf="cameraOn">
             <webcam height="{{height}}"
                     width = "{{width}}"
                     [trigger]="triggerObservable"
