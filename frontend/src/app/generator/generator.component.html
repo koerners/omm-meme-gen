@@ -1,6 +1,6 @@
 <div class="grid-container">
   <h1 class="mat-h1">Dashboard</h1>
-  <mat-grid-list [rowHeight]="250" cols="10">
+  <mat-grid-list [rowHeight]="300" cols="10">
     <mat-grid-tile colspan="6" rowspan="1">
       <mat-card class="dashboard-card">
         <mat-card-header>
@@ -10,16 +10,16 @@
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
         <div>
-        <button mat-raised-button class="butn" id="WebcamSelect" (click)="loadFromWebcam()">Open Webcam for taking an Image</button>
+        <button mat-raised-button class="selectTemplateButton" id="WebcamSelect" (click)="loadFromWebcam()"><span><mat-icon>camera_alt</mat-icon></span>Open Webcam for taking an Image</button>
 
           <input #file hidden (change)=" selectFile($event)" accept="image/*" type="file">
-          <button mat-raised-button class="butn" id="fileSelect" (click)="file.click()">Upload an Image</button>
+          <button mat-raised-button class="selectTemplateButton" id="fileSelect" (click)="file.click()"><span><mat-icon>attachment</mat-icon></span>Upload an Image</button>
 
-          <button mat-raised-button class="butn" id="URLSelect" (click)="loadFromURL()">Load an image from an URL</button>
+          <button mat-raised-button class="selectTemplateButton" id="URLSelect" (click)="loadFromURL()"><span><mat-icon>cloud_upload</mat-icon></span>Load an image from an URL</button>
 
-        <button mat-raised-button class="butn" id="ScreenshotSelect" (click)="loadScreenshotOfURL()">Upload Screenshot from URL</button>
+        <button mat-raised-button class="selectTemplateButton" id="ScreenshotSelect" (click)="loadScreenshotOfURL()"><span><mat-icon>screen_share</mat-icon></span>Upload Screenshot from URL</button>
 
-        <button mat-raised-button class="butn" id="LoadFromAPI" (click)="loadFromAPI()">Load Random Image from IMGFlip</button>
+        <button mat-raised-button class="selectTemplateButton" id="LoadFromAPI" (click)="loadFromAPI()"><span><mat-icon>web_asset</mat-icon></span>Load Random Image from IMGFlip</button>
         </div>
         </mat-card-content>
       </mat-card>

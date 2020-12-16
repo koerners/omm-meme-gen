@@ -29,3 +29,24 @@ canvas {
   margin-top: 5%;
   left: 5%;
 }
+
+.selectTemplateButton {
+  margin-top: 20px;
+  min-height: 150px;
+  margin-right: 10px;
+
+
+}
+
+.selectTemplateButton span {
+  display: block;
+
+}
+
+.selectTemplateButton mat-icon {
+ font-size: 3rem;
+  position: relative;
+  right: 1rem;
+
+
+}
