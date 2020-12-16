@@ -27,6 +27,7 @@
     "@tensorflow/tfjs-converter": "^2.8.0",
     "@tensorflow/tfjs-core": "^2.8.0",
     "ngx-color": "^6.2.0",
+    "ngx-webcam": "^0.3.2",
     "rxjs": "~6.6.0",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.2"
