@@ -29,6 +29,7 @@ export class GeneratorComponent implements AfterViewInit {
   colorPen: string;
   colorBackground: string;
   @ViewChild('previewBackground', {static: false}) backgroundCanvas;
+  @ViewChild('previewFile', {static: false}) fileCanvas;
   @ViewChild('previewText', {static: false}) textCanvas;
   @ViewChild('previewDraw', {static: false}) drawCanvas;
   @Input() public width = 600;
@@ -47,13 +48,14 @@ export class GeneratorComponent implements AfterViewInit {
     const ctx = canvasBackgroundEl.getContext('2d');
     ctx.fillStyle = this.colorBackground;
     ctx.fillRect(0, 0, canvasBackgroundEl.width, canvasBackgroundEl.height);
-    this.captureEvents(canvasBackgroundEl);
+
+    const canvasFileEl: HTMLCanvasElement = this.fileCanvas.nativeElement;
+    canvasFileEl.width = this.width;
+    canvasFileEl.height = this.height;
 
     const canvasTextEl: HTMLCanvasElement = this.textCanvas.nativeElement;
-    const canvasTextCtx = canvasTextEl.getContext('2d');
     canvasTextEl.width = this.width;
     canvasTextEl.height = this.height;
-    this.captureEvents(canvasTextEl);
 
     const canvasDrawEl: HTMLCanvasElement = this.drawCanvas.nativeElement;
     const canvasDrawCtx = canvasDrawEl.getContext('2d');
@@ -76,7 +78,7 @@ export class GeneratorComponent implements AfterViewInit {
       // Check if image
       return;
     }
-    const canvas = this.backgroundCanvas.nativeElement;
+    const canvas = this.fileCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     const reader = new FileReader();
     // Read in image
@@ -150,6 +152,10 @@ export class GeneratorComponent implements AfterViewInit {
     let ctx = canvas.getContext('2d');
     ctx.fillStyle = this.colorBackground;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    canvas = this.fileCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, this.height);
 
     canvas = this.textCanvas.nativeElement;
     ctx = canvas.getContext('2d');
@@ -248,6 +254,7 @@ export class GeneratorComponent implements AfterViewInit {
     canvas.height = this.height;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(this.backgroundCanvas.nativeElement, 0, 0);
+    ctx.drawImage(this.fileCanvas.nativeElement, 0, 0);
     ctx.drawImage(this.textCanvas.nativeElement, 0, 0);
     ctx.drawImage(this.drawCanvas.nativeElement, 0, 0);
     const image = canvas.toDataURL('image/png');
