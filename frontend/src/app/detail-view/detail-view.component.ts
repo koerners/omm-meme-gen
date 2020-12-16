@@ -1,4 +1,11 @@
-import {AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
+import {
+  AfterContentChecked, AfterViewChecked,
+  Component,
+  ElementRef,
+  Input, OnChanges,
+  OnInit,
+  ViewChild
+} from '@angular/core';
 import {Meme} from '../Meme';
 import {MemeService} from '../services/meme.service';
 import {ActivatedRoute, Router} from '@angular/router';
@@ -7,6 +14,7 @@ import '@tensorflow/tfjs-backend-webgl';
 import {ObjectRecognitionService, Prediction} from '../services/object-recognition-service';
 import {MatChipsModule} from '@angular/material/chips';
 import {delay} from 'rxjs/operators';
+import {Observable} from "rxjs";
 
 
 @Component({
@@ -14,38 +22,39 @@ import {delay} from 'rxjs/operators';
   templateUrl: './detail-view.component.html',
   styleUrls: ['./detail-view.component.css']
 })
-export class DetailViewComponent implements OnInit, AfterViewInit {
-  public meme = new Meme();
+export class DetailViewComponent implements OnInit {
+  public meme: Meme;
   selectedId: number;
   comments: any;
   public predictions: Prediction[];
-  @ViewChild('preview') public imageEl: ElementRef;
 
   // tslint:disable-next-line:max-line-length
-  constructor(private memeService: MemeService, private route: ActivatedRoute, private snackBar: MatSnackBar, private predictionService: ObjectRecognitionService, private router: Router ) {
+  constructor(private memeService: MemeService, private route: ActivatedRoute, private snackBar: MatSnackBar, private predictionService: ObjectRecognitionService, private router: Router) {
+    this.meme = new Meme();
 
   }
 
-  async ngOnInit(): Promise<void> {
-    this.route.params.subscribe(async params => {
-      this.meme.id = Number(this.route.snapshot.paramMap.get('id'));
-      this.loadMeme();
+  ngOnInit(): void {
 
+    this.route.params.subscribe(params => {
+      const memeId = Number(this.route.snapshot.paramMap.get('id'));
+      this.loadMeme(memeId);
     });
-
   }
 
-   async loadMeme(): Promise<void> {
-     await this.memeService.loadMeme(String(this.meme.id)).subscribe(data => {
-       console.log(data);
-       this.meme.imageString = data.image_string;
-       this.meme.title = data.title;
-       this.meme.upvotes = data.upvotes;
-       this.meme.downvotes = data.downvotes;
-       this.meme.owner = data.owner;
-     });
-
-   }
+  loadMeme(memeId: number): void {
+    this.memeService.loadMeme(String(memeId)).subscribe(data => {
+      console.log(data);
+      this.meme = new Meme();
+      this.meme.id = data.id;
+      this.meme.imageString = data.image_string;
+      this.meme.title = data.title;
+      this.meme.upvotes = data.upvotes;
+      this.meme.downvotes = data.downvotes;
+      this.meme.owner = data.owner;
+      this.getImageContent(data.image_string);
+    });
+  }
 
   upvote(): void {
     this.openSnackBar('Meme upvoted', 'Dismiss');
@@ -67,22 +76,21 @@ export class DetailViewComponent implements OnInit, AfterViewInit {
     });
   }
 
-  getImageContent(): void {
-    this.predictionService.predictObject(this.imageEl).then(r =>
-      this.predictions = r
+  getImageContent(base64String): void {
+    this.predictionService.predictObject(base64String).then(r => {
+        this.predictions = r;
+      }
     );
   }
 
-  ngAfterViewInit(): void {
-  this.getImageContent();
-  }
 
   nextImage(): void {
-    this.router.navigate(['/meme/' + String(Number(this.meme.id) + 1 )]);
+    console.log(this.meme);
+    this.router.navigate(['/meme/' + String(Number(this.meme.id) + 1)]);
   }
 
   prevImage(): void {
-    this.router.navigate(['/meme/' + String(Number(this.meme.id) - 1 )]);
+    this.router.navigate(['/meme/' + String(Number(this.meme.id) - 1)]);
 
   }
 }

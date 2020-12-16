@@ -21,7 +21,7 @@
         <mat-card-content class="dashboard-card-content">
 
           <mat-chip-list>
-            <mat-chip *ngFor="let prediciton of predictions"
+            <mat-chip *ngFor="let prediciton of predictions "
                       [style.backgroundColor]="prediciton.color">{{prediciton.className}}</mat-chip>
           </mat-chip-list>
 
@@ -41,7 +41,6 @@
               </button>
             </mat-grid-tile>
           </mat-grid-list>
-
 
           <button (click)="upvote()" style="margin-right: 5px;" mat-fab color="accent"
                   aria-label="Example icon button with a delete icon">

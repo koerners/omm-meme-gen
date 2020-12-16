@@ -27,8 +27,14 @@ export class ObjectRecognitionService {
     if (this.model == null) {
       this.model = await mobilenet.load();
     }
-    const imgEl = element.nativeElement;
-    this.predictions = await this.model.classify(imgEl);
+
+    console.log(element);
+
+    let im = new Image();
+    im.src = element;
+    im.width = 1000;
+    im.height = 1000;
+    this.predictions = await this.model.classify(im);
     this.predictions = this.addColors();
     return this.predictions;
 
