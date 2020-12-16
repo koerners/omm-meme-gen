@@ -325,7 +325,7 @@ export class GeneratorComponent implements AfterViewInit {
   showOnCanvas(): void {
     Promise.resolve().then(() => this.cameraOn = false);
     console.log(this);
-    const ctx = this.previewCanvas.nativeElement.getContext('2d');
+    const ctx = this.fileCanvas.nativeElement.getContext('2d');
     const img = new Image();
     img.src = this.webcamImage.imageAsDataUrl;
     ctx.drawImage(img, 0, 100, 600, 500);

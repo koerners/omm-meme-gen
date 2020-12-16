@@ -1,6 +1,6 @@
 <div class="grid-container">
   <h1 class="mat-h1">Dashboard</h1>
-  <mat-grid-list [rowHeight]="300" cols="10">
+  <mat-grid-list [rowHeight]="250" cols="10">
     <mat-grid-tile colspan="6" rowspan="1">
       <mat-card class="dashboard-card">
         <mat-card-header>
@@ -9,21 +9,24 @@
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
-          <div>
-
+        <div>
         <button mat-raised-button class="butn" id="WebcamSelect" (click)="loadFromWebcam()">Open Webcam for taking an Image</button>
 
-        <button mat-raised-button class="butn" id="URLSelect" (click)="loadFromURL()">Load an image from an URL</button>
+          <input #file hidden (change)=" selectFile($event)" accept="image/*" type="file">
+          <button mat-raised-button class="butn" id="fileSelect" (click)="file.click()">Upload an Image</button>
+URLSelect
+
+          <button mat-raised-button class="butn" id="URLSelect" (click)="loadFromURL()">Load an image from an URL</button>
 
         <button mat-raised-button class="butn" id="ScreenshotSelect" (click)="loadScreenshotOfURL()">Upload Screenshot from URL</button>
 
         <button mat-raised-button class="butn" id="LoadFromAPI" (click)="loadFromAPI()">Load Random Image from IMGFlip</button>
-          </div>
+        </div>
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
 
-    <mat-grid-tile colspan="4" rowspan="3">
+    <mat-grid-tile colspan="4" rowspan="4">
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
