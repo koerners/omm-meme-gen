@@ -33,6 +33,7 @@ import {MatSnackBarModule} from '@angular/material/snack-bar';
 
 import {MatChipsModule} from '@angular/material/chips';
 import {RegisterService} from './services/register.service';
+import {WebcamModule} from 'ngx-webcam';
 import {MemeService} from './services/meme.service';
 import { DetailViewComponent } from './detail-view/detail-view.component';
 import {ObjectRecognitionService} from './services/object-recognition-service';
@@ -72,7 +73,8 @@ import {MatTableModule} from '@angular/material/table';
     MatRadioModule,
     MatSnackBarModule,
     MatTableModule,
-    MatChipsModule
+    MatChipsModule,
+    WebcamModule
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},
