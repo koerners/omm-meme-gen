@@ -36,7 +36,10 @@
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
           <div>
-            <canvas #preview [style.background]="colorBackground"></canvas>
+            <canvas #previewBackground [style.background]="colorBackground" class="meme-canvas"></canvas>
+            <canvas #previewFile class="meme-canvas"></canvas>
+            <canvas #previewText class="meme-canvas"></canvas>
+            <canvas #previewDraw class="meme-canvas"></canvas>
           </div>
 
 
@@ -63,7 +66,7 @@
               <mat-grid-tile colspan="1" rowspan="3">
                 <mat-form-field class="example-form-field">
                   <mat-label>Text Top</mat-label>
-                  <input (keyup)="topChanged($event)" [formControl]="textTop" matInput type="text">
+                  <input (keyup)="textChanged()" [formControl]="textTop" matInput type="text">
                 </mat-form-field>
               </mat-grid-tile>
 
@@ -71,7 +74,7 @@
               <mat-grid-tile colspan="1" rowspan="3">
                 <mat-form-field class="example-form-field">
                   <mat-label>Text Bottom</mat-label>
-                  <input (keypress)="bottomChanged($event)" [formControl]="textBottom" matInput type="text">
+                  <input (keyup)="textChanged()" [formControl]="textBottom" matInput type="text">
                 </mat-form-field>
               </mat-grid-tile>
             </mat-grid-list>
@@ -83,7 +86,7 @@
                 <mat-form-field class="example-form-field">
                   <mat-label>Font Size</mat-label>
                   <label>
-                    <input (keyup)="[topChanged($event), bottomChanged($event)]" (change)="[topChanged($event), bottomChanged($event)]" [formControl]="fontSize" matInput [value]="fontSize" type="number">
+                    <input (keyup)="textChanged()" (change)="textChanged()" [formControl]="fontSize" matInput [value]="fontSize" type="number">
                   </label>
                 </mat-form-field>
               </mat-grid-tile>

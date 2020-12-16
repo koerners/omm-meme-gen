@@ -28,10 +28,12 @@ export class GeneratorComponent implements AfterViewInit {
   colorText: string;
   colorPen: string;
   colorBackground: string;
-  @ViewChild('preview', {static: false}) previewCanvas;
+  @ViewChild('previewBackground', {static: false}) backgroundCanvas;
+  @ViewChild('previewFile', {static: false}) fileCanvas;
+  @ViewChild('previewText', {static: false}) textCanvas;
+  @ViewChild('previewDraw', {static: false}) drawCanvas;
   @Input() public width = 600;
   @Input() public height = 700;
-  private cx: CanvasRenderingContext2D;
 
   constructor(private memeService: MemeService) {
     this.colorBackground = '#FFFFFF';
@@ -40,17 +42,29 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    const canvasEl: HTMLCanvasElement = this.previewCanvas.nativeElement;
-    this.cx = canvasEl.getContext('2d');
+    const canvasBackgroundEl: HTMLCanvasElement = this.backgroundCanvas.nativeElement;
+    canvasBackgroundEl.width = this.width;
+    canvasBackgroundEl.height = this.height;
+    const ctx = canvasBackgroundEl.getContext('2d');
+    ctx.fillStyle = this.colorBackground;
+    ctx.fillRect(0, 0, canvasBackgroundEl.width, canvasBackgroundEl.height);
 
-    canvasEl.width = this.width;
-    canvasEl.height = this.height;
+    const canvasFileEl: HTMLCanvasElement = this.fileCanvas.nativeElement;
+    canvasFileEl.width = this.width;
+    canvasFileEl.height = this.height;
 
-    this.cx.lineWidth = 3;
-    this.cx.lineCap = 'round';
-    this.cx.strokeStyle = this.colorPen;
+    const canvasTextEl: HTMLCanvasElement = this.textCanvas.nativeElement;
+    canvasTextEl.width = this.width;
+    canvasTextEl.height = this.height;
 
-    this.captureEvents(canvasEl);
+    const canvasDrawEl: HTMLCanvasElement = this.drawCanvas.nativeElement;
+    const canvasDrawCtx = canvasDrawEl.getContext('2d');
+    canvasDrawEl.width = this.width;
+    canvasDrawEl.height = this.height;
+    canvasDrawCtx.lineWidth = 3;
+    canvasDrawCtx.lineCap = 'round';
+    canvasDrawCtx.strokeStyle = this.colorPen;
+    this.captureEvents(canvasDrawEl);
   }
 
   selectFile(event: any): void {
@@ -64,7 +78,7 @@ export class GeneratorComponent implements AfterViewInit {
       // Check if image
       return;
     }
-    const canvas = this.previewCanvas.nativeElement;
+    const canvas = this.fileCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     const reader = new FileReader();
     // Read in image
@@ -80,68 +94,22 @@ export class GeneratorComponent implements AfterViewInit {
 
   }
 
-  topChanged(e: Event): void {
-    this.updateTopText();
-  }
-
-  bottomChanged(e: Event): void {
-    this.updateBottomText();
-  }
-
-  fontFamilyChanged(e: MatSelectChange): void {
-    this.updateTopText();
-    this.updateBottomText();
-  }
-
-  boldButtonClicked(e: MatButtonToggleChange): void {
-    this.bold.setValue(!this.bold.value);
-    this.updateTopText();
-    this.updateBottomText();
-  }
-
-  italicButtonClicked(e: MatButtonToggleChange): void {
-    this.italic.setValue(!this.italic.value);
-    this.updateTopText();
-    this.updateBottomText();
-  }
-
-  underlineButtonClicked(e: MatButtonToggleChange): void {
-    this.underline.setValue(!this.underline.value);
-    this.updateTopText();
-    this.updateBottomText();
-  }
-
-  updateTopText(): void {
-    const canvas = this.previewCanvas.nativeElement;
+  textChanged(): void {
+    const canvas = this.textCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = this.colorText;
-
-    // font string for bold and italic cause they have to go in ctx.font and dont have an own attribute
-    let fontStyle = '';
-    fontStyle += this.bold.value ? 'bold ' : '';
-    fontStyle += this.italic.value ? 'italic ' : '';
     ctx.font = this.getFontStyle();
-    this.getFontStyle();
     ctx.textAlign = 'center';
-    ctx.fillText(this.textTop.value, canvas.width / 2, 50);
 
+    ctx.fillText(this.textTop.value, canvas.width / 2, 50);
     // this is to underline the text since there seem to be no text-decorations in canvas
     if (this.underline.value) {
       const {width} = ctx.measureText(this.textTop.value);
       ctx.fillRect((canvas.width / 2 - width / 2), 50, width, this.fontSize.value / 10);
     }
-  }
 
-  updateBottomText(): void {
-    const canvas = this.previewCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, this.height - 100, canvas.width, canvas.height);
-    ctx.fillStyle = this.colorText;
-    ctx.font = this.getFontStyle();
-    ctx.textAlign = 'center';
     ctx.fillText(this.textBottom.value, canvas.width / 2, this.height - 50);
-
     // this is to underline the text since there seem to be no text-decorations in canvas
     if (this.underline.value) {
       const {width} = ctx.measureText(this.textBottom.value);
@@ -159,15 +127,47 @@ export class GeneratorComponent implements AfterViewInit {
     return fontStyle;
   }
 
+    fontFamilyChanged(e: MatSelectChange): void {
+      this.textChanged();
+    }
+
+    boldButtonClicked(e: MatButtonToggleChange): void {
+      this.bold.setValue(!this.bold.value);
+      this.textChanged();
+    }
+
+    italicButtonClicked(e: MatButtonToggleChange): void {
+      this.italic.setValue(!this.italic.value);
+      this.textChanged();
+    }
+
+    underlineButtonClicked(e: MatButtonToggleChange): void {
+      this.underline.setValue(!this.underline.value);
+      this.textChanged();
+    }
+
   clearCanvas(): void {
-    const canvas = this.previewCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
+    this.colorBackground = '#FFFFFF';
+    let canvas = this.backgroundCanvas.nativeElement;
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = this.colorBackground;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    canvas = this.fileCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, this.height);
+
+    canvas = this.textCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, this.height);
+
+    canvas = this.drawCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, this.height);
   }
 
   downloadCanvas(): void {
-    const canvas = this.previewCanvas.nativeElement;
-    const image = canvas.toDataURL('image/png');
+    const image = this.createImageStringFromCanvas();
     const link = document.createElement('a');
     link.download = 'meme.png';
     link.href = image;
@@ -176,17 +176,22 @@ export class GeneratorComponent implements AfterViewInit {
 
   textColorChanged($event: ColorEvent): void {
     this.colorText = $event.color.hex;
+    this.textChanged();
   }
 
   penColorChanged($event: ColorEvent): void {
     this.colorPen = $event.color.hex;
-    const canvas = this.previewCanvas.nativeElement;
+    const canvas = this.drawCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.strokeStyle = this.colorPen;
   }
 
   backgroundColorChanged($event: ColorEvent): void {
     this.colorBackground = $event.color.hex;
+    const canvas = this.backgroundCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = this.colorBackground;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
   private captureEvents(canvasEl: HTMLCanvasElement): void {
@@ -228,22 +233,37 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   private drawOnCanvas(prevPos: { x: number, y: number }, currentPos: { x: number, y: number }): void {
-    if (!this.cx) {
+    const drawCanvasCtx = this.drawCanvas.nativeElement.getContext('2d');
+
+    if (!drawCanvasCtx) {
       return;
     }
 
-    this.cx.beginPath();
+    drawCanvasCtx.beginPath();
 
     if (prevPos) {
-      this.cx.moveTo(prevPos.x, prevPos.y); // from
-      this.cx.lineTo(currentPos.x, currentPos.y);
-      this.cx.stroke();
+      drawCanvasCtx.moveTo(prevPos.x, prevPos.y); // from
+      drawCanvasCtx.lineTo(currentPos.x, currentPos.y);
+      drawCanvasCtx.stroke();
     }
   }
 
-  saveCanvas(): void {
-    const canvas = this.previewCanvas.nativeElement;
+  createImageStringFromCanvas(): string {
+    const canvas = document.createElement('canvas');
+    canvas.width = this.width;
+    canvas.height = this.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(this.backgroundCanvas.nativeElement, 0, 0);
+    ctx.drawImage(this.fileCanvas.nativeElement, 0, 0);
+    ctx.drawImage(this.textCanvas.nativeElement, 0, 0);
+    ctx.drawImage(this.drawCanvas.nativeElement, 0, 0);
     const image = canvas.toDataURL('image/png');
+
+    return image;
+  }
+
+  saveCanvas(): void {
+    const image = this.createImageStringFromCanvas();
     const meme = new Meme();
     meme.imageString = image;
     meme.private = true;
