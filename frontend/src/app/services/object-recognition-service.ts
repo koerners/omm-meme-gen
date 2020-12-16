@@ -30,7 +30,7 @@ export class ObjectRecognitionService {
 
     console.log(element);
 
-    let im = new Image();
+    const im = new Image();
     im.src = element;
     im.width = 1000;
     im.height = 1000;

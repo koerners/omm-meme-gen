@@ -14,7 +14,7 @@ import '@tensorflow/tfjs-backend-webgl';
 import {ObjectRecognitionService, Prediction} from '../services/object-recognition-service';
 import {MatChipsModule} from '@angular/material/chips';
 import {delay} from 'rxjs/operators';
-import {Observable} from "rxjs";
+import {Observable} from 'rxjs';
 
 
 @Component({
