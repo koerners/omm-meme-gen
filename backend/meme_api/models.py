@@ -7,8 +7,29 @@ class Meme(models.Model):
     id = models.AutoField(primary_key=True)
     owner = models.ForeignKey('auth.User', related_name='meme', on_delete=models.CASCADE)
     image_string = models.CharField(max_length=9999999999999999999, default='')
-    upvotes = models.IntegerField(default=0)
-    downvotes = models.IntegerField(default=0)
+    views = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['created']
+
+
+class Comment(models.Model):
+    id = models.AutoField(primary_key=True)
+    created = models.DateTimeField(auto_now_add=True)
+    writer = models.ForeignKey('auth.User', related_name='comment', on_delete=models.CASCADE)
+    meme = models.ForeignKey('Meme', related_name='meme_comment', on_delete=models.CASCADE)
+    text = models.CharField(max_length=9999999999, default='')
+
+    class Meta:
+        ordering = ['created']
+
+
+class Vote(models.Model):
+    id = models.AutoField(primary_key=True)
+    created = models.DateTimeField(auto_now_add=True)
+    voter = models.ForeignKey('auth.User', related_name='vote', on_delete=models.CASCADE)
+    meme = models.ForeignKey('Meme', related_name='meme_vote', on_delete=models.CASCADE)
+    upvote = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['created']

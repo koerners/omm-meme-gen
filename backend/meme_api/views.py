@@ -6,9 +6,10 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from meme_api.models import Meme
+from meme_api.models import Meme, Comment, Vote
 from meme_api.permissions import IsOwnerOrReadOnly
-from meme_api.serializers import UserSerializer, GroupSerializer, MemeSerializer
+from meme_api.serializers import UserSerializer, GroupSerializer, MemeSerializer, CommentSerializer, VoteSerializer
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -44,7 +45,6 @@ def user_memes(request):
     return JsonResponse(list(data), safe=False)
 
 
-
 class GroupViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
@@ -60,6 +60,40 @@ class MemeList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+
+class CommentList(generics.ListCreateAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(writer=self.request.user)
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+
+class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+
+class VoteList(generics.ListCreateAPIView):
+    queryset = Vote.objects.all()
+    serializer_class = VoteSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(voter=self.request.user)
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+
+class VoteDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Vote.objects.all()
+    serializer_class = VoteSerializer
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
