@@ -58,6 +58,16 @@ class MemeList(viewsets.ModelViewSet):
 
 
 class CommentList(viewsets.ModelViewSet):
+
+
+    @action(detail=False)
+    def comments_by_meme(self, request):
+        meme_id_ = int(request.GET.get("meme", ""))
+        print(meme_id_)
+        comments_by_meme = Comment.objects.filter(meme_id=meme_id_).order_by('-created').values()
+        return Response(comments_by_meme)
+
+
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 

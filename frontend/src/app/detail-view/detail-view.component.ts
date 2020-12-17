@@ -15,6 +15,9 @@ import {ObjectRecognitionService, Prediction} from '../services/object-recogniti
 import {MatChipsModule} from '@angular/material/chips';
 import {delay} from 'rxjs/operators';
 import {Observable} from 'rxjs';
+import {User} from "../User";
+import {Comment} from '../Comment';
+import {FormControl} from "@angular/forms";
 
 
 @Component({
@@ -25,13 +28,14 @@ import {Observable} from 'rxjs';
 export class DetailViewComponent implements OnInit {
   public meme: Meme;
   selectedId: number;
-  comments: any;
+  comments: Comment[];
+  commentText = new FormControl('');
+
   public predictions: Prediction[];
 
   // tslint:disable-next-line:max-line-length
   constructor(private memeService: MemeService, private route: ActivatedRoute, private snackBar: MatSnackBar, private predictionService: ObjectRecognitionService, private router: Router) {
     this.meme = new Meme();
-
   }
 
   ngOnInit(): void {
@@ -39,6 +43,7 @@ export class DetailViewComponent implements OnInit {
     this.route.params.subscribe(params => {
       const memeId = Number(this.route.snapshot.paramMap.get('id'));
       this.loadMeme(memeId);
+
     });
   }
 
@@ -53,6 +58,25 @@ export class DetailViewComponent implements OnInit {
       this.meme.downvotes = data.downvotes;
       this.meme.owner = data.owner;
       this.getImageContent(data.image_string);
+      this.loadComments();
+    });
+
+  }
+
+
+  loadComments(): void{
+
+    this.comments = [];
+
+    this.memeService.loadComments(String(this.meme.id)).subscribe(data => {
+      data.forEach( value => {
+        console.log(value);
+        const comment = new Comment();
+        comment.text = value.text;
+        comment.created = value.created;
+        this.comments.push(comment);
+      });
+
     });
   }
 
@@ -65,8 +89,15 @@ export class DetailViewComponent implements OnInit {
 
   }
 
-  postComment(): void {
-    this.openSnackBar('Comment posted', 'Dismiss');
+  async postComment(): Promise<void> {
+    console.log(this.commentText.value);
+    this.memeService.postComment(String(this.meme.id), this.commentText.value).subscribe(data => {
+      console.log(data);
+      this.openSnackBar('Comment posted', 'Dismiss');
+      this.loadComments();
+
+    });
+
 
   }
 

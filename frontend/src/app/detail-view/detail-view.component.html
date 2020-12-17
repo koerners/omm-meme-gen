@@ -70,13 +70,13 @@
           <mat-list>
             <mat-form-field appearance="fill" style="width: 100%">
               <mat-label>Write a comment</mat-label>
-              <textarea matInput></textarea>
+              <textarea matInput [formControl]="commentText"></textarea>
               <button (click)="postComment()" color="primary" mat-raised-button
                       type="button">Comment
               </button>
             </mat-form-field>
 
-            <mat-list-item *ngFor="let comment of comments">{{comment.text}}</mat-list-item>
+            <mat-list-item *ngFor="let comment of comments">{{comment.text}} - <i>{{comment.created | date}}</i></mat-list-item>
             <mat-divider></mat-divider>
 
           </mat-list>

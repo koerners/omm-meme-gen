@@ -33,8 +33,7 @@ class MemeSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-
-        fields = ['meme', 'text', 'owner']
+        fields = ['meme', 'text', 'owner', 'created']
 
     owner = serializers.ReadOnlyField(source='owner.username')
 
