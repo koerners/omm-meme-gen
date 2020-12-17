@@ -52,6 +52,6 @@ export class LoginService {
   }
 
   private getUserInfo(): any {
-    return this.http.get(environment.apiUrl + '/self/');
+    return this.http.get(environment.apiUrl + '/users/self/');
   }
 }

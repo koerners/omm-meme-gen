@@ -15,6 +15,9 @@ import {ObjectRecognitionService, Prediction} from '../services/object-recogniti
 import {MatChipsModule} from '@angular/material/chips';
 import {delay} from 'rxjs/operators';
 import {Observable} from 'rxjs';
+import {User} from '../User';
+import {Comment} from '../Comment';
+import {FormControl} from '@angular/forms';
 
 
 @Component({
@@ -25,13 +28,14 @@ import {Observable} from 'rxjs';
 export class DetailViewComponent implements OnInit {
   public meme: Meme;
   selectedId: number;
-  comments: any;
+  comments: Comment[];
+  commentText = new FormControl('');
+
   public predictions: Prediction[];
 
   // tslint:disable-next-line:max-line-length
   constructor(private memeService: MemeService, private route: ActivatedRoute, private snackBar: MatSnackBar, private predictionService: ObjectRecognitionService, private router: Router) {
     this.meme = new Meme();
-
   }
 
   ngOnInit(): void {
@@ -39,6 +43,7 @@ export class DetailViewComponent implements OnInit {
     this.route.params.subscribe(params => {
       const memeId = Number(this.route.snapshot.paramMap.get('id'));
       this.loadMeme(memeId);
+
     });
   }
 
@@ -53,20 +58,67 @@ export class DetailViewComponent implements OnInit {
       this.meme.downvotes = data.downvotes;
       this.meme.owner = data.owner;
       this.getImageContent(data.image_string);
+      this.loadComments();
+      this.loadVotes();
+    });
+
+  }
+
+
+  loadComments(): void {
+
+    this.comments = [];
+
+    this.memeService.loadComments(String(this.meme.id)).subscribe(data => {
+      data.forEach(value => {
+        const comment = new Comment();
+        comment.text = value.text;
+        comment.created = value.created;
+        comment.owner = value.owner;
+        this.comments.push(comment);
+      });
+
+    });
+  }
+
+  loadVotes(): void {
+    this.memeService.loadVotes(String(this.meme.id)).subscribe(data => {
+      this.meme.upvotes = data.upvotes;
+      this.meme.downvotes = data.downvotes;
+      this.meme.liked = data.liked;
+      this.meme.voted = data.voted;
     });
   }
 
   upvote(): void {
-    this.openSnackBar('Meme upvoted', 'Dismiss');
+
+    this.memeService.vote(String(this.meme.id), true).subscribe(data => {
+      this.openSnackBar('Meme upvoted', 'Dismiss');
+      this.loadVotes();
+
+    });
+
   }
 
   downvote(): void {
-    this.openSnackBar('Meme downvoted', 'Dismiss');
+    this.memeService.vote(String(this.meme.id), false).subscribe(data => {
+      this.openSnackBar('Meme downvoted', 'Dismiss');
+      this.loadVotes();
+
+    });
+
 
   }
 
-  postComment(): void {
-    this.openSnackBar('Comment posted', 'Dismiss');
+  async postComment(): Promise<void> {
+    console.log(this.commentText.value);
+    this.memeService.postComment(String(this.meme.id), this.commentText.value).subscribe(data => {
+      console.log(data);
+      this.openSnackBar('Comment posted', 'Dismiss');
+      this.loadComments();
+
+    });
+
 
   }
 
@@ -92,5 +144,13 @@ export class DetailViewComponent implements OnInit {
   prevImage(): void {
     this.router.navigate(['/meme/' + String(Number(this.meme.id) - 1)]);
 
+  }
+
+  downloadCanvas(): void {
+    const link = document.createElement('a');
+    link.href = this.meme.imageString;
+    link.download = this.meme.title + '.jpg';
+    document.body.appendChild(link);
+    link.click();
   }
 }
