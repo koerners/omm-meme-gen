@@ -149,7 +149,7 @@ export class DetailViewComponent implements OnInit {
   downloadCanvas(): void {
     const link = document.createElement('a');
     link.href = this.meme.imageString;
-    link.download = this.meme.title+ '.jpg';
+    link.download = this.meme.title + '.jpg';
     document.body.appendChild(link);
     link.click();
   }
