@@ -16,7 +16,7 @@ class Meme(models.Model):
 class Comment(models.Model):
     id = models.AutoField(primary_key=True)
     created = models.DateTimeField(auto_now_add=True)
-    writer = models.ForeignKey('auth.User', related_name='comment', on_delete=models.CASCADE)
+    owner = models.ForeignKey('auth.User', related_name='comment', on_delete=models.CASCADE)
     meme = models.ForeignKey('Meme', related_name='meme_comment', on_delete=models.CASCADE)
     text = models.CharField(max_length=9999999999, default='')
 
@@ -27,7 +27,7 @@ class Comment(models.Model):
 class Vote(models.Model):
     id = models.AutoField(primary_key=True)
     created = models.DateTimeField(auto_now_add=True)
-    voter = models.ForeignKey('auth.User', related_name='vote', on_delete=models.CASCADE)
+    owner = models.ForeignKey('auth.User', related_name='vote', on_delete=models.CASCADE)
     meme = models.ForeignKey('Meme', related_name='meme_vote', on_delete=models.CASCADE)
     upvote = models.BooleanField(default=False)
 

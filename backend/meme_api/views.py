@@ -3,58 +3,51 @@ from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 
 from meme_api.models import Meme, Comment, Vote
 from meme_api.permissions import IsOwnerOrReadOnly
-from meme_api.serializers import UserSerializer, GroupSerializer, MemeSerializer, CommentSerializer, VoteSerializer
-
+from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
+
+    @action(detail=False)
+    def self(self, request):
+        user = request.user
+        if not user.is_anonymous:
+            return Response({
+                'id': user.id,
+                'username': user.last_name,
+                'email': user.email,
+            })
+        else:
+            return Response({
+                'username': "Anonymus"
+            })
+
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
     # permission_classes = [permissions.IsAuthenticated]
 
 
-@api_view(['GET'])
-def current_user(request):
-    user = request.user
-    if not user.is_anonymous:
-        return Response({
-            'id': user.id,
-            'username': user.last_name,
-            'email': user.email,
-        })
-    else:
-        return Response({
-            'username': "Anonymus"
-        })
+class MemeList(viewsets.ModelViewSet):
+    @action(detail=False)
+    def own(self, request):
+        own_memes = Meme.objects.filter(owner=request.user).order_by('-created').values()
 
+        page = self.paginate_queryset(own_memes)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-@api_view(['GET'])
-def user_memes(request):
-    user = request.user
-    data = Meme.objects.filter(owner=user).order_by('-created').values()
-    print(data)
+        serializer = self.get_serializer(own_memes, many=True)
+        return Response(serializer.data)
 
-    return JsonResponse(list(data), safe=False)
-
-
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class MemeList(generics.ListCreateAPIView):
     queryset = Meme.objects.all()
     serializer_class = MemeSerializer
 
@@ -64,42 +57,21 @@ class MemeList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
-class CommentList(generics.ListCreateAPIView):
+class CommentList(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
     def perform_create(self, serializer):
-        serializer.save(writer=self.request.user)
+        serializer.save(owner=self.request.user)
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
-class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-
-
-class VoteList(generics.ListCreateAPIView):
+class VoteList(viewsets.ModelViewSet):
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
 
     def perform_create(self, serializer):
-        serializer.save(voter=self.request.user)
-
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-
-
-class VoteDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Vote.objects.all()
-    serializer_class = VoteSerializer
-
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-
-
-class MemeDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Meme.objects.all()
-    serializer_class = MemeSerializer
+        serializer.save(owner=self.request.user)
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
