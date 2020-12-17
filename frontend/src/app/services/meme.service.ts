@@ -37,4 +37,14 @@ export class MemeService {
     });
   }
 
+  vote(id: string, upvoteIn: boolean): any {
+    return this.http.post(environment.apiUrl + '/vote/', {
+      meme: id,
+      upvote: upvoteIn
+    });
+  }
+
+  loadVotes(id: string): any {
+    return this.http.get(environment.apiUrl + '/vote/votes_by_meme/?meme=' + String(id));
+  }
 }

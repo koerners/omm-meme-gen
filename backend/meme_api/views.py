@@ -59,12 +59,13 @@ class MemeList(viewsets.ModelViewSet):
 
 class CommentList(viewsets.ModelViewSet):
 
-
     @action(detail=False)
     def comments_by_meme(self, request):
         meme_id_ = int(request.GET.get("meme", ""))
         print(meme_id_)
         comments_by_meme = Comment.objects.filter(meme_id=meme_id_).order_by('-created').values()
+        for comment in comments_by_meme:
+            comment['owner'] = User.objects.filter(id=comment['owner_id'])[0].last_name
         return Response(comments_by_meme)
 
 
@@ -78,6 +79,27 @@ class CommentList(viewsets.ModelViewSet):
 
 
 class VoteList(viewsets.ModelViewSet):
+    @action(detail=False)
+    def votes_by_meme(self, request):
+        meme_id_ = int(request.GET.get("meme", ""))
+        print(meme_id_)
+        upvotes = len(Vote.objects.filter(meme_id=meme_id_, upvote=True))
+        downvotes = len(Vote.objects.filter(meme_id=meme_id_, upvote=False))
+        voted = False
+        liked = False
+        own_vote = Vote.objects.filter(owner=request.user, meme_id=meme_id_)
+        print(own_vote)
+        if len(own_vote)>0:
+            voted = True
+            liked = own_vote[0].upvote
+
+        data = {"upvotes": upvotes, "downvotes": downvotes, "voted": voted, "liked": liked}
+
+
+        return Response(data)
+
+
+
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
 
