@@ -1,6 +1,6 @@
 import {AfterViewInit, Component, Input, ViewChild, ElementRef} from '@angular/core';
 import {FormControl} from '@angular/forms';
-import {fromEvent, Subject, Observable} from 'rxjs';
+import {fromEvent, Subject, Observable, pipe} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
 import {Meme} from '../Meme';
@@ -8,6 +8,7 @@ import {MemeService} from '../services/meme.service';
 import {WebcamImage, WebcamInitError} from 'ngx-webcam';
 import {MatSelectChange} from '@angular/material/select';
 import {MatButtonToggleChange, MatButtonToggleModule} from '@angular/material/button-toggle';
+import {Textbox} from '../Textbox';
 
 @Component({
   selector: 'app-generator',
@@ -24,6 +25,11 @@ export class GeneratorComponent implements AfterViewInit {
   bold = new FormControl(false);
   italic = new FormControl(false);
   underline = new FormControl(false);
+  drawingMode = false;
+  textboxes: Textbox[] = [];
+  yourText = new FormControl('Your text');
+  newTextbox: Textbox;
+  previousDrawPosition = null;
 
   colorOptions: string[] = ['#000000', '#808080', '#C0C0C0', '#FFFFFF', '#800000', '#FF0000', '#808000', '#FFFF00', '#008000', '#00FF00', '#008080', '#00FFFF', '#000080', '#0000FF', '#800080', '#FF00FF', '#795548', '#607d8b'];
   colorText: string;
@@ -36,6 +42,7 @@ export class GeneratorComponent implements AfterViewInit {
   @ViewChild('previewBackground', {static: false}) backgroundCanvas;
   @ViewChild('previewFile', {static: false}) fileCanvas;
   @ViewChild('previewText', {static: false}) textCanvas;
+  @ViewChild('previewTextbox', {static: false}) textboxCanvas;
   @ViewChild('previewDraw', {static: false}) drawCanvas;
   @Input() public width = 600;
   @Input() public height = 700;
@@ -76,6 +83,10 @@ export class GeneratorComponent implements AfterViewInit {
     const canvasTextEl: HTMLCanvasElement = this.textCanvas.nativeElement;
     canvasTextEl.width = this.width;
     canvasTextEl.height = this.height;
+
+    const canvasTextboxEl: HTMLCanvasElement = this.textboxCanvas.nativeElement;
+    canvasTextboxEl.width = this.width;
+    canvasTextboxEl.height = this.height;
 
     const canvasDrawEl: HTMLCanvasElement = this.drawCanvas.nativeElement;
     const canvasDrawCtx = canvasDrawEl.getContext('2d');
@@ -136,6 +147,81 @@ export class GeneratorComponent implements AfterViewInit {
       const {width} = ctx.measureText(this.textBottom.value);
       ctx.fillRect((canvas.width / 2 - width / 2), this.height - 50, width, this.fontSize.value / 10);
     }
+
+    this.textboxes.forEach((textbox) => {
+      const textMetrics = ctx.measureText(textbox.formControl.value);
+      const width = textMetrics.width;
+      const baseline = textMetrics.actualBoundingBoxAscent;
+
+      ctx.fillText(textbox.formControl.value, textbox.xPos, textbox.yPos + baseline / 2);
+      // this is to underline the text since there seem to be no text-decorations in canvas
+      if (this.underline.value) {
+        ctx.fillRect((textbox.xPos - width / 2), (textbox.yPos + baseline / 2),
+          width, this.fontSize.value / 10);
+      }
+    });
+  }
+
+  drawNewTextbox(): void {
+    if (!this.newTextbox) {
+      return;
+    }
+
+    const ctx = this.textboxCanvas.nativeElement.getContext('2d');
+    ctx.clearRect(0, 0, this.width, this.height);
+    ctx.fillStyle = this.colorText;
+    ctx.font = this.getFontStyle();
+    ctx.textAlign = 'center';
+
+    const textMetrics = ctx.measureText(this.newTextbox.formControl.value);
+    const width = textMetrics.width;
+    const baseline = textMetrics.actualBoundingBoxAscent;
+
+    ctx.fillText(this.newTextbox.formControl.value, this.newTextbox.xPos,
+      this.newTextbox.yPos + baseline / 2);
+    // this is to underline the text since there seem to be no text-decorations in canvas
+    if (this.underline.value) {
+      ctx.fillRect((this.newTextbox.xPos - width / 2), (this.newTextbox.yPos + baseline / 2),
+        width, this.fontSize.value / 10);
+    }
+  }
+
+  createNewTextbox(): void {
+    this.drawingMode = false;
+
+    const canvas = this.textboxCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = this.colorText;
+    ctx.font = this.getFontStyle();
+    ctx.textAlign = 'center';
+
+    const textMetrics = ctx.measureText(this.yourText.value);
+    const width = textMetrics.width;
+    const baseline = textMetrics.actualBoundingBoxAscent;
+
+    this.newTextbox = new Textbox(this.yourText.value, null, null);
+  }
+
+  textboxChanged(): void {
+    this.textChanged();
+  }
+
+  deleteTextbox(textbox: Textbox): void {
+    this.newTextbox = null;
+
+    const textboxCanvasCtx = this.textboxCanvas.nativeElement.getContext('2d');
+    textboxCanvasCtx.clearRect(0, 0, this.width, this.height);
+  }
+
+  saveTextbox(textbox: Textbox): void {
+    this.textboxes.push(textbox);
+    this.newTextbox = null;
+
+    const textboxCanvasCtx = this.textboxCanvas.nativeElement.getContext('2d');
+    textboxCanvasCtx.clearRect(0, 0, this.width, this.height);
+
+    this.textChanged();
   }
 
   getFontStyle(): string {
@@ -155,16 +241,19 @@ export class GeneratorComponent implements AfterViewInit {
     boldButtonClicked(e: MatButtonToggleChange): void {
       this.bold.setValue(!this.bold.value);
       this.textChanged();
+      this.drawNewTextbox();
     }
 
     italicButtonClicked(e: MatButtonToggleChange): void {
       this.italic.setValue(!this.italic.value);
       this.textChanged();
+      this.drawNewTextbox();
     }
 
     underlineButtonClicked(e: MatButtonToggleChange): void {
       this.underline.setValue(!this.underline.value);
       this.textChanged();
+      this.drawNewTextbox();
     }
 
   clearCanvas(): void {
@@ -182,9 +271,15 @@ export class GeneratorComponent implements AfterViewInit {
     ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, this.height);
 
+    canvas = this.textboxCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, this.height);
+
     canvas = this.drawCanvas.nativeElement;
     ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, this.height);
+
+    this.newTextbox = null;
   }
 
   downloadCanvas(): void {
@@ -216,41 +311,47 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   private captureEvents(canvasEl: HTMLCanvasElement): void {
-    // this will capture all mousedown events from the canvas element
-    fromEvent(canvasEl, 'mousedown')
-      .pipe(
-        switchMap((e) => {
-          // after a mouse down, we'll record all mouse moves
-          return fromEvent(canvasEl, 'mousemove')
-            .pipe(
-              // we'll stop (and unsubscribe) once the user releases the mouse
-              // this will trigger a 'mouseup' event
-              takeUntil(fromEvent(canvasEl, 'mouseup')),
-              // we'll also stop (and unsubscribe) once the mouse leaves the canvas (mouseleave event)
-              takeUntil(fromEvent(canvasEl, 'mouseleave')),
-              // pairwise lets us get the previous value to draw a line from
-              // the previous point to the current point
-              pairwise()
-            );
-        })
-      )
-      .subscribe((res: [MouseEvent, MouseEvent]) => {
-        const rect = canvasEl.getBoundingClientRect();
+    fromEvent(canvasEl, 'mousemove').subscribe((res: MouseEvent) => {
+      const rect = canvasEl.getBoundingClientRect();
 
-        // previous and current position with the offset
-        const prevPos = {
-          x: res[0].clientX - rect.left,
-          y: res[0].clientY - rect.top
-        };
+      const currentPos = {
+        x: res.clientX - rect.left,
+        y: res.clientY - rect.top
+      };
 
-        const currentPos = {
-          x: res[1].clientX - rect.left,
-          y: res[1].clientY - rect.top
-        };
+      if (this.drawingMode) {
+        this.drawOnCanvas(this.previousDrawPosition, currentPos);
 
-        // this method we'll implement soon to do the actual drawing
-        this.drawOnCanvas(prevPos, currentPos);
-      });
+        this.previousDrawPosition = currentPos;
+      } else if (this.newTextbox && !this.newTextbox.fixedPosition) {
+        this.newTextbox.xPos = currentPos.x;
+        this.newTextbox.yPos = currentPos.y;
+        this.drawNewTextbox();
+      }
+    });
+    fromEvent(canvasEl, 'mousedown').subscribe((res: MouseEvent) => {
+      const rect = canvasEl.getBoundingClientRect();
+
+      const currentPos = {
+        x: res.clientX - rect.left,
+        y: res.clientY - rect.top
+      };
+
+      if (!this.newTextbox) {
+        this.drawingMode = true;
+
+        this.previousDrawPosition = currentPos;
+      } else if (!this.newTextbox.fixedPosition) {
+        this.newTextbox.fixedPosition = true;
+        this.newTextbox.xPos = currentPos.x;
+        this.newTextbox.yPos = currentPos.y;
+        this.drawNewTextbox();
+      }
+    });
+    fromEvent(canvasEl, 'mouseup').subscribe((res: MouseEvent) => {
+      this.drawingMode = false;
+      this.previousDrawPosition = null;
+    });
   }
 
   private drawOnCanvas(prevPos: { x: number, y: number }, currentPos: { x: number, y: number }): void {
@@ -348,5 +449,3 @@ export class GeneratorComponent implements AfterViewInit {
 
   }
 }
-
-
