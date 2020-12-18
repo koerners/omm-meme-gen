@@ -9,4 +9,6 @@ export class Meme {
   title: string;
   upvotes: number;
   downvotes: number;
+  liked: boolean;
+  voted: boolean;
 }
