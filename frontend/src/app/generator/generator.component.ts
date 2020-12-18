@@ -160,6 +160,8 @@ export class GeneratorComponent implements AfterViewInit {
           width, this.fontSize.value / 10);
       }
     });
+
+    this.drawNewTextbox();
   }
 
   drawNewTextbox(): void {
@@ -241,19 +243,16 @@ export class GeneratorComponent implements AfterViewInit {
     boldButtonClicked(e: MatButtonToggleChange): void {
       this.bold.setValue(!this.bold.value);
       this.textChanged();
-      this.drawNewTextbox();
     }
 
     italicButtonClicked(e: MatButtonToggleChange): void {
       this.italic.setValue(!this.italic.value);
       this.textChanged();
-      this.drawNewTextbox();
     }
 
     underlineButtonClicked(e: MatButtonToggleChange): void {
       this.underline.setValue(!this.underline.value);
       this.textChanged();
-      this.drawNewTextbox();
     }
 
   clearCanvas(): void {
