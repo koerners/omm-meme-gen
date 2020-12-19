@@ -203,7 +203,7 @@ export class DetailViewComponent implements OnInit {
         if (this.slideshowRandom) {
           this.meme.id = this.availableMemes[Math.floor(Math.random() * this.availableMemes.length)].id;
         }
-          this.nextImage();
+        this.nextImage();
       });
 
     }
