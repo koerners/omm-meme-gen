@@ -5,6 +5,7 @@ import {DashboardComponent} from './dashboard/dashboard.component';
 import {GeneratorComponent} from './generator/generator.component';
 import {RegisterComponent} from './register/register.component';
 import {DetailViewComponent} from './detail-view/detail-view.component';
+import {MyMemesComponent} from './my-memes/my-memes.component';
 
 
 const routes: Routes = [
@@ -13,6 +14,7 @@ const routes: Routes = [
   {path: 'generator', component: GeneratorComponent},
   {path: 'register', component: RegisterComponent},
   {path: 'meme/:id', component: DetailViewComponent},
+  {path: 'memes', component: MyMemesComponent},
 ];
 
 @NgModule({
