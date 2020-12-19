@@ -1,8 +1,8 @@
 import {Component, OnInit} from '@angular/core';
-import {BreakpointObserver} from "@angular/cdk/layout";
-import {MemeService} from "../services/meme.service";
-import {Meme} from "../Meme";
-import {PageEvent} from "@angular/material/paginator";
+import {BreakpointObserver} from '@angular/cdk/layout';
+import {MemeService} from '../services/meme.service';
+import {Meme} from '../Meme';
+import {PageEvent} from '@angular/material/paginator';
 import { MatTabChangeEvent } from '@angular/material/tabs';
 
 @Component({
