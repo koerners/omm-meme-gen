@@ -16,7 +16,7 @@ export class MemeService {
   saveMeme(meme: Meme): void {
     this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,
-      image_string: meme.imageString
+      image_string: meme.imageString, private: meme.private
     }).subscribe(data => {
       console.log(data);
     });
@@ -24,6 +24,10 @@ export class MemeService {
 
   loadMeme(id: string): any {
     return this.http.get(environment.apiUrl + '/meme/' + String(id) + '/');
+  }
+
+  availableMemeIds(): any {
+    return this.http.get(environment.apiUrl + '/meme/availableMemes/');
   }
 
   loadComments(id: string): any {

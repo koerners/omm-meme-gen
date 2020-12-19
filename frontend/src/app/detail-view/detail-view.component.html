@@ -94,14 +94,14 @@
     <mat-grid-tile colspan="1" rowspan="2">
 
     </mat-grid-tile>
-    <mat-grid-tile colspan="5" rowspan="1">
+    <mat-grid-tile colspan="3" rowspan="1">
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
             Details
           </mat-card-title>
         </mat-card-header>
-        <mat-card-content class="dashboard-card-content" >
+        <mat-card-content class="dashboard-card-content">
 
 
           <p>Upvotes: {{meme.upvotes}}</p>
@@ -109,14 +109,60 @@
           <p>Views: {{meme.views}}</p>
           <p>Created by: {{meme.owner}}</p>
 
+        </mat-card-content>
+      </mat-card>
+
+
+    </mat-grid-tile>
+
+
+    <mat-grid-tile colspan="2" rowspan="1">
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-card-title>
+            Slideshow
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="dashboard-card-content">
+
+
+          <div style="margin-top: 20px;">
+
+            <mat-slide-toggle [(ngModel)]="slideshowRandom" [disabled]="slideShowRunning"
+            >Random order
+            </mat-slide-toggle>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <label>Speed</label>
+
+            <mat-slider
+              class="example-margin"
+              [max]=20
+              [min]=2
+              [step]=1
+              [disabled]="slideShowRunning"
+              [thumbLabel]=true
+              [(ngModel)]="slideshowspeed">
+            </mat-slider>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <button (click)="slideshow()" *ngIf="!slideShowRunning" [disabled]="slideShowRunning" color="primary"
+                    mat-raised-button
+                    type="button">Start Slideshow
+            </button>
+            <button (click)="slideshow()" *ngIf="slideShowRunning" [disabled]="!slideShowRunning" color="primary"
+                    mat-raised-button
+                    type="button">Stop Slideshow
+            </button>
+          </div>
 
         </mat-card-content>
       </mat-card>
-      <mat-grid-tile colspan="3" rowspan="2">
-
-      </mat-grid-tile>
 
     </mat-grid-tile>
+
 
   </mat-grid-list>
 </div>

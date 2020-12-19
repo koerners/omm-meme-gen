@@ -438,13 +438,23 @@ export class GeneratorComponent implements AfterViewInit {
     const image = this.createImageStringFromCanvas();
     const meme = new Meme();
     meme.imageString = image;
-    meme.private = true;
+    meme.private = false;
     meme.title = this.name.value;
     this.memeService.saveMeme(meme);
 
   }
 
   saveCanvasAsDraft(): void {
+
+  }
+
+  saveCanvasPrivate(): void {
+    const image = this.createImageStringFromCanvas();
+    const meme = new Meme();
+    meme.imageString = image;
+    meme.private = true;
+    meme.title = this.name.value;
+    this.memeService.saveMeme(meme);
 
   }
 }
