@@ -44,8 +44,9 @@
         <mat-card-content class="dashboard-card-content">
           <div>
             <canvas [hidden]="cameraOn" #previewBackground [style.background]="colorBackground" class="meme-canvas"></canvas>
-            <canvas [hidden]="cameraOn"#previewFile class="meme-canvas"></canvas>
+            <canvas [hidden]="cameraOn" #previewFile class="meme-canvas"></canvas>
             <canvas [hidden]="cameraOn" #previewText class="meme-canvas"></canvas>
+            <canvas [hidden]="cameraOn" #previewTextbox class="meme-canvas"></canvas>
             <canvas [hidden]="cameraOn" #previewDraw class="meme-canvas"></canvas>
           </div>
 
@@ -68,7 +69,7 @@
 
       </mat-card>
     </mat-grid-tile>
-    <mat-grid-tile colspan="6" rowspan="2">
+    <mat-grid-tile colspan="6" rowspan="3">
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
@@ -100,7 +101,26 @@
               </mat-grid-tile>
             </mat-grid-list>
 
-
+            <mat-grid-list [rowHeight]="75" cols="3">
+              <mat-grid-tile aria-colspan="1" aria-rowspan="1">
+                <button (click)="createNewTextbox()">New Textbox</button>
+              </mat-grid-tile>
+              <mat-grid-tile colspan="2" rowspan="1">
+                <mat-nav-list *ngIf="newTextbox">
+                  <mat-list-item>
+                    <mat-form-field class="example-form-field">
+                      <mat-label>Your Text</mat-label>
+                      <input (keyup)="textboxChanged()" (change)="textboxChanged()" [formControl]="newTextbox.formControl" matInput type="text">
+                    </mat-form-field>
+                    <div *ngIf="newTextbox.xPos">
+                      <button (click)="deleteTextbox(newTextbox)">DELETE</button>
+                      <button (click)="saveTextbox(newTextbox)">SAVE</button>
+                    </div>
+                    <div *ngIf="!newTextbox.xPos">Place in Canvas</div>
+                  </mat-list-item>
+                </mat-nav-list>
+              </mat-grid-tile>
+            </mat-grid-list>
 
             <mat-grid-list [rowHeight]="75" cols="3">
               <mat-grid-tile colspan="1" rowspan="3">
