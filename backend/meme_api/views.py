@@ -3,12 +3,14 @@ from django.http import JsonResponse
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework import viewsets
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
 
 from meme_api.models import Meme, Comment, Vote
-from meme_api.permissions import IsOwnerOrReadOnly
+from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer
+
+from django.db.models import Q
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -16,7 +18,7 @@ class UserViewSet(viewsets.ModelViewSet):
     API endpoint that allows users to be viewed or edited.
     """
 
-    @action(detail=False)
+    @action(detail=False, permission_classes=[permissions.IsAuthenticated])
     def self(self, request):
         user = request.user
         if not user.is_anonymous:
@@ -32,7 +34,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrCreateOnly]
 
 
 class MemeList(viewsets.ModelViewSet):
@@ -48,11 +50,35 @@ class MemeList(viewsets.ModelViewSet):
         serializer = self.get_serializer(own_memes, many=True)
         return Response(serializer.data)
 
-    queryset = Meme.objects.all()
-    serializer_class = MemeSerializer
+    @action(detail=False)
+    def availableMemes(self, request):
+        available = Meme.objects.filter(Q(owner=request.user) | Q(private=False)).order_by('-created').values('id')
+
+        serializer = self.get_serializer(available, many=True)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def list(self, request):
+        queryset = Meme.objects.filter(private=False)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.views = obj.views + 1
+        obj.save(update_fields=("views",))
+        return super().retrieve(request, *args, **kwargs)
+
+    queryset = Meme.objects.all()
+    serializer_class = MemeSerializer
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
@@ -67,7 +93,6 @@ class CommentList(viewsets.ModelViewSet):
         for comment in comments_by_meme:
             comment['owner'] = User.objects.filter(id=comment['owner_id'])[0].last_name
         return Response(comments_by_meme)
-
 
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -89,16 +114,13 @@ class VoteList(viewsets.ModelViewSet):
         liked = False
         own_vote = Vote.objects.filter(owner=request.user, meme_id=meme_id_)
         print(own_vote)
-        if len(own_vote)>0:
+        if len(own_vote) > 0:
             voted = True
             liked = own_vote[0].upvote
 
         data = {"upvotes": upvotes, "downvotes": downvotes, "voted": voted, "liked": liked}
 
-
         return Response(data)
-
-
 
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer

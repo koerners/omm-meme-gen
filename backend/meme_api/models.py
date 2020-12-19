@@ -8,6 +8,7 @@ class Meme(models.Model):
     owner = models.ForeignKey('auth.User', related_name='meme', on_delete=models.CASCADE)
     image_string = models.CharField(max_length=9999999999999999999, default='')
     views = models.IntegerField(default=0)
+    private = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['created']

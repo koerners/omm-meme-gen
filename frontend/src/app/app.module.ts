@@ -38,6 +38,8 @@ import {MemeService} from './services/meme.service';
 import { DetailViewComponent } from './detail-view/detail-view.component';
 import {ObjectRecognitionService} from './services/object-recognition-service';
 import {MatTableModule} from '@angular/material/table';
+import {MatSliderModule} from '@angular/material/slider';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 
 @NgModule({
   declarations: [
@@ -74,7 +76,9 @@ import {MatTableModule} from '@angular/material/table';
     MatSnackBarModule,
     MatTableModule,
     MatChipsModule,
-    WebcamModule
+    WebcamModule,
+    MatSliderModule,
+    MatSlideToggleModule
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},

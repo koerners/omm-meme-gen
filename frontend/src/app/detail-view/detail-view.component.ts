@@ -18,7 +18,7 @@ import {Observable} from 'rxjs';
 import {User} from '../User';
 import {Comment} from '../Comment';
 import {FormControl} from '@angular/forms';
-
+import {interval, Subscription} from 'rxjs';
 
 @Component({
   selector: 'app-detail-view',
@@ -30,8 +30,14 @@ export class DetailViewComponent implements OnInit {
   selectedId: number;
   comments: Comment[];
   commentText = new FormControl('');
-
+  availableMemes: Meme[];
+  slideShowRunning: boolean;
   public predictions: Prediction[];
+
+  // tslint:disable-next-line:max-line-length
+  slideshowspeed = 4;
+  slideshowRandom: boolean;
+  private subscription: Subscription;
 
   // tslint:disable-next-line:max-line-length
   constructor(private memeService: MemeService, private route: ActivatedRoute, private snackBar: MatSnackBar, private predictionService: ObjectRecognitionService, private router: Router) {
@@ -45,6 +51,10 @@ export class DetailViewComponent implements OnInit {
       this.loadMeme(memeId);
 
     });
+
+    this.memeService.availableMemeIds().subscribe(data => {
+      this.availableMemes = data.reverse();
+    });
   }
 
   loadMeme(memeId: number): void {
@@ -57,6 +67,7 @@ export class DetailViewComponent implements OnInit {
       this.meme.upvotes = data.upvotes;
       this.meme.downvotes = data.downvotes;
       this.meme.owner = data.owner;
+      this.meme.views = data.views;
       this.getImageContent(data.image_string);
       this.loadComments();
       this.loadVotes();
@@ -136,13 +147,39 @@ export class DetailViewComponent implements OnInit {
   }
 
 
+  getNextMemeId(next: boolean): Meme {
+
+    for (let i = 0; i < this.availableMemes.length; i++) {
+      if (this.availableMemes[i].id === this.meme.id) {
+        if (next) {
+          if ((i + 1) < this.availableMemes.length) {
+            return this.availableMemes[i + 1];
+          } else {
+
+            return this.availableMemes[0];
+          }
+        } else {
+          if ((i - 1) >= 0) {
+            return this.availableMemes[i - 1];
+          } else {
+            return this.availableMemes[this.availableMemes.length - 1];
+          }
+        }
+
+      }
+    }
+    return this.availableMemes[0];
+
+  }
+
+
   nextImage(): void {
-    console.log(this.meme);
-    this.router.navigate(['/meme/' + String(Number(this.meme.id) + 1)]);
+
+    this.router.navigate(['/meme/' + String(this.getNextMemeId(true).id)]);
   }
 
   prevImage(): void {
-    this.router.navigate(['/meme/' + String(Number(this.meme.id) - 1)]);
+    this.router.navigate(['/meme/' + String(this.getNextMemeId(false).id)]);
 
   }
 
@@ -152,5 +189,23 @@ export class DetailViewComponent implements OnInit {
     link.download = this.meme.title + '.jpg';
     document.body.appendChild(link);
     link.click();
+  }
+
+  slideshow(): void {
+    if (this.slideShowRunning) {
+      this.slideShowRunning = false;
+      this.subscription.unsubscribe();
+    } else {
+      this.slideShowRunning = true;
+      console.log(this.slideshowspeed, this.slideshowRandom);
+      const source = interval(this.slideshowspeed * 1000);
+      this.subscription = source.subscribe(val => {
+        if (this.slideshowRandom) {
+          this.meme.id = this.availableMemes[Math.floor(Math.random() * this.availableMemes.length)].id;
+        }
+        this.nextImage();
+      });
+
+    }
   }
 }
