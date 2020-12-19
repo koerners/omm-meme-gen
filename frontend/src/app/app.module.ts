@@ -40,6 +40,9 @@ import {ObjectRecognitionService} from './services/object-recognition-service';
 import {MatTableModule} from '@angular/material/table';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import { MyMemesComponent } from './my-memes/my-memes.component';
+import {MatTabsModule} from '@angular/material/tabs';
+import {MatPaginatorModule} from '@angular/material/paginator';
 
 @NgModule({
   declarations: [
@@ -50,6 +53,7 @@ import {MatSlideToggleModule} from '@angular/material/slide-toggle';
     ErrorDialogComponent,
     RegisterComponent,
     DetailViewComponent,
+    MyMemesComponent,
   ],
   imports: [
     BrowserModule,
@@ -78,7 +82,9 @@ import {MatSlideToggleModule} from '@angular/material/slide-toggle';
     MatChipsModule,
     WebcamModule,
     MatSliderModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatTabsModule,
+    MatPaginatorModule
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},

@@ -4,10 +4,10 @@
 
 .dashboard-card {
   position: absolute;
-  top: 15px;
-  left: 15px;
-  right: 15px;
-  bottom: 15px;
+  top: 10%;
+  left: 10%;
+  right: 10%;
+  bottom: 10%;
 }
 
 .more-button {
@@ -19,4 +19,3 @@
 .dashboard-card-content {
   text-align: center;
 }
-

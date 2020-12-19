@@ -13,6 +13,14 @@ export class MemeService {
     return this.http.get(environment.apiUrl + '/meme/');
   }
 
+  paginator(url: string): any {
+    return this.http.get(url + '');
+  }
+
+  getOwn(): any {
+    return this.http.get(environment.apiUrl + '/meme/own/');
+  }
+
   saveMeme(meme: Meme): void {
     this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,

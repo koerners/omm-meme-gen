@@ -1,0 +1,53 @@
+
+<mat-paginator
+  [length]=memeLength
+  [pageSize]=6
+  (page)="pageEvent = getData($event)">
+</mat-paginator>
+<mat-tab-group mat-align-tabs="center" (selectedTabChange)="onTabChanged($event);">
+  <mat-tab label="Other's Memes">
+
+    <div class="grid-container">
+      <mat-grid-list cols="2" rowHeight="350px">
+        <mat-grid-tile *ngFor="let meme of this.allMemes" [colspan]="1" [rowspan]="3">
+          <mat-card class="dashboard-card" routerLink = "/meme/{{meme.id}}" style="cursor: pointer;">
+            <mat-card-header>
+              <mat-card-title>
+                {{meme.title}}
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content class="dashboard-card-content">
+              <img [src]="meme.image_string" alt="Loading">
+            </mat-card-content>
+          </mat-card>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </div>
+
+
+
+  </mat-tab>
+
+  <mat-tab label="My Memes">
+    <div class="grid-container">
+      <mat-grid-list cols="2" rowHeight="350px">
+        <mat-grid-tile *ngFor="let meme of allMemes" [colspan]="1" [rowspan]="3">
+          <mat-card class="dashboard-card" routerLink = "/meme/{{meme.id}}" style="cursor: pointer;">
+            <mat-card-header>
+              <mat-card-title>
+                {{meme.title}}
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content class="dashboard-card-content">
+              <img [src]="meme.image_string" alt="Loading">
+            </mat-card-content>
+          </mat-card>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </div>
+
+
+
+  </mat-tab>
+
+</mat-tab-group>
