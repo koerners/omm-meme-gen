@@ -54,6 +54,12 @@ class MemeList(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def retrieve(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.views = obj.views + 1
+        obj.save(update_fields=("views",))
+        return super().retrieve(request, *args, **kwargs)
+
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
@@ -67,7 +73,6 @@ class CommentList(viewsets.ModelViewSet):
         for comment in comments_by_meme:
             comment['owner'] = User.objects.filter(id=comment['owner_id'])[0].last_name
         return Response(comments_by_meme)
-
 
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -89,16 +94,13 @@ class VoteList(viewsets.ModelViewSet):
         liked = False
         own_vote = Vote.objects.filter(owner=request.user, meme_id=meme_id_)
         print(own_vote)
-        if len(own_vote)>0:
+        if len(own_vote) > 0:
             voted = True
             liked = own_vote[0].upvote
 
         data = {"upvotes": upvotes, "downvotes": downvotes, "voted": voted, "liked": liked}
 
-
         return Response(data)
-
-
 
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer

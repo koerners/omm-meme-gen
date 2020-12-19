@@ -101,20 +101,15 @@
             Details
           </mat-card-title>
         </mat-card-header>
-        <mat-card-content class="dashboard-card-content">
-          <div >
-            <h3>Created by</h3>
-            <h3>{{meme.owner}}</h3>
-          </div>
-          <div>
-            <h3>Upvotes</h3>
-            <h3>{{meme.upvotes}}</h3>
-          </div>
+        <mat-card-content class="dashboard-card-content" >
 
-          <div >
-            <h3>Downvotes</h3>
-            <h3>{{meme.downvotes}}</h3>
-          </div>
+
+          <p>Upvotes: {{meme.upvotes}}</p>
+          <p>Downvotes: {{meme.downvotes}}</p>
+          <p>Views: {{meme.views}}</p>
+          <p>Created by: {{meme.owner}}</p>
+
+
         </mat-card-content>
       </mat-card>
       <mat-grid-tile colspan="3" rowspan="2">

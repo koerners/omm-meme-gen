@@ -57,6 +57,7 @@ export class DetailViewComponent implements OnInit {
       this.meme.upvotes = data.upvotes;
       this.meme.downvotes = data.downvotes;
       this.meme.owner = data.owner;
+      this.meme.views = data.views;
       this.getImageContent(data.image_string);
       this.loadComments();
       this.loadVotes();

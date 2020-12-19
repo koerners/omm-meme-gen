@@ -11,4 +11,5 @@ export class Meme {
   downvotes: number;
   liked: boolean;
   voted: boolean;
+  views: number;
 }
