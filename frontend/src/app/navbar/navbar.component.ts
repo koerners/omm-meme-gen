@@ -4,6 +4,7 @@ import {Observable} from 'rxjs';
 import {map, shareReplay} from 'rxjs/operators';
 import {LoginService} from '../services/login.service';
 import {User} from '../User';
+import {environment} from '../../environments/environment';
 
 @Component({
   selector: 'app-navbar',
@@ -20,6 +21,7 @@ export class NavbarComponent {
   title = 'Meme Generator';
   isLoggedIn = false;
   loggedOnUser: User;
+  adminUrl = environment.apiUrl + '/admin';
 
   constructor(private breakpointObserver: BreakpointObserver, private loginService: LoginService) {
     if (localStorage.getItem('access') !== null) {

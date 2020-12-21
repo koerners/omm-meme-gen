@@ -10,6 +10,7 @@ class Meme(models.Model):
     views = models.IntegerField(default=0)
     private = models.BooleanField(default=False)
 
+
     class Meta:
         ordering = ['created']
 
@@ -20,6 +21,7 @@ class Comment(models.Model):
     owner = models.ForeignKey('auth.User', related_name='comment', on_delete=models.CASCADE)
     meme = models.ForeignKey('Meme', related_name='meme_comment', on_delete=models.CASCADE)
     text = models.CharField(max_length=9999999999, default='')
+
 
     class Meta:
         ordering = ['created']
