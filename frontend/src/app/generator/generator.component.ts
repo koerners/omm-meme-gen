@@ -278,6 +278,8 @@ export class GeneratorComponent implements AfterViewInit {
     ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, this.height);
 
+    this.textboxes = [];
+
     this.newTextbox = null;
   }
 
