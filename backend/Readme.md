@@ -9,22 +9,10 @@ python manage.py makemigrations
 ````
 python manage.py migrate
 ````
-
+-Step 4: Create Admin User (optional)
+````
+python manage.py createsuperuser
+````
 
 ## Api-Doc
-Get Users / Create User
-````
-/users/
-````
-Get User / Update User
-````
-/users/<id>
-````
-Get Memes / Create Meme
-````
-/memes/
-````
-Get Meme / Update Meme
-````
-/memes/<id>
-````
+Available by navigating to URL
