@@ -25,6 +25,7 @@
             ],
             "styles": [
               "./node_modules/@angular/material/prebuilt-themes/purple-green.css",
+              "./node_modules/ngx-sharebuttons/themes/circles/circles-dark-theme.scss",
               "src/styles.css"
             ],
             "scripts": []
