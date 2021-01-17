@@ -35,17 +35,20 @@ import {MatChipsModule} from '@angular/material/chips';
 import {RegisterService} from './services/register.service';
 import {WebcamModule} from 'ngx-webcam';
 import {MemeService} from './services/meme.service';
-import { DetailViewComponent } from './detail-view/detail-view.component';
+import {DetailViewComponent} from './detail-view/detail-view.component';
 import {ObjectRecognitionService} from './services/object-recognition-service';
 import {MatTableModule} from '@angular/material/table';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
-import { MyMemesComponent } from './my-memes/my-memes.component';
+import {MyMemesComponent} from './my-memes/my-memes.component';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatPaginatorModule} from '@angular/material/paginator';
+import {ShareButtonsModule} from 'ngx-sharebuttons/buttons';
+import {ShareIconsModule} from 'ngx-sharebuttons/icons';
 
 @NgModule({
   declarations: [
+
     AppComponent,
     DashboardComponent,
     NavbarComponent,
@@ -55,37 +58,39 @@ import {MatPaginatorModule} from '@angular/material/paginator';
     DetailViewComponent,
     MyMemesComponent,
   ],
-    imports: [
-        BrowserModule,
-        AppRoutingModule,
-        BrowserAnimationsModule,
-        MatToolbarModule,
-        MatButtonModule,
-        MatButtonToggleModule,
-        MatIconModule,
-        LayoutModule,
-        MatSidenavModule,
-        MatListModule,
-        MatGridListModule,
-        MatCardModule,
-        MatMenuModule,
-        ReactiveFormsModule,
-        MatInputModule,
-        FormsModule,
-        ColorCircleModule,
-        HttpClientModule,
-        MatDialogModule,
-        MatSelectModule,
-        MatRadioModule,
-        MatSnackBarModule,
-        MatTableModule,
-        MatChipsModule,
-        WebcamModule,
-        MatSliderModule,
-        MatSlideToggleModule,
-        MatTabsModule,
-        MatPaginatorModule
-    ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    BrowserAnimationsModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatIconModule,
+    LayoutModule,
+    MatSidenavModule,
+    MatListModule,
+    MatGridListModule,
+    MatCardModule,
+    MatMenuModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    FormsModule,
+    ColorCircleModule,
+    HttpClientModule,
+    MatDialogModule,
+    MatSelectModule,
+    MatRadioModule,
+    MatSnackBarModule,
+    MatTableModule,
+    MatChipsModule,
+    WebcamModule,
+    MatSliderModule,
+    MatSlideToggleModule,
+    MatTabsModule,
+    MatPaginatorModule,
+    ShareButtonsModule,
+    ShareIconsModule
+  ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},
     ErrorDialogService,
