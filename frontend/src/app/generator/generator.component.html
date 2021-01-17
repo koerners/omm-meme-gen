@@ -1,6 +1,6 @@
 <div class="grid-container">
   <h1 class="mat-h1">Dashboard</h1>
-  <mat-grid-list [rowHeight]="250" cols="10">
+  <mat-grid-list [rowHeight]=this.rowHeight cols="10">
     <mat-grid-tile colspan="6" rowspan="1">
       <mat-card class="dashboard-card">
         <mat-card-header>
@@ -9,23 +9,31 @@
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
-        <div>
-        <button mat-raised-button class="butn" id="WebcamSelect" (click)="loadFromWebcam()">Open Webcam for taking an Image</button>
+          <div>
+            <button mat-raised-button class="butn" id="TemplatesSelect" (click)="reloadAndShowMemeTemplates()">Reload Meme Templates</button>
 
-          <input #file hidden (change)=" selectFile($event)" accept="image/*" type="file">
-          <button mat-raised-button class="butn" id="fileSelect" (click)="file.click()">Upload an Image</button>
+            <button mat-raised-button class="butn" id="WebcamSelect" (click)="loadFromWebcam()">Open Webcam for taking an Image</button>
 
-          <button mat-raised-button class="butn" id="URLSelect" (click)="loadFromURL()">Load an image from an URL</button>
+            <input #file hidden (change)=" selectFile($event)" accept="image/*" type="file">
+            <button mat-raised-button class="butn" id="fileSelect" (click)="file.click()">Upload an Image</button>
 
-        <button mat-raised-button class="butn" id="ScreenshotSelect" (click)="loadScreenshotOfURL()">Upload Screenshot from URL</button>
+            <button mat-raised-button class="butn" id="URLSelect" (click)="loadFromURL()">Load an image from an URL</button>
 
-        <button mat-raised-button class="butn" id="LoadFromAPI" (click)="loadFromAPI()">Load Random Image from IMGFlip</button>
-        </div>
+            <button mat-raised-button class="butn" id="ScreenshotSelect" (click)="loadScreenshotOfURL()">Upload Screenshot from URL</button>
+
+            <button mat-raised-button class="butn" id="LoadFromAPI" (click)="loadFromAPI()">Load Random Image from IMGFlip</button>
+          </div>
+          <div class="memeTemplatesCycle">
+            <button mat-raised-button id="previousTemplateButton" class="previousTemplateButton" (click)="previousTemplateButtonClicked()">❮</button>
+            <div id="memeTemplatesContainer" class="memeTemplatesContainer">Loading meme templates...</div>
+            <button mat-raised-button id="nextTemplateButton" class="nextTemplateButton" (click)="nextTemplateButtonClicked()">❯</button>
+          </div>
         </mat-card-content>
+
       </mat-card>
     </mat-grid-tile>
 
-    <mat-grid-tile colspan="4" rowspan="4">
+    <mat-grid-tile colspan="4" rowspan={{getCanvasRowspan()}}>
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
