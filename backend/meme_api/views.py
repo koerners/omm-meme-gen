@@ -1,16 +1,21 @@
 from django.contrib.auth.models import User, Group
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework import viewsets
+from rest_framework import views
 from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from meme_api.models import Meme, Comment, Vote
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer
 
 from django.db.models import Q
+import os
+import re
+import base64
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -129,3 +134,43 @@ class VoteList(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+
+class MemeTemplate:
+
+    available_meme_templates = None
+
+    @classmethod
+    def load_available_meme_templates(cls):
+        images = os.listdir(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))
+
+        backend_basename = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        templates = []
+
+        for image in images:
+            with open(os.path.join(backend_basename, 'media/memeTemplates', image), "rb") as image_file:
+                base64_bytes = base64.b64encode(image_file.read())
+                base64_string = base64_bytes.decode('utf-8')
+                templates.append({'name': re.sub(r'.png$', '', image), 'base64_string': base64_string})
+
+        print(templates[0])
+        cls.available_meme_templates = templates
+
+    @classmethod
+    def get_all_meme_templates(cls, request):
+        if not cls.available_meme_templates:
+            cls.load_available_meme_templates()
+
+        return JsonResponse(cls.available_meme_templates, safe=False)
+
+    @classmethod
+    def get_meme_template(cls, request):
+        if not cls.available_meme_templates:
+            cls.load_available_meme_templates()
+
+        searched_template = request.GET.get('name')
+
+        meme_data = next((template for template in cls.available_meme_templates if template['name'] == searched_template), {'error': 'meme template not found'})
+
+        return JsonResponse(meme_data)

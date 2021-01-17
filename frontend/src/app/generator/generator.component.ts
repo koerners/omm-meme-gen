@@ -9,6 +9,7 @@ import {WebcamImage, WebcamInitError} from 'ngx-webcam';
 import {MatSelectChange} from '@angular/material/select';
 import {MatButtonToggleChange, MatButtonToggleModule} from '@angular/material/button-toggle';
 import {Textbox} from '../Textbox';
+import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 
 @Component({
   selector: 'app-generator',
@@ -30,6 +31,9 @@ export class GeneratorComponent implements AfterViewInit {
   yourText = new FormControl('Your text');
   newTextbox: Textbox;
   previousDrawPosition = null;
+  rowHeight = 250;
+
+  memeTemplates: {name, base64_string}[] = [];
 
   colorOptions: string[] = ['#000000', '#808080', '#C0C0C0', '#FFFFFF', '#800000', '#FF0000', '#808000', '#FFFF00', '#008000', '#00FF00', '#008080', '#00FFFF', '#000080', '#0000FF', '#800080', '#FF00FF', '#795548', '#607d8b'];
   colorText: string;
@@ -38,13 +42,17 @@ export class GeneratorComponent implements AfterViewInit {
 
   cameraOn = false;
 
+  currentWidth: number;
+  currentHeight: number;
+  currentlyShownMemeTemplateIndex = -1;
+
   @ViewChild('preview', {static: false}) previewCanvas: ElementRef<HTMLCanvasElement>;
   @ViewChild('previewBackground', {static: false}) backgroundCanvas;
   @ViewChild('previewFile', {static: false}) fileCanvas;
   @ViewChild('previewText', {static: false}) textCanvas;
   @ViewChild('previewTextbox', {static: false}) textboxCanvas;
   @ViewChild('previewDraw', {static: false}) drawCanvas;
-  @Input() public width = 600;
+  @Input() public width = 500;
   @Input() public height = 700;
 
 
@@ -62,36 +70,48 @@ export class GeneratorComponent implements AfterViewInit {
   // webcam snapshot trigger
   private trigger: Subject<void> = new Subject<void>();
 
-  constructor(private memeService: MemeService) {
+  constructor(private memeService: MemeService, private sanitizer: DomSanitizer) {
     this.colorBackground = '#FFFFFF';
     this.colorText = '#000000';
     this.colorPen = '#000000';
+
+    this.currentWidth = this.width;
+    this.currentHeight = this.height;
+
+    this.memeService.getAllMemeTemplates().subscribe(memeTemplates => {
+      const memeTemplateContainer = document.getElementById('memeTemplatesContainer');
+      memeTemplateContainer.innerHTML = '';
+      console.log(memeTemplates);
+      this.memeTemplates = memeTemplates;
+
+      this.showMemeTemplates();
+    });
   }
 
   public ngAfterViewInit(): void {
     const canvasBackgroundEl: HTMLCanvasElement = this.backgroundCanvas.nativeElement;
-    canvasBackgroundEl.width = this.width;
-    canvasBackgroundEl.height = this.height;
+    canvasBackgroundEl.width = this.currentWidth;
+    canvasBackgroundEl.height = this.currentHeight;
     const ctx = canvasBackgroundEl.getContext('2d');
     ctx.fillStyle = this.colorBackground;
     ctx.fillRect(0, 0, canvasBackgroundEl.width, canvasBackgroundEl.height);
 
     const canvasFileEl: HTMLCanvasElement = this.fileCanvas.nativeElement;
-    canvasFileEl.width = this.width;
-    canvasFileEl.height = this.height;
+    canvasFileEl.width = this.currentWidth;
+    canvasFileEl.height = this.currentHeight;
 
     const canvasTextEl: HTMLCanvasElement = this.textCanvas.nativeElement;
-    canvasTextEl.width = this.width;
-    canvasTextEl.height = this.height;
+    canvasTextEl.width = this.currentWidth;
+    canvasTextEl.height = this.currentHeight;
 
     const canvasTextboxEl: HTMLCanvasElement = this.textboxCanvas.nativeElement;
-    canvasTextboxEl.width = this.width;
-    canvasTextboxEl.height = this.height;
+    canvasTextboxEl.width = this.currentWidth;
+    canvasTextboxEl.height = this.currentHeight;
 
     const canvasDrawEl: HTMLCanvasElement = this.drawCanvas.nativeElement;
     const canvasDrawCtx = canvasDrawEl.getContext('2d');
-    canvasDrawEl.width = this.width;
-    canvasDrawEl.height = this.height;
+    canvasDrawEl.width = this.currentWidth;
+    canvasDrawEl.height = this.currentHeight;
     canvasDrawCtx.lineWidth = 3;
     canvasDrawCtx.lineCap = 'round';
     canvasDrawCtx.strokeStyle = this.colorPen;
@@ -129,23 +149,23 @@ export class GeneratorComponent implements AfterViewInit {
   textChanged(): void {
     const canvas = this.textCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
     ctx.fillStyle = this.colorText;
     ctx.font = this.getFontStyle();
     ctx.textAlign = 'center';
 
-    ctx.fillText(this.textTop.value, canvas.width / 2, 50);
+    ctx.fillText(this.textTop.value, this.currentWidth / 2, 50);
     // this is to underline the text since there seem to be no text-decorations in canvas
     if (this.underline.value) {
       const {width} = ctx.measureText(this.textTop.value);
-      ctx.fillRect((canvas.width / 2 - width / 2), 50, width, this.fontSize.value / 10);
+      ctx.fillRect((this.currentWidth / 2 - width / 2), 50, width, this.fontSize.value / 10);
     }
 
-    ctx.fillText(this.textBottom.value, canvas.width / 2, this.height - 50);
+    ctx.fillText(this.textBottom.value, this.currentWidth / 2, this.currentHeight - 50);
     // this is to underline the text since there seem to be no text-decorations in canvas
     if (this.underline.value) {
       const {width} = ctx.measureText(this.textBottom.value);
-      ctx.fillRect((canvas.width / 2 - width / 2), this.height - 50, width, this.fontSize.value / 10);
+      ctx.fillRect((this.currentWidth / 2 - width / 2), this.currentHeight - 50, width, this.fontSize.value / 10);
     }
 
     this.textboxes.forEach((textbox) => {
@@ -170,7 +190,7 @@ export class GeneratorComponent implements AfterViewInit {
     }
 
     const ctx = this.textboxCanvas.nativeElement.getContext('2d');
-    ctx.clearRect(0, 0, this.width, this.height);
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
     ctx.fillStyle = this.colorText;
     ctx.font = this.getFontStyle();
     ctx.textAlign = 'center';
@@ -193,7 +213,7 @@ export class GeneratorComponent implements AfterViewInit {
 
     const canvas = this.textboxCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
     ctx.fillStyle = this.colorText;
     ctx.font = this.getFontStyle();
     ctx.textAlign = 'center';
@@ -213,7 +233,7 @@ export class GeneratorComponent implements AfterViewInit {
     this.newTextbox = null;
 
     const textboxCanvasCtx = this.textboxCanvas.nativeElement.getContext('2d');
-    textboxCanvasCtx.clearRect(0, 0, this.width, this.height);
+    textboxCanvasCtx.clearRect(0, 0, this.currentWidth, this.currentHeight);
   }
 
   saveTextbox(textbox: Textbox): void {
@@ -221,7 +241,7 @@ export class GeneratorComponent implements AfterViewInit {
     this.newTextbox = null;
 
     const textboxCanvasCtx = this.textboxCanvas.nativeElement.getContext('2d');
-    textboxCanvasCtx.clearRect(0, 0, this.width, this.height);
+    textboxCanvasCtx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
     this.textChanged();
   }
@@ -256,27 +276,29 @@ export class GeneratorComponent implements AfterViewInit {
     }
 
   clearCanvas(): void {
+    this.resizeCanvasHeight(this.height);
+
     this.colorBackground = '#FFFFFF';
     let canvas = this.backgroundCanvas.nativeElement;
     let ctx = canvas.getContext('2d');
     ctx.fillStyle = this.colorBackground;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, this.currentWidth, this.currentHeight);
 
     canvas = this.fileCanvas.nativeElement;
     ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, this.height);
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
     canvas = this.textCanvas.nativeElement;
     ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, this.height);
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
     canvas = this.textboxCanvas.nativeElement;
     ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, this.height);
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
     canvas = this.drawCanvas.nativeElement;
     ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, this.height);
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
     this.textboxes = [];
 
@@ -308,7 +330,7 @@ export class GeneratorComponent implements AfterViewInit {
     const canvas = this.backgroundCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = this.colorBackground;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, this.currentWidth, this.currentHeight);
   }
 
   private captureEvents(canvasEl: HTMLCanvasElement): void {
@@ -373,8 +395,8 @@ export class GeneratorComponent implements AfterViewInit {
 
   createImageStringFromCanvas(): string {
     const canvas = document.createElement('canvas');
-    canvas.width = this.width;
-    canvas.height = this.height;
+    canvas.width = this.currentWidth;
+    canvas.height = this.currentHeight;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(this.backgroundCanvas.nativeElement, 0, 0);
     ctx.drawImage(this.fileCanvas.nativeElement, 0, 0);
@@ -383,6 +405,51 @@ export class GeneratorComponent implements AfterViewInit {
     const image = canvas.toDataURL('image/png');
 
     return image;
+  }
+
+  reloadAndShowMemeTemplates(): void {
+    this.memeTemplates = [];
+    this.currentlyShownMemeTemplateIndex = -1;
+    const memeTemplateContainer = document.getElementById('memeTemplatesContainer');
+    memeTemplateContainer.innerHTML = 'Loading meme templates...';
+
+    this.memeService.getAllMemeTemplates().subscribe(memeTemplates => {
+      memeTemplateContainer.innerHTML = '';
+      console.log(memeTemplates);
+      this.memeTemplates = memeTemplates;
+
+      this.showMemeTemplates();
+    });
+  }
+
+  showMemeTemplates(): void {
+    const memeTemplateContainer = document.getElementById('memeTemplatesContainer');
+    this.memeTemplates.forEach(template => {
+      const newImg = document.createElement('img');
+      newImg.className = 'memeTemplate';
+      newImg.width = 80;
+      newImg.height = 80;
+      newImg.addEventListener('click', () => {
+        this.currentlyShownMemeTemplateIndex = this.memeTemplates.indexOf(template);
+
+        const canvas = this.fileCanvas.nativeElement;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+
+        const memeTemplate = new Image();
+        memeTemplate.src = 'data:image/png;base64,' + template.base64_string;
+        memeTemplate.onload = () => {
+          const scaleFactor = memeTemplate.width / this.width;
+          this.resizeCanvasHeight(memeTemplate.height / scaleFactor);
+          ctx.drawImage(memeTemplate, 0, 0, memeTemplate.width, memeTemplate.height, 0, 0, this.width, this.currentHeight);
+
+          this.textChanged();
+        };
+      });
+      newImg.src = 'data:image/jpg;base64,' + template.base64_string;
+      newImg.alt = 'ndfjkalsfjdsafjsaöfjdslo';
+      memeTemplateContainer.append(newImg);
+    });
   }
 
   loadFromWebcam(): void {
@@ -458,5 +525,76 @@ export class GeneratorComponent implements AfterViewInit {
     meme.title = this.name.value;
     this.memeService.saveMeme(meme);
 
+  }
+
+  getSafeUrl(base64String: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl('data:image/jpg;base64,' + base64String);
+  }
+
+  resizeCanvasHeight(height: number): void {
+    this.currentHeight = height;
+
+    const canvasBackgroundEl: HTMLCanvasElement = this.backgroundCanvas.nativeElement;
+    canvasBackgroundEl.width = this.currentWidth;
+    canvasBackgroundEl.height = this.currentHeight;
+
+    const canvasFileEl: HTMLCanvasElement = this.fileCanvas.nativeElement;
+    canvasFileEl.width = this.currentWidth;
+    canvasFileEl.height = this.currentHeight;
+
+    const canvasTextEl: HTMLCanvasElement = this.textCanvas.nativeElement;
+    canvasTextEl.width = this.currentWidth;
+    canvasTextEl.height = this.currentHeight;
+
+    const canvasTextboxEl: HTMLCanvasElement = this.textboxCanvas.nativeElement;
+    canvasTextboxEl.width = this.currentWidth;
+    canvasTextboxEl.height = this.currentHeight;
+
+    const canvasDrawEl: HTMLCanvasElement = this.drawCanvas.nativeElement;
+    const canvasDrawCtx = canvasDrawEl.getContext('2d');
+    canvasDrawEl.width = this.currentWidth;
+    canvasDrawEl.height = this.currentHeight;
+  }
+
+  getCanvasRowspan(): number {
+    // adding 0.2 for the title and menu
+    return Math.ceil(this.currentHeight / this.rowHeight + 0.2);
+  }
+
+  memeTemplateChosen(template: { name: string, base64_string: string }): void {
+    const canvas = this.fileCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+
+    const memeTemplate = new Image();
+    memeTemplate.src = 'data:image/png;base64,' + template.base64_string;
+    memeTemplate.onload = () => {
+      const scaleFactor = memeTemplate.width / this.width;
+      this.resizeCanvasHeight(memeTemplate.height / scaleFactor);
+      ctx.drawImage(memeTemplate, 0, 0, memeTemplate.width, memeTemplate.height, 0, 0, this.width, this.currentHeight);
+
+      this.textChanged();
+    };
+  }
+
+  previousTemplateButtonClicked(): void {
+    if (this.currentlyShownMemeTemplateIndex === -1 || this.currentlyShownMemeTemplateIndex === 0) {
+      this.currentlyShownMemeTemplateIndex = this.memeTemplates.length - 1;
+    } else {
+      this.currentlyShownMemeTemplateIndex--;
+    }
+
+    this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
+  }
+
+  nextTemplateButtonClicked(): void {
+    const amountOfMemeTemplates = this.memeTemplates.length;
+    if (this.currentlyShownMemeTemplateIndex === -1 || this.currentlyShownMemeTemplateIndex === amountOfMemeTemplates - 1) {
+      this.currentlyShownMemeTemplateIndex = 0;
+    } else {
+      this.currentlyShownMemeTemplateIndex++;
+    }
+
+    this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
   }
 }
