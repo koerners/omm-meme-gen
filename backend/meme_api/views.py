@@ -16,6 +16,8 @@ from django.db.models import Q
 import os
 import re
 import base64
+from PIL import Image, ImageDraw, ImageFont
+import json
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -141,36 +143,102 @@ class MemeTemplate:
     available_meme_templates = None
 
     @classmethod
-    def load_available_meme_templates(cls):
-        images = os.listdir(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))
+    def get_available_meme_templates(cls):
+        if not cls.available_meme_templates:
+            images = os.listdir(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))
 
-        backend_basename = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            backend_basename = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        templates = []
+            templates = []
 
-        for image in images:
-            with open(os.path.join(backend_basename, 'media/memeTemplates', image), "rb") as image_file:
-                base64_bytes = base64.b64encode(image_file.read())
-                base64_string = base64_bytes.decode('utf-8')
-                templates.append({'name': re.sub(r'.png$', '', image), 'base64_string': base64_string})
+            for image in images:
+                with open(os.path.join(backend_basename, 'media/memeTemplates', image), "rb") as image_file:
+                    base64_bytes = base64.b64encode(image_file.read())
+                    base64_string = base64_bytes.decode('utf-8')
+                    templates.append({'name': re.sub(r'.png$', '', image), 'base64_string': base64_string})
 
-        print(templates[0])
-        cls.available_meme_templates = templates
+            print(templates[0])
+            cls.available_meme_templates = templates
+
+        return cls.available_meme_templates
 
     @classmethod
     def get_all_meme_templates(cls, request):
-        if not cls.available_meme_templates:
-            cls.load_available_meme_templates()
-
-        return JsonResponse(cls.available_meme_templates, safe=False)
+        return JsonResponse(cls.get_available_meme_templates(), safe=False)
 
     @classmethod
     def get_meme_template(cls, request):
-        if not cls.available_meme_templates:
-            cls.load_available_meme_templates()
-
         searched_template = request.GET.get('name')
 
-        meme_data = next((template for template in cls.available_meme_templates if template['name'] == searched_template), {'error': 'meme template not found'})
+        meme_data = next((template for template in cls.get_available_meme_templates() if template['name'] == searched_template), {'error': 'meme template not found'})
 
         return JsonResponse(meme_data)
+
+
+class MemeCreation:
+
+    image_paths = None
+    default_font_size = 30
+    default_font_style = 'Ubuntu-B.ttf'
+    default_font_style_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/fonts', default_font_style)
+
+    @classmethod
+    def get_image_paths(cls):
+        if not cls.image_paths:
+            backend_basename = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+            meme_templates_dir = 'media/memeTemplates'
+
+            cls.image_paths = [os.path.join(backend_basename, meme_templates_dir, image_name) for image_name in os.listdir(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))]
+
+        return cls.image_paths
+
+    @classmethod
+    def create_meme(cls, request):
+        template_name = request.GET.get('templateName')
+        if template_name is None:
+            return JsonResponse({'message': 'meme template not found'}, status=400)
+
+        meme_template_path = next((template for template in cls.get_image_paths() if template.endswith(template_name + '.png')), {'error': 'meme template not found'})
+        img = Image.open(meme_template_path)
+        image_draw = ImageDraw.Draw(img)
+
+        try:
+            font_size = int(request.GET.get('fontSize'))
+        except (ValueError, TypeError):
+            font_size = cls.default_font_size
+        font = ImageFont.truetype(cls.default_font_style_path, font_size)
+
+        try:
+            fill_color = tuple(int(request.GET.get('colorHex')[i:i+2], 16) for i in (0, 2, 4))
+        except (ValueError, TypeError):
+            fill_color = (0, 0, 0)
+
+        top_text = request.GET.get('topText', '')
+        top_text_width, top_text_height = ImageDraw.ImageDraw.textsize(image_draw, top_text, font)
+        print(img.width, img.height)
+
+        bottom_text = request.GET.get('bottomText', '')
+        bottom_text_width, bottom_text_height = ImageDraw.ImageDraw.textsize(image_draw, bottom_text, font)
+
+        top_text_x_coord_start_pos = (img.width - top_text_width) / 2
+        image_draw.text((top_text_x_coord_start_pos, 50), top_text, fill=fill_color, font=font)
+        bottom_text_x_coord_start_pos = (img.width - bottom_text_width) / 2
+        image_draw.text((bottom_text_x_coord_start_pos, img.height - 50), bottom_text, fill=fill_color, font=font)
+
+        necessary_keys_for_other_texts = ['x', 'y', 'text']
+        try:
+            other_texts = json.loads(request.GET.get('otherTexts').replace('\'', '"'))
+            if isinstance(other_texts, list):
+                for cur_txt_obj in other_texts:
+                    if all(key in cur_txt_obj for key in necessary_keys_for_other_texts):
+                        image_draw.text((cur_txt_obj['x'], cur_txt_obj['y']), cur_txt_obj['text'], fill=fill_color, font=font)
+
+        except (json.decoder.JSONDecodeError, AttributeError, ValueError):
+            pass
+
+        response = HttpResponse(content_type='image/png')
+
+        img.save(response, 'PNG')
+
+        return response
