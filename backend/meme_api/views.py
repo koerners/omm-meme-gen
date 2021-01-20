@@ -179,8 +179,11 @@ class MemeCreation:
 
     image_paths = None
     default_font_size = 30
-    default_font_style = 'Ubuntu-B.ttf'
-    default_font_style_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/fonts', default_font_style)
+    font_default = 'Ubuntu-M.ttf'
+    font_bold = 'Ubuntu-B.ttf'
+    font_italic = 'Ubuntu-MI.ttf'
+    font_bold_italic = 'Ubuntu-BI.ttf'
+    default_font_style_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/fonts')
 
     @classmethod
     def get_image_paths(cls):
@@ -203,11 +206,26 @@ class MemeCreation:
         img = Image.open(meme_template_path)
         image_draw = ImageDraw.Draw(img)
 
+        bold = request.GET.get('bold')
+        italic = request.GET.get('italic')
+        underline = request.GET.get('underline')
+
+        def get_font_style_path(font_style):
+            return os.path.join(cls.default_font_style_path, font_style)
+
         try:
             font_size = int(request.GET.get('fontSize'))
         except (ValueError, TypeError):
             font_size = cls.default_font_size
-        font = ImageFont.truetype(cls.default_font_style_path, font_size)
+
+        if bold in ["True", "true"] and italic in ["True", "true"]:
+            font = ImageFont.truetype(get_font_style_path(cls.font_bold_italic), font_size)
+        elif bold in ["True", "true"]:
+            font = ImageFont.truetype(get_font_style_path(cls.font_bold), font_size)
+        elif italic in ["True", "true"]:
+            font = ImageFont.truetype(get_font_style_path(cls.font_italic), font_size)
+        else:
+            font = ImageFont.truetype(get_font_style_path(cls.font_default), font_size)
 
         try:
             fill_color = tuple(int(request.GET.get('colorHex')[i:i+2], 16) for i in (0, 2, 4))
@@ -216,15 +234,21 @@ class MemeCreation:
 
         top_text = request.GET.get('topText', '')
         top_text_width, top_text_height = ImageDraw.ImageDraw.textsize(image_draw, top_text, font)
-        print(img.width, img.height)
 
         bottom_text = request.GET.get('bottomText', '')
         bottom_text_width, bottom_text_height = ImageDraw.ImageDraw.textsize(image_draw, bottom_text, font)
 
-        top_text_x_coord_start_pos = (img.width - top_text_width) / 2
-        image_draw.text((top_text_x_coord_start_pos, 50), top_text, fill=fill_color, font=font)
-        bottom_text_x_coord_start_pos = (img.width - bottom_text_width) / 2
-        image_draw.text((bottom_text_x_coord_start_pos, img.height - 50), bottom_text, fill=fill_color, font=font)
+        top_text_x_coord = (img.width - top_text_width) / 2
+        top_text_y_coord = 50 - top_text_height * 0.79
+        image_draw.text((top_text_x_coord, top_text_y_coord), top_text, fill=fill_color, font=font)
+        if underline in ["True", "true"]:
+            image_draw.line(((top_text_x_coord, 50), (top_text_x_coord + top_text_width, 50)), fill=fill_color, width=int(font_size / 10))
+
+        bottom_text_x_coord = (img.width - bottom_text_width) / 2
+        bottom_text_y_coord = 50 + bottom_text_height * 0.79
+        image_draw.text((bottom_text_x_coord, img.height - bottom_text_y_coord), bottom_text, fill=fill_color, font=font)
+        if underline in ["True", "true"]:
+            image_draw.line(((bottom_text_x_coord, img.height - 50), (bottom_text_x_coord + bottom_text_width, img.height - 50)), fill=fill_color, width=int(font_size / 10))
 
         necessary_keys_for_other_texts = ['x', 'y', 'text']
         try:
@@ -232,7 +256,10 @@ class MemeCreation:
             if isinstance(other_texts, list):
                 for cur_txt_obj in other_texts:
                     if all(key in cur_txt_obj for key in necessary_keys_for_other_texts):
-                        image_draw.text((cur_txt_obj['x'], cur_txt_obj['y']), cur_txt_obj['text'], fill=fill_color, font=font)
+                        image_draw.text((cur_txt_obj.get('x'), cur_txt_obj.get('y')), cur_txt_obj.get('text'), fill=fill_color, font=font)
+                        text_width, text_height = ImageDraw.ImageDraw.textsize(image_draw, cur_txt_obj.get('text'), font)
+                        if underline in ["True", "true"]:
+                            image_draw.line(((cur_txt_obj.get('x'), cur_txt_obj.get('y') + text_height), (cur_txt_obj.get('x') + text_width, cur_txt_obj.get('y') + text_height)), fill=fill_color, width=int(font_size / 10))
 
         except (json.decoder.JSONDecodeError, AttributeError, ValueError):
             pass
