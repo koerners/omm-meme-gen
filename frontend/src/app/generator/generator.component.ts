@@ -10,6 +10,13 @@ import {MatSelectChange} from '@angular/material/select';
 import {MatButtonToggleChange, MatButtonToggleModule} from '@angular/material/button-toggle';
 import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
+import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
+import {MatDialog} from '@angular/material/dialog';
+
+export interface DialogData {
+  url: string;
+}
+
 
 @Component({
   selector: 'app-generator',
@@ -31,7 +38,7 @@ export class GeneratorComponent implements AfterViewInit {
   yourText = new FormControl('Your text');
   newTextbox: Textbox;
   previousDrawPosition = null;
-  rowHeight = 250;
+  rowHeight = 95;
 
   memeTemplates: {name, base64_string}[] = [];
 
@@ -56,7 +63,8 @@ export class GeneratorComponent implements AfterViewInit {
   @Input() public height = 700;
 
 
-  private canvasStored: any;
+  imageToShow: any;
+  isImageLoading = false;
 
   public errors: WebcamInitError[] = [];
   public videoOptions: MediaTrackConstraints = {
@@ -69,8 +77,12 @@ export class GeneratorComponent implements AfterViewInit {
 
   // webcam snapshot trigger
   private trigger: Subject<void> = new Subject<void>();
+  url: string;
+  posts: any;
+  private imagesRecieved: any;
+  private randomImageIndex: number;
 
-  constructor(private memeService: MemeService, private sanitizer: DomSanitizer) {
+  constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog) {
     this.colorBackground = '#FFFFFF';
     this.colorText = '#000000';
     this.colorPen = '#000000';
@@ -87,7 +99,6 @@ export class GeneratorComponent implements AfterViewInit {
       this.showMemeTemplates();
     });
   }
-
   public ngAfterViewInit(): void {
     const canvasBackgroundEl: HTMLCanvasElement = this.backgroundCanvas.nativeElement;
     canvasBackgroundEl.width = this.currentWidth;
@@ -455,15 +466,20 @@ export class GeneratorComponent implements AfterViewInit {
   loadFromWebcam(): void {
     console.log('opening webcam');
     if (this.cameraOn === false){
-      this.canvasStored = this.previewCanvas;
       this.cameraOn = true;
     }
   }
 
   loadFromURL(): void {
+    this.clearCanvas();
     console.log('pressed url');
+    const ctx = this.fileCanvas.nativeElement.getContext('2d');
+    const img = new Image();
+    img.src = this.url;
+    img.onload = () => ctx.drawImage(img, 0, 100, 600, 500);
 
   }
+
 
   loadScreenshotOfURL(): void {
     console.log('pressed screenshot');
@@ -471,8 +487,32 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   loadFromAPI(): void {
+    this.clearCanvas();
     console.log('pressed api');
+    const arr = this.memeService.getMemesFromImgFlip();
+    console.log(arr);
+    // Get call on imgflip api
+    /*this.memeService.paginator('https://api.imgflip.com/get_memes').subscribe(data => {
+      this.imagesRecieved = JSON.parse(JSON.stringify(data));
+    }, null, () => {
+      this.imagesRecieved = this.imagesRecieved.data.memes;
+      this.randomImageIndex = Math.floor(Math.random() * this.imagesRecieved.length);
+      const randomImage = this.imagesRecieved[this.randomImageIndex];
+      const ctx = this.fileCanvas.nativeElement.getContext('2d');
+      const img = new Image();
+      img.src = randomImage.url;
+      img.onload = () => {
+        const scaleFactor = randomImage.width / this.width;
+        this.resizeCanvasHeight(randomImage.height);
+        this.getCanvasRowspan();
+
+        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, this.width, this.currentHeight);
+
+      };*/
+    //});
+
   }
+
   public get triggerObservable(): Observable<void> {
     return this.trigger.asObservable();
   }
@@ -492,15 +532,11 @@ export class GeneratorComponent implements AfterViewInit {
 
 
   showOnCanvas(): void {
-    Promise.resolve().then(() => this.cameraOn = false);
-    console.log(this);
     const ctx = this.fileCanvas.nativeElement.getContext('2d');
     const img = new Image();
     img.src = this.webcamImage.imageAsDataUrl;
     ctx.drawImage(img, 0, 100, 600, 500);
-
-    // const reader = new FileReader();
-    // console.log(this.webcamImage.imageAsDataUrl);
+    this.cameraOn = false;
   }
 
   saveCanvas(): void {
@@ -551,7 +587,6 @@ export class GeneratorComponent implements AfterViewInit {
     canvasTextboxEl.height = this.currentHeight;
 
     const canvasDrawEl: HTMLCanvasElement = this.drawCanvas.nativeElement;
-    const canvasDrawCtx = canvasDrawEl.getContext('2d');
     canvasDrawEl.width = this.currentWidth;
     canvasDrawEl.height = this.currentHeight;
   }
@@ -597,4 +632,19 @@ export class GeneratorComponent implements AfterViewInit {
 
     this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
   }
+
+  openDialog(): void {
+    const dialogRef = this.dialog.open(InputUrlDialogComponent, {
+      width: '300px',
+      data: {name: this.url}
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      this.url = result;
+    }, null , () => {
+      this.loadFromURL();
+    });
+  }
 }
+

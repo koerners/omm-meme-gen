@@ -1,7 +1,7 @@
 <div class="grid-container">
   <h1 class="mat-h1">Dashboard</h1>
-  <mat-grid-list [rowHeight]=this.rowHeight cols="10">
-    <mat-grid-tile colspan="6" rowspan="1">
+  <mat-grid-list [rowHeight]="100" cols="10">
+    <mat-grid-tile colspan="6" rowspan="3">
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
@@ -17,7 +17,7 @@
             <input #file hidden (change)=" selectFile($event)" accept="image/*" type="file">
             <button mat-raised-button class="butn" id="fileSelect" (click)="file.click()">Upload an Image</button>
 
-            <button mat-raised-button class="butn" id="URLSelect" (click)="loadFromURL()">Load an image from an URL</button>
+            <button mat-raised-button class="butn" id="URLSelect" (click)="openDialog()">Load an image from an URL</button>
 
             <button mat-raised-button class="butn" id="ScreenshotSelect" (click)="loadScreenshotOfURL()">Upload Screenshot from URL</button>
 
@@ -78,7 +78,7 @@
 
       </mat-card>
     </mat-grid-tile>
-    <mat-grid-tile colspan="6" rowspan="3">
+    <mat-grid-tile colspan="6" rowspan="4">
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
@@ -87,7 +87,7 @@
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
           <div>
-            <mat-grid-list [rowHeight]="75" cols="3">
+            <mat-grid-list [rowHeight]="30" cols="3">
               <mat-grid-tile colspan="1" rowspan="3">
                 <mat-form-field class="example-form-field">
                   <mat-label>Title</mat-label>
@@ -168,7 +168,7 @@
       </mat-card>
     </mat-grid-tile>
 
-    <mat-grid-tile colspan="6" rowspan="1">
+    <mat-grid-tile colspan="6" rowspan="3">
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>

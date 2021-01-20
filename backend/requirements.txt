@@ -3,4 +3,5 @@ djangorestframework
 djangorestframework-simplejwt
 django-cors-headers
 random-username
+requests
 Pillow
