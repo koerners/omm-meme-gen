@@ -33,6 +33,10 @@ export class MemeService {
       });
   }
 
+  getMemesFromImgFlip(): any {
+    this.http.get(environment.apiUrl + '/imgFlip/');
+  }
+
   saveMeme(meme: Meme): void {
     this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,

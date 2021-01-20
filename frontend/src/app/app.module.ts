@@ -17,6 +17,7 @@ import {MatGridListModule} from '@angular/material/grid-list';
 import {MatCardModule} from '@angular/material/card';
 import {MatMenuModule} from '@angular/material/menu';
 import {GeneratorComponent} from './generator/generator.component';
+import {InputUrlDialogComponent} from './input-url-dialog/input-url-dialog.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatInputModule} from '@angular/material/input';
 import {ColorCircleModule} from 'ngx-color/circle';
@@ -25,7 +26,7 @@ import {HttpConfigInterceptor} from './interceptor/httpconfig.interceptor';
 import {ErrorDialogComponent} from './error-dialog/errordialog.component';
 import {ErrorDialogService} from './error-dialog/errordialog.service';
 import {LoginService} from './services/login.service';
-import {MatDialogModule} from '@angular/material/dialog';
+import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {RegisterComponent} from './register/register.component';
 import {MatSelectModule} from '@angular/material/select';
 import {MatRadioModule} from '@angular/material/radio';
@@ -57,6 +58,8 @@ import {ShareIconsModule} from 'ngx-sharebuttons/icons';
     RegisterComponent,
     DetailViewComponent,
     MyMemesComponent,
+    InputUrlDialogComponent
+
   ],
   imports: [
     BrowserModule,
@@ -89,7 +92,8 @@ import {ShareIconsModule} from 'ngx-sharebuttons/icons';
     MatTabsModule,
     MatPaginatorModule,
     ShareButtonsModule,
-    ShareIconsModule
+    ShareIconsModule,
+    MatDialogModule
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},
@@ -97,9 +101,11 @@ import {ShareIconsModule} from 'ngx-sharebuttons/icons';
     LoginService,
     RegisterService,
     MemeService,
-    ObjectRecognitionService
+    ObjectRecognitionService,
   ],
-  entryComponents: [ErrorDialogComponent],
+  entryComponents: [
+    ErrorDialogComponent
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {

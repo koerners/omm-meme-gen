@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<h1 mat-dialog-title>Please enter the URL</h1>
+<div mat-dialog-content>
+  <mat-form-field>
+    <input matInput [(ngModel)]="data.url">
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">No Thanks</button>
+  <button mat-button [mat-dialog-close]="data.url" cdkFocusInitial>Ok</button>
+</div>
