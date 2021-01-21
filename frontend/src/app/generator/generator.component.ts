@@ -13,6 +13,9 @@ import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser'
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
 
+/**
+ * The interface for the InputDialogData
+ */
 export interface DialogData {
   url: string;
 }
@@ -24,29 +27,85 @@ export interface DialogData {
   styleUrls: ['./generator.component.css']
 })
 export class GeneratorComponent implements AfterViewInit {
-
+  /**
+   * The form for the text on the top
+   */
   textTop = new FormControl('');
+  /**
+   * The form for the name of the meme
+   */
   name = new FormControl('');
+  /**
+   * The form for the text on the bottom
+   */
   textBottom = new FormControl('');
+  /**
+   * The form for the font size
+   */
   fontSize = new FormControl('30');
+  /**
+   * The form for the font style
+   */
   fontFamily = new FormControl('Arial');
+  /**
+   * The form for bold text
+   */
   bold = new FormControl(false);
+  /**
+   * The form for italic text
+   */
   italic = new FormControl(false);
+  /**
+   * The form for underlinde text
+   */
   underline = new FormControl(false);
+  /**
+   * Allows drawing on canvas
+   */
   drawingMode = false;
+  /**
+   * The array for storing the textboxes
+   */
   textboxes: Textbox[] = [];
+  /**
+   * The input form for the new textbox
+   * @see newTextbox
+   */
   yourText = new FormControl('Your text');
+  /**
+   * a new Textbox
+   */
   newTextbox: Textbox;
+  /**
+   * The previous drawing position
+   */
   previousDrawPosition = null;
+  /**
+   * The row height of MaterialGridTile
+   */
   rowHeight = 95;
 
   memeTemplates: {name, base64_string}[] = [];
-
+  /**
+   * The Color options available
+   */
   colorOptions: string[] = ['#000000', '#808080', '#C0C0C0', '#FFFFFF', '#800000', '#FF0000', '#808000', '#FFFF00', '#008000', '#00FF00', '#008080', '#00FFFF', '#000080', '#0000FF', '#800080', '#FF00FF', '#795548', '#607d8b'];
+  /**
+   * The Color of the Text
+   */
   colorText: string;
+  /**
+   * The Color of the Pen
+   */
   colorPen: string;
+  /**
+   * The Color of the Pen
+   */
   colorBackground: string;
 
+  /**
+   * The camera value wheter it is active or not
+   */
   cameraOn = false;
 
   currentWidth: number;
@@ -470,6 +529,9 @@ export class GeneratorComponent implements AfterViewInit {
     }
   }
 
+  /**
+   * load image from a given url
+   */
   loadFromURL(): void {
     this.clearCanvas();
     console.log('pressed url');
@@ -486,6 +548,10 @@ export class GeneratorComponent implements AfterViewInit {
 
   }
 
+  /**
+   * loads Images from the backend;
+   * @see getMemesFromImgFlip
+   */
   loadFromAPI(): void {
     this.clearCanvas();
     console.log('pressed api');
@@ -631,12 +697,15 @@ export class GeneratorComponent implements AfterViewInit {
     this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
   }
 
+  /**
+   * Opens the URL input dialog
+   * @see InputUrlDialogComponent
+   */
   openDialog(): void {
     const dialogRef = this.dialog.open(InputUrlDialogComponent, {
       width: '300px',
       data: {name: this.url}
     });
-
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed');
       this.url = result;
