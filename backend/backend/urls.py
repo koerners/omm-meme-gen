@@ -31,5 +31,6 @@ urlpatterns = [
     path('memeTemplates/', views.MemeTemplate.get_all_meme_templates),
     path('memeTemplate/', views.MemeTemplate.get_meme_template),
     path('createMeme/', views.MemeCreation.create_meme),
+    path('createMemes/', views.MemeCreation.create_memes),
     path('imgFlip/', views.IMGFlip.get_imgflip_memes)
 ] + static('/media/memeTemplates', document_root=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))
