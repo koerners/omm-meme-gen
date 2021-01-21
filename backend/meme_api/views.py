@@ -276,10 +276,10 @@ class MemeCreation:
 
 
 class IMGFlip:
-
     @action(detail=False)
     def get_imgflip_memes(self):
         imgflip_response = requests.get('https://api.imgflip.com/get_memes')
-        print(imgflip_response)
+
         if imgflip_response.status_code == 200:
-            return JsonResponse(imgflip_response)
+
+            return HttpResponse(imgflip_response)
