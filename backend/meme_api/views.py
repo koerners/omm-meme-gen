@@ -204,67 +204,42 @@ class MemeCreation:
     def create_meme(cls, request):
         template_name = request.GET.get('templateName')
         if template_name is None:
-            return JsonResponse({'message': 'meme template not found'}, status=400)
+            return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
 
-        meme_template_path = next((template for template in cls.get_image_paths() if template.endswith(template_name + '.png')), {'error': 'meme template not found'})
+        meme_template_path = next((template for template in cls.get_image_paths() if template.endswith(template_name + '.png')), None)
+        if meme_template_path is None:
+            return JsonResponse({'message': 'meme template could not be found'}, status=400)
+
+        # rp is short for request parameters
+        qp = cls.get_query_parameters(request)
+
         img = Image.open(meme_template_path)
         image_draw = ImageDraw.Draw(img)
 
-        bold = request.GET.get('bold')
-        italic = request.GET.get('italic')
-        underline = request.GET.get('underline')
-
-        def get_font_style_path(font_style):
-            return os.path.join(cls.font_style_path, font_style)
-
-        try:
-            font_size = int(request.GET.get('fontSize'))
-        except (ValueError, TypeError):
-            font_size = cls.default_font_size
-
-        if bold in ["True", "true"] and italic in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(cls.font_bold_italic), font_size)
-        elif bold in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(cls.font_bold), font_size)
-        elif italic in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(cls.font_italic), font_size)
-        else:
-            font = ImageFont.truetype(get_font_style_path(cls.font_default), font_size)
-
-        try:
-            fill_color = tuple(int(request.GET.get('colorHex')[i:i+2], 16) for i in (0, 2, 4))
-        except (ValueError, TypeError):
-            fill_color = (0, 0, 0)
-
         top_text = request.GET.get('topText', '')
-        top_text_width, top_text_height = ImageDraw.ImageDraw.textsize(image_draw, top_text, font)
+        text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, top_text, qp.get('font'))
+        x = (img.width - text_width) / 2
+        ascent, _ = qp.get('font').getmetrics()
+        y = 50 - ascent
+        cls.draw_text(image_draw, top_text, x, y, qp)
 
         bottom_text = request.GET.get('bottomText', '')
-        bottom_text_width, bottom_text_height = ImageDraw.ImageDraw.textsize(image_draw, bottom_text, font)
+        text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, bottom_text, qp.get('font'))
+        x = (img.width - text_width) / 2
+        ascent, _ = qp.get('font').getmetrics()
+        y = img.height - (50 + ascent)
+        cls.draw_text(image_draw, bottom_text, x, y, qp)
 
-        top_text_x_coord = (img.width - top_text_width) / 2
-        top_text_y_coord = 50 - top_text_height * 0.79
-        image_draw.text((top_text_x_coord, top_text_y_coord), top_text, fill=fill_color, font=font)
-        if underline in ["True", "true"]:
-            image_draw.line(((top_text_x_coord, 50), (top_text_x_coord + top_text_width, 50)), fill=fill_color, width=int(font_size / 10))
+        # keys which are necessary to place a text (other than topText or bottomText) in image
+        expect_keys = ['x', 'y', 'text']
 
-        bottom_text_x_coord = (img.width - bottom_text_width) / 2
-        ascent, descent = font.getmetrics()
-        bottom_text_y_coord = 50 + ascent
-        image_draw.text((bottom_text_x_coord, img.height - bottom_text_y_coord), bottom_text, fill=fill_color, font=font)
-        if underline in ["True", "true"]:
-            image_draw.line(((bottom_text_x_coord, img.height - 50), (bottom_text_x_coord + bottom_text_width, img.height - 50)), fill=fill_color, width=int(font_size / 10))
-
-        necessary_keys_for_other_texts = ['x', 'y', 'text']
         try:
             other_texts = json.loads(request.GET.get('otherTexts').replace('\'', '"'))
             if isinstance(other_texts, list):
                 for cur_txt_dict in other_texts:
-                    if all(key in cur_txt_dict for key in necessary_keys_for_other_texts):
-                        image_draw.text((cur_txt_dict.get('x'), cur_txt_dict.get('y')), cur_txt_dict.get('text'), fill=fill_color, font=font)
-                        text_width, text_height = ImageDraw.ImageDraw.textsize(image_draw, cur_txt_dict.get('text'), font)
-                        if underline in ["True", "true"]:
-                            image_draw.line(((cur_txt_dict.get('x'), cur_txt_dict.get('y') + text_height), (cur_txt_dict.get('x') + text_width, cur_txt_dict.get('y') + text_height)), fill=fill_color, width=int(font_size / 10))
+                    if all(key in cur_txt_dict for key in expect_keys):
+                        cls.draw_text(image_draw, cur_txt_dict.get('text'), cur_txt_dict.get('x'),
+                                      cur_txt_dict.get('y'), qp)
 
         except (json.decoder.JSONDecodeError, AttributeError, ValueError):
             pass
@@ -279,43 +254,20 @@ class MemeCreation:
     def create_memes(cls, request):
         template_name = request.GET.get('templateName')
         if template_name is None:
-            return JsonResponse({'message': 'meme template not found'}, status=400)
-
-        img = None
+            return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
 
         meme_template_path = next((template for template in cls.get_image_paths() if template.endswith(template_name + '.png')), None)
         if meme_template_path is None:
-            return JsonResponse({'message': 'meme template not found'}, status=400)
+            return JsonResponse({'message': 'meme template could not be found'}, status=400)
 
-        bold = request.GET.get('bold')
-        italic = request.GET.get('italic')
-        underline = request.GET.get('underline')
-
-        def get_font_style_path(font_style):
-            return os.path.join(cls.font_style_path, font_style)
-
-        try:
-            font_size = int(request.GET.get('fontSize'))
-        except (ValueError, TypeError):
-            font_size = cls.default_font_size
-
-        if bold in ["True", "true"] and italic in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(cls.font_bold_italic), font_size)
-        elif bold in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(cls.font_bold), font_size)
-        elif italic in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(cls.font_italic), font_size)
-        else:
-            font = ImageFont.truetype(get_font_style_path(cls.font_default), font_size)
-
-        try:
-            fill_color = tuple(int(request.GET.get('colorHex')[i:i+2], 16) for i in (0, 2, 4))
-        except (ValueError, TypeError):
-            fill_color = (0, 0, 0)
+        # rp is short for request parameters
+        qp = cls.get_query_parameters(request)
 
         created_memes = []
 
-        necessary_keys_for_other_texts = ['x', 'y', 'text']
+        # keys which are necessary to place a text (other than topText or bottomText) in image
+        expect_keys = ['x', 'y', 'text']
+
         try:
             text_lists = json.loads(request.GET.get('textLists').replace('\'', '"'))
             if isinstance(text_lists, list):
@@ -327,27 +279,22 @@ class MemeCreation:
                         for cur_txt_dict in text_list:
                             if isinstance(cur_txt_dict, dict):
                                 if 'topText' in cur_txt_dict:
-                                    top_text = cur_txt_dict.pop('topText')
-                                    top_text_width, top_text_height = ImageDraw.ImageDraw.textsize(image_draw, top_text, font)
-                                    top_text_x_coord = (img.width - top_text_width) / 2
-                                    top_text_y_coord = 50 - top_text_height * 0.79
-                                    image_draw.text((top_text_x_coord, top_text_y_coord), top_text, fill=fill_color, font=font)
-                                    if underline in ["True", "true"]:
-                                        image_draw.line(((top_text_x_coord, 50), (top_text_x_coord + top_text_width, 50)), fill=fill_color, width=int(font_size / 10))
+                                    text = cur_txt_dict.pop('topText')
+                                    text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, text, qp.get('font'))
+                                    x = (img.width - text_width) / 2
+                                    ascent, _ = qp.get('font').getmetrics()
+                                    y = 50 - ascent
+                                    cls.draw_text(image_draw, text, x, y, qp)
                                 if 'bottomText' in cur_txt_dict:
-                                    bottom_text = cur_txt_dict.pop('bottomText')
-                                    bottom_text_width, bottom_text_height = ImageDraw.ImageDraw.textsize(image_draw, bottom_text, font)
-                                    bottom_text_x_coord = (img.width - bottom_text_width) / 2
-                                    ascent, descent = font.getmetrics()
-                                    bottom_text_y_coord = 50 + ascent
-                                    image_draw.text((bottom_text_x_coord, img.height - bottom_text_y_coord), bottom_text, fill=fill_color, font=font)
-                                    if underline in ["True", "true"]:
-                                        image_draw.line(((bottom_text_x_coord, img.height - 50), (bottom_text_x_coord + bottom_text_width, img.height - 50)), fill=fill_color, width=int(font_size / 10))
-                                if all(key in cur_txt_dict for key in necessary_keys_for_other_texts):
-                                    image_draw.text((cur_txt_dict.get('x'), cur_txt_dict.get('y')), cur_txt_dict.get('text'), fill=fill_color, font=font)
-                                    text_width, text_height = ImageDraw.ImageDraw.textsize(image_draw, cur_txt_dict.get('text'), font)
-                                    if underline in ["True", "true"]:
-                                        image_draw.line(((cur_txt_dict.get('x'), cur_txt_dict.get('y') + text_height), (cur_txt_dict.get('x') + text_width, cur_txt_dict.get('y') + text_height)), fill=fill_color, width=int(font_size / 10))
+                                    text = cur_txt_dict.pop('bottomText')
+                                    text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, text, qp.get('font'))
+                                    x = (img.width - text_width) / 2
+                                    ascent, _ = qp.get('font').getmetrics()
+                                    y = img.height - (50 + ascent)
+                                    cls.draw_text(image_draw, text, x, y, qp)
+                                if all(key in cur_txt_dict for key in expect_keys):
+                                    cls.draw_text(image_draw, cur_txt_dict.get('text'), cur_txt_dict.get('x'),
+                                                        cur_txt_dict.get('y'), qp)
                         img.save(buffer, 'PNG')
                         created_memes.append(buffer.getvalue())
                         buffer.close()
@@ -365,6 +312,44 @@ class MemeCreation:
         response = HttpResponse(zip_archive.getvalue(), content_type='application/zip')
         response['Content-Disposition'] = 'attachment; filename="%s"' % 'memes.zip'
         return response
+
+    @classmethod
+    def get_query_parameters(cls, request):
+        def get_font_style_path(font_style):
+            return os.path.join(cls.font_style_path, font_style)
+
+        try:
+            font_size = int(request.GET.get('fontSize'))
+        except (ValueError, TypeError):
+            font_size = cls.default_font_size
+
+        bold = request.GET.get('bold')
+        italic = request.GET.get('italic')
+        underline = request.GET.get('underline')
+
+        if bold in ["True", "true"] and italic in ["True", "true"]:
+            font = ImageFont.truetype(get_font_style_path(cls.font_bold_italic), font_size)
+        elif bold in ["True", "true"]:
+            font = ImageFont.truetype(get_font_style_path(cls.font_bold), font_size)
+        elif italic in ["True", "true"]:
+            font = ImageFont.truetype(get_font_style_path(cls.font_italic), font_size)
+        else:
+            font = ImageFont.truetype(get_font_style_path(cls.font_default), font_size)
+
+        try:
+            fill_color = tuple(int(request.GET.get('colorHex')[i:i+2], 16) for i in (0, 2, 4))
+        except (ValueError, TypeError):
+            fill_color = (0, 0, 0)
+
+        return {'font_size': font_size, 'font': font, 'fill_color': fill_color, 'underline': underline}
+
+    @classmethod
+    def draw_text(cls, image_draw, text, x, y, qp):
+        text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, text, qp.get('font'))
+        ascent, _ = qp.get('font').getmetrics()
+        image_draw.text((x, y), text, fill=qp.get('fill_color'), font=qp.get('font'))
+        if qp.get('underline') in ["True", "true"]:
+            image_draw.line(((x, y + ascent), (x + text_width, y + ascent)), fill=qp.get('fill_color'), width=int(qp.get('font_size') / 10))
 
 
 class IMGFlip:
