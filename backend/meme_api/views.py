@@ -16,6 +16,7 @@ from django.db.models import Q
 import os
 import re
 import base64
+import requests
 from PIL import Image, ImageDraw, ImageFont
 import json, io, zipfile
 
@@ -168,6 +169,9 @@ class MemeTemplate:
 
     @classmethod
     def get_meme_template(cls, request):
+        if not cls.available_meme_templates:
+            cls.load_available_meme_templates()
+
         searched_template = request.GET.get('name')
 
         meme_data = next((template for template in cls.get_available_meme_templates() if template['name'] == searched_template), {'error': 'meme template not found'})
@@ -361,3 +365,13 @@ class MemeCreation:
         response = HttpResponse(zip_archive.getvalue(), content_type='application/zip')
         response['Content-Disposition'] = 'attachment; filename="%s"' % 'memes.zip'
         return response
+
+
+class IMGFlip:
+
+    @action(detail=False)
+    def get_imgflip_memes(self):
+        imgflip_response = requests.get('https://api.imgflip.com/get_memes')
+        print(imgflip_response)
+        if imgflip_response.status_code == 200:
+            return JsonResponse(imgflip_response)
