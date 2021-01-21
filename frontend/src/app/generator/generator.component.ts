@@ -489,10 +489,8 @@ export class GeneratorComponent implements AfterViewInit {
   loadFromAPI(): void {
     this.clearCanvas();
     console.log('pressed api');
-    const arr = this.memeService.getMemesFromImgFlip();
-    console.log(arr);
-    // Get call on imgflip api
-    /*this.memeService.paginator('https://api.imgflip.com/get_memes').subscribe(data => {
+    this.memeService.getMemesFromImgFlip().subscribe(data => {
+      console.log(data);
       this.imagesRecieved = JSON.parse(JSON.stringify(data));
     }, null, () => {
       this.imagesRecieved = this.imagesRecieved.data.memes;
@@ -503,14 +501,12 @@ export class GeneratorComponent implements AfterViewInit {
       img.src = randomImage.url;
       img.onload = () => {
         const scaleFactor = randomImage.width / this.width;
-        this.resizeCanvasHeight(randomImage.height);
+        this.resizeCanvasHeight(randomImage.height / scaleFactor);
         this.getCanvasRowspan();
 
         ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, this.width, this.currentHeight);
-
-      };*/
-    //});
-
+      };
+    });
   }
 
   public get triggerObservable(): Observable<void> {
@@ -534,8 +530,10 @@ export class GeneratorComponent implements AfterViewInit {
   showOnCanvas(): void {
     const ctx = this.fileCanvas.nativeElement.getContext('2d');
     const img = new Image();
-    img.src = this.webcamImage.imageAsDataUrl;
-    ctx.drawImage(img, 0, 100, 600, 500);
+    if (this.webcamImage) {
+      img.src = this.webcamImage.imageAsDataUrl;
+      ctx.drawImage(img, 0, 100, 600, 500);
+    }
     this.cameraOn = false;
   }
 

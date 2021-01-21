@@ -34,7 +34,7 @@ export class MemeService {
   }
 
   getMemesFromImgFlip(): any {
-    this.http.get(environment.apiUrl + '/imgFlip/');
+    return this.http.get(environment.apiUrl + '/imgFlip/');
   }
 
   saveMeme(meme: Meme): void {
