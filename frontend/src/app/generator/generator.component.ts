@@ -48,6 +48,7 @@ export class GeneratorComponent implements AfterViewInit {
   colorBackground: string;
 
   cameraOn = false;
+  videoOn = false;
 
   currentWidth: number;
   currentHeight: number;
@@ -93,7 +94,6 @@ export class GeneratorComponent implements AfterViewInit {
     this.memeService.getAllMemeTemplates().subscribe(memeTemplates => {
       const memeTemplateContainer = document.getElementById('memeTemplatesContainer');
       memeTemplateContainer.innerHTML = '';
-      console.log(memeTemplates);
       this.memeTemplates = memeTemplates;
 
       this.showMemeTemplates();
@@ -130,6 +130,8 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   selectFile(event: any): void {
+    this.videoOn = false;
+    this.emptyVideoContainer();
     // An image is uploaded from the users desktop
     if (!event.target.files[0] || event.target.files[0].length === 0) {
       // if no image
@@ -154,7 +156,57 @@ export class GeneratorComponent implements AfterViewInit {
         ctx.drawImage(img, 0, 100, 600, 500);
       };
     };
+  }
 
+  selectVideo(event: any): void {
+    // A video is uploaded from the users desktop
+    if (!event.target.files[0] || event.target.files[0].length === 0) {
+      // if no video
+      return;
+    }
+    const mimeType = event.target.files[0].type;
+    if (mimeType.match(/video\/*/) == null) {
+      // Check if video
+      return;
+    }
+    const reader = new FileReader();
+    // Read in video
+    reader.readAsDataURL(event.target.files[0]);
+    reader.onload = event1 => {
+      // hide html elements when video is playing
+      this.videoOn = true;
+      // base64 video string
+      const videoString = event1.target.result as string;
+      const videoContainer = document.getElementById('videoContainer');
+      // empty videoContainer if another video showing
+      this.emptyVideoContainer();
+      // create video element
+      const videoEl: HTMLVideoElement = document.createElement('video');
+      videoEl.loop = true;
+      videoEl.controls = true;
+      videoContainer.appendChild(videoEl);
+      // create source element
+      const source = document.createElement('source');
+      source.setAttribute('src', videoString);
+      videoEl.appendChild(source);
+      const containerWidth = this.width;
+      const containerHeight = this.height;
+      videoEl.addEventListener( 'loadedmetadata', function(e): void {
+        // wait till loadedmetadata to have video element's videoWidth and videoHeight
+        // calculate scaleFactor to properly show in meme container
+        const scaleFactor = Math.min(containerWidth / this.videoWidth, containerHeight / this.videoHeight);
+        videoEl.width = this.videoWidth * scaleFactor;
+        videoEl.height = this.videoHeight * scaleFactor;
+        // play video after scaling
+        this.play().then(r => {} );
+      }, false );
+    };
+  }
+
+  emptyVideoContainer(): void {
+    // empty the videoContainer
+    const videoContainer = document.getElementById('videoContainer');
+    videoContainer.innerHTML = '';
   }
 
   textChanged(): void {
@@ -441,6 +493,8 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.width = 80;
       newImg.height = 80;
       newImg.addEventListener('click', () => {
+        this.videoOn = false;
+        this.emptyVideoContainer();
         this.currentlyShownMemeTemplateIndex = this.memeTemplates.indexOf(template);
 
         const canvas = this.fileCanvas.nativeElement;
@@ -458,13 +512,15 @@ export class GeneratorComponent implements AfterViewInit {
         };
       });
       newImg.src = 'data:image/jpg;base64,' + template.base64_string;
-      newImg.alt = 'ndfjkalsfjdsafjsaöfjdslo';
+      newImg.alt = 'Loading';
       memeTemplateContainer.append(newImg);
     });
   }
 
   loadFromWebcam(): void {
     console.log('opening webcam');
+    this.videoOn = false;
+    this.emptyVideoContainer();
     if (this.cameraOn === false){
       this.cameraOn = true;
     }
@@ -483,12 +539,15 @@ export class GeneratorComponent implements AfterViewInit {
 
   loadScreenshotOfURL(): void {
     console.log('pressed screenshot');
-
+    this.videoOn = false;
+    this.emptyVideoContainer();
   }
 
   loadFromAPI(): void {
     this.clearCanvas();
     console.log('pressed api');
+    this.videoOn = false;
+    this.emptyVideoContainer();
     this.memeService.getMemesFromImgFlip().subscribe(data => {
       console.log(data);
       this.imagesRecieved = JSON.parse(JSON.stringify(data));
@@ -632,6 +691,8 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   openDialog(): void {
+    this.videoOn = false;
+    this.emptyVideoContainer();
     const dialogRef = this.dialog.open(InputUrlDialogComponent, {
       width: '300px',
       data: {name: this.url}

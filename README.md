@@ -1,4 +1,9 @@
 # omm-meme-gen
+<<<<<<< HEAD
+<<<<<<< Updated upstream
+=======
+=======
+>>>>>>> main
 
 
 ## API
@@ -22,7 +27,7 @@ parameters:
 | italic | false | False |
 | underline | true | False |
 
-as url: <http://127.0.0.1:8000/createMeme/?templateName=bernieAsking&topText=text on top a bit longer&bottomText=for your bottom text&fontSize=25&colorHex=ff8cff&bold=True&italic=true&underline=true>
+as url: <http://127.0.0.1:8000/createMeme/?templateName=bernieAsking&topText=text%20on%20top%20a%20bit%20longer&bottomText=for%20your%20bottom%20text&fontSize=25&colorHex=ff8cff&bold=True&italic=true&underline=true>
 
 response content_type = 'image/png':   
 ![alt text](memeExamples/singleImageTopBottomText.png "single image top and bottom text")
@@ -48,7 +53,8 @@ parameters:
 | italic | false | False |
 | underline | true | False |
 
-as url: <http://127.0.0.1:8000/createMeme/?templateName=bernieAsking&topText=text on top a bit longer&bottomText=for your bottom text&fontSize=25&colorHex=ff8cff&otherTexts=[{"x": 20, "y":200, "text":'mein extra text'}, {'x': 200, 'y': 110, 'text': 'noch anderer text'}]&bold=True&italic=true&underline=true>
+
+as url: <http://127.0.0.1:8000/createMeme/?templateName=bernieAsking&topText=text%20on%20top%20a%20bit%20longer&bottomText=for%20your%20bottom%20text&fontSize=25&colorHex=ff8cff&otherTexts=[{%22x%22:%2020,%20%22y%22:200,%20%22text%22:%27mein%20extra%20text%27},%20{%27x%27:%20200,%20%27y%27:%20110,%20%27text%27:%20%27noch%20anderer%20text%27}]&bold=True&italic=true&underline=true>
 
 response content_type = 'image/png':   
 ![alt text](memeExamples/singleImageMultipleTexts.png "single image multiple texts")
@@ -72,8 +78,9 @@ parameters:
 | italic | false | False |
 | underline | true | False |
 
-as url: <http://127.0.0.1:8000/createMemes/?templateName=bernieAsking&fontSize=25&colorHex=ff8cff&textLists=[[{"x": 20, "y":200, "text":'mein extra text'}, {'x': 200, 'y': 110, 'text': 'noch anderer text'}], [{'x':10,'y':10,'text':'was los'}, {'bottomText': 'for your bottom text'}]]&bold=True&italic=true&underline=true>
 
-response content_type = 'application/zip':
+as url: <http://127.0.0.1:8000/createMemes/?templateName=bernieAsking&fontSize=25&colorHex=ff8cff&textLists=[[{%22x%22:%2020,%20%22y%22:200,%20%22text%22:%27mein%20extra%20text%27},%20{%27x%27:%20200,%20%27y%27:%20110,%20%27text%27:%20%27noch%20anderer%20text%27}],%20[{%27x%27:10,%27y%27:10,%27text%27:%27was%20los%27},%20{%27bottomText%27:%20%27for%20your%20bottom%20text%27}]]&bold=True&italic=true&underline=true>
+
+response content_type = 'application/zip':  
 response: zip containing images named meme0.png, meme1.png, ...
 

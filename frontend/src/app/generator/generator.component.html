@@ -17,6 +17,9 @@
             <input #file hidden (change)=" selectFile($event)" accept="image/*" type="file">
             <button mat-raised-button class="butn" id="fileSelect" (click)="file.click()">Upload an Image</button>
 
+            <input #video hidden (change)=" selectVideo($event)" accept="video/*" type="file">
+            <button mat-raised-button class="butn" id="videoSelect" (click)="video.click()">Upload a Video</button>
+
             <button mat-raised-button class="butn" id="URLSelect" (click)="openDialog()">Load an image from an URL</button>
 
             <button mat-raised-button class="butn" id="ScreenshotSelect" (click)="loadScreenshotOfURL()">Upload Screenshot from URL</button>
@@ -51,13 +54,14 @@
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
-          <div>
+          <div [hidden]="videoOn">
             <canvas [hidden]="cameraOn" #previewBackground [style.background]="colorBackground" class="meme-canvas"></canvas>
             <canvas [hidden]="cameraOn" #previewFile class="meme-canvas"></canvas>
             <canvas [hidden]="cameraOn" #previewText class="meme-canvas"></canvas>
             <canvas [hidden]="cameraOn" #previewTextbox class="meme-canvas"></canvas>
             <canvas [hidden]="cameraOn" #previewDraw class="meme-canvas"></canvas>
           </div>
+          <div [hidden]="!videoOn" id="videoContainer"></div>
 
           <div *ngIf="cameraOn">
             <webcam height="{{height}}"
