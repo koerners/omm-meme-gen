@@ -158,7 +158,6 @@ class MemeTemplate:
                     base64_string = base64_bytes.decode('utf-8')
                     templates.append({'name': re.sub(r'.png$', '', image), 'base64_string': base64_string})
 
-            print(templates[0])
             cls.available_meme_templates = templates
 
         return cls.available_meme_templates
