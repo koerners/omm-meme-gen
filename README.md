@@ -1,9 +1,4 @@
 # omm-meme-gen
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> main
 
 
 ## API
