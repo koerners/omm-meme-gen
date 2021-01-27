@@ -29,3 +29,38 @@ canvas {
   margin-top: 5%;
   left: 5%;
 }
+
+.memeTemplatesCycle {
+  height: 100px;
+  display: flex;
+}
+
+.memeTemplatesContainer {
+  overflow: auto;
+  white-space: nowrap;
+  height: 100px;
+  width: 80%;
+  margin: auto;
+}
+
+.memeTemplate {
+  display: inline-block;
+  height: 80px;
+  width: 80px;
+}
+
+.previousTemplateButton {
+  position: absolute;
+  left: 2.5%;
+  height: 80px;
+  width: 5%;
+  font-size: 50px;
+}
+
+.nextTemplateButton {
+  position: absolute;
+  right: 2.5%;
+  height: 80px;
+  width: 5%;
+  font-size: 50px;
+}

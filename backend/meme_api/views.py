@@ -1,16 +1,24 @@
 from django.contrib.auth.models import User, Group
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework import viewsets
+from rest_framework import views
 from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from meme_api.models import Meme, Comment, Vote
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer
 
 from django.db.models import Q
+import os
+import re
+import base64
+import requests
+from PIL import Image, ImageDraw, ImageFont
+import json, io, zipfile
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -129,3 +137,226 @@ class VoteList(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+
+class MemeTemplate:
+
+    available_meme_templates = None
+
+    @classmethod
+    def get_available_meme_templates(cls):
+        if not cls.available_meme_templates:
+            images = os.listdir(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))
+
+            backend_basename = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+            templates = []
+
+            for image in images:
+                with open(os.path.join(backend_basename, 'media/memeTemplates', image), "rb") as image_file:
+                    base64_bytes = base64.b64encode(image_file.read())
+                    base64_string = base64_bytes.decode('utf-8')
+                    templates.append({'name': re.sub(r'.png$', '', image), 'base64_string': base64_string})
+
+            print(templates[0])
+            cls.available_meme_templates = templates
+
+        return cls.available_meme_templates
+
+    @classmethod
+    def get_all_meme_templates(cls, request):
+        return JsonResponse(cls.get_available_meme_templates(), safe=False)
+
+    @classmethod
+    def get_meme_template(cls, request):
+        if not cls.available_meme_templates:
+            cls.load_available_meme_templates()
+
+        searched_template = request.GET.get('name')
+
+        meme_data = next((template for template in cls.get_available_meme_templates() if template['name'] == searched_template), {'error': 'meme template not found'})
+
+        return JsonResponse(meme_data)
+
+
+class MemeCreation:
+
+    image_paths = None
+    default_font_size = 30
+    font_default = 'Ubuntu-M.ttf'
+    font_bold = 'Ubuntu-B.ttf'
+    font_italic = 'Ubuntu-MI.ttf'
+    font_bold_italic = 'Ubuntu-BI.ttf'
+    font_style_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/fonts')
+
+    @classmethod
+    def get_image_paths(cls):
+        if not cls.image_paths:
+            backend_basename = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+            meme_templates_dir = 'media/memeTemplates'
+
+            cls.image_paths = [os.path.join(backend_basename, meme_templates_dir, image_name) for image_name in os.listdir(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))]
+
+        return cls.image_paths
+
+    @classmethod
+    def create_meme(cls, request):
+        template_name = request.GET.get('templateName')
+        if template_name is None:
+            return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
+
+        meme_template_path = next((template for template in cls.get_image_paths() if template.endswith(template_name + '.png')), None)
+        if meme_template_path is None:
+            return JsonResponse({'message': 'meme template could not be found'}, status=400)
+
+        # rp is short for request parameters
+        qp = cls.get_query_parameters(request)
+
+        img = Image.open(meme_template_path)
+        image_draw = ImageDraw.Draw(img)
+
+        top_text = request.GET.get('topText', '')
+        text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, top_text, qp.get('font'))
+        x = (img.width - text_width) / 2
+        ascent, _ = qp.get('font').getmetrics()
+        y = 50 - ascent
+        cls.draw_text(image_draw, top_text, x, y, qp)
+
+        bottom_text = request.GET.get('bottomText', '')
+        text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, bottom_text, qp.get('font'))
+        x = (img.width - text_width) / 2
+        ascent, _ = qp.get('font').getmetrics()
+        y = img.height - (50 + ascent)
+        cls.draw_text(image_draw, bottom_text, x, y, qp)
+
+        # keys which are necessary to place a text (other than topText or bottomText) in image
+        expect_keys = ['x', 'y', 'text']
+
+        try:
+            other_texts = json.loads(request.GET.get('otherTexts').replace('\'', '"'))
+            if isinstance(other_texts, list):
+                for cur_txt_dict in other_texts:
+                    if all(key in cur_txt_dict for key in expect_keys):
+                        cls.draw_text(image_draw, cur_txt_dict.get('text'), cur_txt_dict.get('x'),
+                                      cur_txt_dict.get('y'), qp)
+
+        except (json.decoder.JSONDecodeError, AttributeError, ValueError):
+            pass
+
+        response = HttpResponse(content_type='image/png')
+
+        img.save(response, 'PNG')
+
+        return response
+
+    @classmethod
+    def create_memes(cls, request):
+        template_name = request.GET.get('templateName')
+        if template_name is None:
+            return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
+
+        meme_template_path = next((template for template in cls.get_image_paths() if template.endswith(template_name + '.png')), None)
+        if meme_template_path is None:
+            return JsonResponse({'message': 'meme template could not be found'}, status=400)
+
+        # rp is short for request parameters
+        qp = cls.get_query_parameters(request)
+
+        created_memes = []
+
+        # keys which are necessary to place a text (other than topText or bottomText) in image
+        expect_keys = ['x', 'y', 'text']
+
+        try:
+            text_lists = json.loads(request.GET.get('textLists').replace('\'', '"'))
+            if isinstance(text_lists, list):
+                for text_list in text_lists:
+                    if isinstance(text_list, list):
+                        img = Image.open(meme_template_path)
+                        image_draw = ImageDraw.Draw(img)
+                        buffer = io.BytesIO()
+                        for cur_txt_dict in text_list:
+                            if isinstance(cur_txt_dict, dict):
+                                if 'topText' in cur_txt_dict:
+                                    text = cur_txt_dict.pop('topText')
+                                    text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, text, qp.get('font'))
+                                    x = (img.width - text_width) / 2
+                                    ascent, _ = qp.get('font').getmetrics()
+                                    y = 50 - ascent
+                                    cls.draw_text(image_draw, text, x, y, qp)
+                                if 'bottomText' in cur_txt_dict:
+                                    text = cur_txt_dict.pop('bottomText')
+                                    text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, text, qp.get('font'))
+                                    x = (img.width - text_width) / 2
+                                    ascent, _ = qp.get('font').getmetrics()
+                                    y = img.height - (50 + ascent)
+                                    cls.draw_text(image_draw, text, x, y, qp)
+                                if all(key in cur_txt_dict for key in expect_keys):
+                                    cls.draw_text(image_draw, cur_txt_dict.get('text'), cur_txt_dict.get('x'),
+                                                        cur_txt_dict.get('y'), qp)
+                        img.save(buffer, 'PNG')
+                        created_memes.append(buffer.getvalue())
+                        buffer.close()
+        except json.decoder.JSONDecodeError:
+            return JsonResponse({'message': 'could not parse param \'textLists\''}, status=400)
+        except EOFError as e:
+            print(e)
+            pass
+
+        zip_archive = io.BytesIO()
+        with zipfile.ZipFile(zip_archive, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for index, image in enumerate(created_memes):
+                zf.writestr('meme'+str(index)+'.png', image)
+
+        response = HttpResponse(zip_archive.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % 'memes.zip'
+        return response
+
+    @classmethod
+    def get_query_parameters(cls, request):
+        def get_font_style_path(font_style):
+            return os.path.join(cls.font_style_path, font_style)
+
+        try:
+            font_size = int(request.GET.get('fontSize'))
+        except (ValueError, TypeError):
+            font_size = cls.default_font_size
+
+        bold = request.GET.get('bold')
+        italic = request.GET.get('italic')
+        underline = request.GET.get('underline')
+
+        if bold in ["True", "true"] and italic in ["True", "true"]:
+            font = ImageFont.truetype(get_font_style_path(cls.font_bold_italic), font_size)
+        elif bold in ["True", "true"]:
+            font = ImageFont.truetype(get_font_style_path(cls.font_bold), font_size)
+        elif italic in ["True", "true"]:
+            font = ImageFont.truetype(get_font_style_path(cls.font_italic), font_size)
+        else:
+            font = ImageFont.truetype(get_font_style_path(cls.font_default), font_size)
+
+        try:
+            fill_color = tuple(int(request.GET.get('colorHex')[i:i+2], 16) for i in (0, 2, 4))
+        except (ValueError, TypeError):
+            fill_color = (0, 0, 0)
+
+        return {'font_size': font_size, 'font': font, 'fill_color': fill_color, 'underline': underline}
+
+    @classmethod
+    def draw_text(cls, image_draw, text, x, y, qp):
+        text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, text, qp.get('font'))
+        ascent, _ = qp.get('font').getmetrics()
+        image_draw.text((x, y), text, fill=qp.get('fill_color'), font=qp.get('font'))
+        if qp.get('underline') in ["True", "true"]:
+            image_draw.line(((x, y + ascent), (x + text_width, y + ascent)), fill=qp.get('fill_color'), width=int(qp.get('font_size') / 10))
+
+
+class IMGFlip:
+    @action(detail=False)
+    def get_imgflip_memes(self):
+        imgflip_response = requests.get('https://api.imgflip.com/get_memes')
+
+        if imgflip_response.status_code == 200:
+
+            return HttpResponse(imgflip_response)

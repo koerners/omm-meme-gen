@@ -82,6 +82,10 @@
               : </b> {{comment.text}} - <i>{{comment.created | date}}</i></mat-card>
 
           </mat-list>
+
+
+
+
         </mat-card-content>
       </mat-card>
 
@@ -108,6 +112,17 @@
           <p>Downvotes: {{meme.downvotes}}</p>
           <p>Views: {{meme.views}}</p>
           <p>Created by: {{meme.owner}}</p>
+
+
+          <share-buttons [theme]="'circles-dark'"
+                         [include]="['facebook','twitter','linkedin','reddit','telegram','messenger','whatsapp','xing','email','copy']"
+                         [show]="5"
+                         [title]="meme.title"
+                         [showText]="true"
+                         [size]="-2"
+                         [description]="'Look at this great meme!'"
+                         [tags]="'Meme, Funny, Lol'"
+          ></share-buttons>
 
         </mat-card-content>
       </mat-card>

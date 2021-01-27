@@ -1,10 +1,13 @@
 from django.contrib import admin
 from django.urls import include, path
+from django.conf.urls.static import static
 from rest_framework import routers
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView, TokenVerifyView,
 )
+import os
+from django.http import HttpResponse
 
 from meme_api import views
 
@@ -23,5 +26,11 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('admin/', admin.site.urls)
-]
+    path('admin/', admin.site.urls),
+    path('blub', lambda request: HttpResponse('Hello World!')),
+    path('memeTemplates/', views.MemeTemplate.get_all_meme_templates),
+    path('memeTemplate/', views.MemeTemplate.get_meme_template),
+    path('createMeme/', views.MemeCreation.create_meme),
+    path('createMemes/', views.MemeCreation.create_memes),
+    path('imgFlip/', views.IMGFlip.get_imgflip_memes)
+] + static('/media/memeTemplates', document_root=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))

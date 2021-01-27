@@ -21,6 +21,22 @@ export class MemeService {
     return this.http.get(environment.apiUrl + '/meme/own/');
   }
 
+  getAllMemeTemplates(): any {
+    return this.http.get(environment.apiUrl + '/memeTemplates/');
+  }
+
+  getMemeTemplateByString(templateName: string): any {
+    this.http.get(environment.apiUrl + '/memeTemplate/?name=' + templateName)
+      .subscribe(template => {
+        console.log('meme template:', template);
+        return template;
+      });
+  }
+
+  getMemesFromImgFlip(): any {
+    return this.http.get(environment.apiUrl + '/imgFlip/');
+  }
+
   saveMeme(meme: Meme): void {
     this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,
