@@ -17,6 +17,7 @@ import os
 import re
 import base64
 import requests
+from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import json, io, zipfile
 
@@ -48,7 +49,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class MemeList(viewsets.ModelViewSet):
     @action(detail=False)
     def own(self, request):
-        own_memes = Meme.objects.filter(owner=request.user).order_by('-created').values()
+        own_memes = Meme.objects.filter(owner=request.user).order_by('-created') #.values()
 
         page = self.paginate_queryset(own_memes)
         if page is not None:
@@ -60,7 +61,7 @@ class MemeList(viewsets.ModelViewSet):
 
     @action(detail=False)
     def availableMemes(self, request):
-        available = Meme.objects.filter(Q(owner=request.user) | Q(private=False)).order_by('-created').values('id')
+        available = Meme.objects.filter(Q(owner=request.user) | Q(private=False)).order_by('-created') #.values('id')
 
         serializer = self.get_serializer(available, many=True)
         return Response(serializer.data)
@@ -69,7 +70,38 @@ class MemeList(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def list(self, request):
-        queryset = Meme.objects.filter(private=False)
+        sort_ = request.GET.get("sort", "")
+        filter_ = request.GET.get("filter", "")
+        filter_value_ = request.GET.get("value", "")
+
+        queryset = Meme.objects
+
+        #TODO multi-field-Query Builder instead
+        if filter_ == "title" and not filter_value_ == "":
+            print("filter: title contains "+filter_value_)
+            queryset = queryset.filter(Q(title__icontains=filter_value_) & Q(private=False))
+        elif filter_ == "owner_id" and not filter_value_ == "":
+            print("filter: owner_id="+filter_value_)
+            queryset = queryset.filter(Q(owner_id=int(filter_value_)) & Q(private=False))
+        elif filter_ == "views" and not filter_value_ == "":
+            print("filter: views>="+filter_value_)
+            queryset = queryset.filter(Q(views__gte=int(filter_value_)) & Q(private=False))
+        elif filter_ == "-views" and not filter_value_ == "":
+            print("filter: views<="+filter_value_)
+            queryset = queryset.filter(Q(views__lte=int(filter_value_)) & Q(private=False))
+        elif filter_ == "created" and not filter_value_ == "":
+            print("filter: created>="+filter_value_)
+            queryset = queryset.filter(Q(created__gte=datetime.strptime(filter_value_, '%Y-%m-%d')) & Q(private=False))
+        elif filter_ == "-created" and not filter_value_ == "":
+            print("filter: created<="+filter_value_)
+            queryset = queryset.filter(Q(created__lte=datetime.strptime(filter_value_+" 23:59:59", '%Y-%m-%d %H:%M:%S')) & Q(private=False))
+        else:
+            queryset = queryset.filter(private=False)
+
+        if re.match(r"^\-?((title)|(owner)|(views)|(created))$", sort_) is not None:
+            print("order: "+sort_)
+            queryset = queryset.order_by(sort_)
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

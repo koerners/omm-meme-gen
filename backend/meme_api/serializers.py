@@ -25,10 +25,29 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class MemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meme
-        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private']
+        fields = ['id', 'title', 'owner', 'image_string', 'views', 'meme_comment', 'comments', 'meme_vote', 'upvotes', 'downvotes', 'private', 'created']
 
     owner = serializers.ReadOnlyField(source='owner.username')
+    comments = serializers.IntegerField(
+        source='meme_comment.count',
+        read_only=True
+    )
+    upvotes = serializers.SerializerMethodField()
+    downvotes = serializers.SerializerMethodField()
 
+    def get_upvotes(self, obj):
+        upvotes = 0
+        for val in obj.meme_vote.all():
+            if val.upvote == True:
+                upvotes+=1
+        return upvotes
+
+    def get_downvotes(self, obj):
+        downvotes = 0
+        for val in obj.meme_vote.all():
+            if val.upvote == False:
+                downvotes+=1
+        return downvotes
 
 
 class CommentSerializer(serializers.ModelSerializer):
