@@ -13,6 +13,19 @@ export class MemeService {
     return this.http.get(environment.apiUrl + '/meme/');
   }
 
+  getAllSortFilter(sort: string, order: string, filter: string, value: string): any {
+    let params = '';
+    if (sort) {
+      // console.log(sort, order);
+      params += 'sort=' + order + sort;
+    }
+    if (filter && value) {
+      // console.log(filter, value);
+      params += (params ? '&' : '') + 'filter=' + filter + '&value=' + value;
+    }
+    return this.http.get(environment.apiUrl + '/meme/' + (params ? '?' + params : ''));
+  }
+
   paginator(url: string): any {
     return this.http.get(url + '');
   }
