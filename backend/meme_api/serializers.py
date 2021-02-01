@@ -21,7 +21,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         user.save()
         return user
 
+class MemeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meme
+        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private']
 
+    owner = serializers.ReadOnlyField(source='owner.username')
+"""
 class MemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meme
@@ -48,7 +54,7 @@ class MemeSerializer(serializers.ModelSerializer):
             if val.upvote == False:
                 downvotes+=1
         return downvotes
-
+"""
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
