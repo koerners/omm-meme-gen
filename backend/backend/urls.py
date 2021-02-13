@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from rest_framework import routers
 from rest_framework_simplejwt.views import (
@@ -32,5 +32,6 @@ urlpatterns = [
     path('memeTemplate/', views.MemeTemplate.get_meme_template),
     path('createMeme/', views.MemeCreation.create_meme),
     path('createMemes/', views.MemeCreation.create_memes),
-    path('imgFlip/', views.IMGFlip.get_imgflip_memes)
+    path('imgFlip/', views.IMGFlip.get_imgflip_memes, name='img_flip'),
+    path('screenshotFromUrl/', views.ScreenshotFromUrl.get_screenshot, name='url_screenshot')
 ] + static('/media/memeTemplates', document_root=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))

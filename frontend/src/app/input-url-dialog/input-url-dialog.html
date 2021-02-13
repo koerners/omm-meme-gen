@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <h1 mat-dialog-title>Please enter the URL</h1>
+<mat-button-toggle-group #group="matButtonToggleGroup">
+<mat-button-toggle value="screenshot">For a screenshot of a website</mat-button-toggle>
+  <mat-button-toggle value="url">to upload an image from</mat-button-toggle>
+</mat-button-toggle-group>
 <div mat-dialog-content>
   <mat-form-field>
     <input matInput [(ngModel)]="data.url">
@@ -8,5 +12,5 @@
 </div>
 <div mat-dialog-actions>
   <button mat-button (click)="onNoClick()">No Thanks</button>
-  <button mat-button [mat-dialog-close]="data.url" cdkFocusInitial>Ok</button>
+  <button mat-button [mat-dialog-close]="group.value + ' ' + data.url" cdkFocusInitial>Ok</button>
 </div>

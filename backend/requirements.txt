@@ -5,3 +5,4 @@ django-cors-headers
 random-username
 requests
 Pillow
+selenium
