@@ -1,3 +1,6 @@
+import sys
+import urllib
+
 from django.contrib.auth.models import User, Group
 from django.http import JsonResponse, HttpResponse
 from rest_framework import generics
@@ -7,6 +10,8 @@ from rest_framework import views
 from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 from meme_api.models import Meme, Comment, Vote
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
@@ -19,6 +24,7 @@ import base64
 import requests
 from PIL import Image, ImageDraw, ImageFont
 import json, io, zipfile
+import urllib.parse
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -360,3 +366,25 @@ class IMGFlip:
         if imgflip_response.status_code == 200:
 
             return HttpResponse(imgflip_response)
+
+class ScreenshotFromUrl:
+    @action(detail=False)
+    def get_screenshot(request):
+        encoded_url = request.GET.get('url')
+        if encoded_url is not None and encoded_url != '':
+            url = urllib.parse.unquote(encoded_url)
+            CHROMEDRIVER_PATH = '/usr/bin/chromedriver'
+            WINDOW_SIZE = "800,1080"
+
+            chrome_options = Options()
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
+            driver = webdriver.Chrome(CHROMEDRIVER_PATH, chrome_options=chrome_options)
+            driver.get(url)
+            screenshot_img = driver.get_screenshot_as_base64()
+            driver.quit()
+            screenshot = screenshot_img
+
+            return HttpResponse(screenshot)
+
+        return None

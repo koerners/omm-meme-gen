@@ -75,4 +75,7 @@ export class MemeService {
   loadVotes(id: string): any {
     return this.http.get(environment.apiUrl + '/vote/votes_by_meme/?meme=' + String(id));
   }
+  getScreenshotFromUrl(url: string): any{
+    return this.http.get(environment.apiUrl + '/screenshotFromUrl/?url=' + url, {responseType: 'text'});
+  }
 }

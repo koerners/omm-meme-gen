@@ -12,6 +12,7 @@ import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
+import {decodeBase64} from "@tensorflow/tfjs-converter/dist/operations/operation_mapper";
 
 export interface DialogData {
   url: string;
@@ -49,6 +50,7 @@ export class GeneratorComponent implements AfterViewInit {
 
   cameraOn = false;
   videoOn = false;
+  res = '';
 
   currentWidth: number;
   currentHeight: number;
@@ -537,12 +539,6 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
 
-  loadScreenshotOfURL(): void {
-    console.log('pressed screenshot');
-    this.videoOn = false;
-    this.emptyVideoContainer();
-  }
-
   loadFromAPI(): void {
     this.clearCanvas();
     console.log('pressed api');
@@ -689,21 +685,42 @@ export class GeneratorComponent implements AfterViewInit {
 
     this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
   }
-
+  /**
+   * Opens dialog for entering URL in order to get an imaage or screenshot from it via backend
+   */
   openDialog(): void {
     this.videoOn = false;
+    let toggle = '';
     this.emptyVideoContainer();
+
     const dialogRef = this.dialog.open(InputUrlDialogComponent, {
-      width: '300px',
+      width: '600px',
       data: {name: this.url}
     });
-
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed');
-      this.url = result;
+      toggle = result.split(' ')[0];
+      this.url = result.split(' ')[1];
     }, null , () => {
-      this.loadFromURL();
+      // Switch toggle between image from url and screenshot from url
+      if (toggle === 'url') {
+        this.loadFromURL();
+      } else {
+        this.videoOn = false;
+        this.emptyVideoContainer();
+        this.clearCanvas();
+        const ctx = this.fileCanvas.nativeElement.getContext('2d');
+        const img = new Image();
+        // Send request with endoded URL as paramter to backend
+        this.memeService.getScreenshotFromUrl(encodeURIComponent(this.url)).subscribe(response => {
+          this.res = response;
+          // add missing data info to base64 response string
+          img.src = 'data:image/png;base64, ' + this.res;
+          console.log(img.src);
+          this.width = img.width;
+          img.onload = () => ctx.drawImage(img, 0, 100, img.width, img.height);
+        });
+      }
     });
   }
 }
-
