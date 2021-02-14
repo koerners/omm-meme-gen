@@ -1,7 +1,6 @@
 import {AfterViewInit, Component, OnInit} from '@angular/core';
 import {map} from 'rxjs/operators';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
-import {User} from '../User';
 import {MemeService} from '../services/meme.service';
 import { ChartDataSets, ChartOptions } from 'chart.js';
 import { Color, Label } from 'ng2-charts';
