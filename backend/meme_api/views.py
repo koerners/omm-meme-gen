@@ -17,7 +17,7 @@ from meme_api.models import Meme, Comment, Vote
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer
 
-from django.db.models import Q
+from django.db.models import Q, Count
 import os
 import re
 import base64
@@ -180,7 +180,9 @@ class MemeTemplate:
 
         searched_template = request.GET.get('name')
 
-        meme_data = next((template for template in cls.get_available_meme_templates() if template['name'] == searched_template), {'error': 'meme template not found'})
+        meme_data = next(
+            (template for template in cls.get_available_meme_templates() if template['name'] == searched_template),
+            {'error': 'meme template not found'})
 
         return JsonResponse(meme_data)
 
@@ -364,8 +366,24 @@ class IMGFlip:
         imgflip_response = requests.get('https://api.imgflip.com/get_memes')
 
         if imgflip_response.status_code == 200:
-
             return HttpResponse(imgflip_response)
+
+
+class SendStatistics:
+    @action(detail=False)
+    def send_statisticis(self):
+        user_database = User.objects.all()
+        for user in user_database:
+            print(user)
+        top_five_memes = list(Meme.objects.values('id', 'title', 'views').order_by('-views')[:5])
+
+
+        print(top_five_memes)
+        comments_database = Comment.objects.all()
+        for comment in comments_database:
+            print(comment)
+
+        return JsonResponse(top_five_memes, safe=False)
 
 class ScreenshotFromUrl:
     @action(detail=False)

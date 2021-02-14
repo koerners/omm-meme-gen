@@ -11,6 +11,9 @@ class Meme(models.Model):
     private = models.BooleanField(default=False)
 
 
+
+
+
     class Meta:
         ordering = ['created']
 
@@ -36,3 +39,7 @@ class Vote(models.Model):
 
     class Meta:
         ordering = ['created']
+#
+# class MemeTopHstory(models.Model):
+#     id = models.AutoField(primary_key=True)
+#     top_meme = models.aggregates(max(models))

@@ -30,6 +30,8 @@
     "@tensorflow/tfjs-backend-webgl": "^2.8.3",
     "@tensorflow/tfjs-converter": "^2.8.3",
     "@tensorflow/tfjs-core": "^2.8.3",
+    "chart.js": "^2.9.4",
+    "ng2-charts": "^2.4.2",
     "ngx-color": "^6.2.0",
     "ngx-sharebuttons": "^8.0.5",
     "ngx-webcam": "^0.3.2",

@@ -1,6 +1,6 @@
 <div class="grid-container">
   <h1 class="mat-h1">Dashboard</h1>
-  <mat-grid-list cols="2" rowHeight="350px">
+  <mat-grid-list cols="2" rowHeight={{rowHeight}}>
     <mat-grid-tile *ngFor="let card of cards | async" [colspan]="card.cols" [rowspan]="card.rows">
       <mat-card class="dashboard-card">
         <mat-card-header>
@@ -16,7 +16,19 @@
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
-          <div>Card Content Here</div>
+          <div *ngIf="card.title == 'Card 1'">
+          <div class="chart-wrapper" *ngIf="chartReady">
+            <canvas baseChart height="{{chartRowHeight}}"
+                    [datasets]="topMemeChartData"
+                    [labels]="topMemeChartLabels"
+                    [options]="topMemeChartOptions"
+                    [colors]="topMemeChartColors"
+                    [legend]="topMemeChartLegend"
+                    [chartType]="topMemeChartType"
+                    [plugins]="topMemeChartPlugins">
+            </canvas>
+          </div>
+          </div>
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
