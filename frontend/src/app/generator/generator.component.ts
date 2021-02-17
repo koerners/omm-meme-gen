@@ -1,5 +1,6 @@
-import {AfterViewInit, Component, Input, ViewChild, ElementRef} from '@angular/core';
+import {AfterViewInit, Component, Input, ViewChild, ElementRef, NgZone} from '@angular/core';
 import {FormControl} from '@angular/forms';
+import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import {fromEvent, Subject, Observable, pipe} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
@@ -12,12 +13,14 @@ import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
-import {decodeBase64} from "@tensorflow/tfjs-converter/dist/operations/operation_mapper";
+import {decodeBase64} from '@tensorflow/tfjs-converter/dist/operations/operation_mapper';
+
 
 export interface DialogData {
   url: string;
 }
 
+declare const annyang: any;
 
 @Component({
   selector: 'app-generator',
@@ -85,7 +88,15 @@ export class GeneratorComponent implements AfterViewInit {
   private imagesRecieved: any;
   private randomImageIndex: number;
 
-  constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog) {
+  // voice stuff
+  voiceActiveSectionDisabled = true;
+  voiceActiveSectionError = false;
+  voiceActiveSectionSuccess = false;
+  voiceActiveSectionListening = false;
+  voiceText: any;
+
+  constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog,
+              private ngZone: NgZone, private router: Router) {
     this.colorBackground = '#FFFFFF';
     this.colorText = '#000000';
     this.colorPen = '#000000';
@@ -722,5 +733,87 @@ export class GeneratorComponent implements AfterViewInit {
         });
       }
     });
+  }
+
+  // voice control
+  initializeVoiceRecognitionCallback(): void {
+    annyang.addCallback('error', (err) => {
+      if (err.error === 'network'){
+        this.voiceText = 'Internet is require';
+        annyang.abort();
+        this.ngZone.run(() => this.voiceActiveSectionSuccess = true);
+      } else if (this.voiceText === undefined) {
+        this.ngZone.run(() => this.voiceActiveSectionError = true);
+        annyang.abort();
+      }
+    });
+
+    annyang.addCallback('soundstart', (res) => {
+      this.ngZone.run(() => this.voiceActiveSectionListening = true);
+    });
+
+    annyang.addCallback('end', () => {
+      if (this.voiceText === undefined) {
+        this.ngZone.run(() => this.voiceActiveSectionError = true);
+        annyang.abort();
+      }
+    });
+
+    annyang.addCallback('result', (userSaid) => {
+      this.ngZone.run(() => this.voiceActiveSectionError = false);
+
+      const queryText: any = userSaid[0];
+
+      annyang.abort();
+
+      this.voiceText = 'Your command: ' + queryText;
+
+      this.ngZone.run(() => this.voiceActiveSectionListening = false);
+      this.ngZone.run(() => this.voiceActiveSectionSuccess = true);
+    });
+  }
+
+  startVoiceRecognition(): void {
+    this.voiceActiveSectionDisabled = false;
+    this.voiceActiveSectionError = false;
+    this.voiceActiveSectionSuccess = false;
+    this.voiceText = undefined;
+
+    if (annyang) {
+      const commands = {
+        'template *tag': (tag: string) => { alert('New photo:' + tag); },
+        'open dashboard': () => { this.router.navigate(['./dashboard']); },
+        'open memes': () => { this.router.navigate(['./memes']); },
+        // 'open *tag': (tag: string) => { alert('navigation:' + tag); },
+        'open webcam': () => { this.loadFromWebcam(); },
+        'close webcam': () => { if (this.cameraOn === true) { this.showOnCanvas(); } },
+        'take picture': () => { if (this.cameraOn === true) { this.triggerSnapshot(); } },
+        'title *text': (text: string) => { this.name.setValue(text); this.textChanged(); },
+        'text top *text': (text: string) => { this.textTop.setValue(text); this.textChanged(); },
+        'text bottom *text': (text: string) => { this.textBottom.setValue(text); this.textChanged(); },
+        'save public': () => { this.saveCanvas(); },
+        'save private': () => { this.saveCanvasPrivate(); },
+        'save draft': () => { this.saveCanvasAsDraft(); },
+        'download meme': () => { this.downloadCanvas(); },
+      };
+
+      annyang.addCommands(commands);
+
+      this.initializeVoiceRecognitionCallback();
+
+      annyang.start({ autoRestart: false });
+    }
+  }
+
+  closeVoiceRecognition(): void {
+    this.voiceActiveSectionDisabled = true;
+    this.voiceActiveSectionError = false;
+    this.voiceActiveSectionSuccess = false;
+    this.voiceActiveSectionListening = false;
+    this.voiceText = undefined;
+
+    if (annyang){
+      annyang.abort();
+    }
   }
 }

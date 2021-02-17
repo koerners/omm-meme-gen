@@ -1,5 +1,31 @@
 <div class="grid-container">
-  <h1 class="mat-h1">Dashboard</h1>
+  <h1 class="mat-h1">Create your Meme</h1>
+  <div *ngIf="voiceActiveSectionDisabled; else voicesection;">
+    <button type="button" (click)="startVoiceRecognition()">Record</button>
+  </div>
+  <ng-template #voicesection>
+    <ng-container *ngIf="!voiceActiveSectionError; else failure">
+      <ng-container *ngIf="voiceText; else start">
+        <span>{{voiceText}}</span>
+      </ng-container>
+      <ng-template #start>
+        <ng-container
+          *ngIf="voiceActiveSectionListening; else beginning">
+          <span>Listening...</span>
+        </ng-container>
+        <ng-template #beginning>
+          <span>Start talking...</span>
+        </ng-template>
+      </ng-template>
+    </ng-container>
+    <ng-template #failure>
+      <span>Didn't catch that</span>
+    </ng-template>
+    <div>
+      <button (click)="closeVoiceRecognition()">Close</button>
+      <button (click)="startVoiceRecognition()">Restart</button>
+    </div>
+  </ng-template>
   <mat-grid-list [rowHeight]="100" cols="10">
     <mat-grid-tile colspan="6" rowspan="3">
       <mat-card class="dashboard-card">
