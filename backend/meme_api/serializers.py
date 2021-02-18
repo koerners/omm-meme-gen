@@ -21,11 +21,16 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         user.save()
         return user
 
-
 class MemeSerializer(serializers.ModelSerializer):
+
+    pos_votes = serializers.SerializerMethodField('how_many_pos')
+
+    def how_many_pos(self, meme):
+        return len(Vote.objects.filter(meme=meme, upvote=True))
+
     class Meta:
         model = Meme
-        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private']
+        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private', 'pos_votes']
 
     owner = serializers.ReadOnlyField(source='owner.username')
 

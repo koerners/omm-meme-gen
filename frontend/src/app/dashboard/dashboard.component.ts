@@ -95,10 +95,7 @@ export class DashboardComponent implements  AfterViewInit{
         this.video = 'data:video/mp4;base64,' + this.loadString.substring(2);
     });
   }
-  capture(event): void {
-    event.preventDefault();
-    const context = this.canvas.nativeElement.getContext('2d').drawImage(this.video.nativeElement, 0, 0, 1024, 768);
-  }
+
   drawTopMemeChart(): void{
     console.log(this.topMemes);
     const chartData = Array.from(this.topMemes.data, ({view}) => view );

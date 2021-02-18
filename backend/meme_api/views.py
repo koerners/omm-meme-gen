@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from meme_api.models import Meme, Comment, Vote
+from meme_api.models import Meme, Comment, Vote, Blocker
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer
 
@@ -31,12 +31,9 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 import json, io, zipfile
 import urllib.parse
-from moviepy.editor import ImageSequenceClip
-import cv2
-import skvideo.io
 import numpy as np
 from skimage.transform import resize
-import glob
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -403,7 +400,7 @@ class SendUserStatistics:
                                        day=Day('last_login'),
                                        month=Month('last_login'),
                                        year=Year('last_login'))
-                             .values('day','month','year','date', 'count'))
+                             .values('day', 'month', 'year', 'date', 'count'))
 
         return JsonResponse(user_database, safe=False)
 
@@ -434,21 +431,26 @@ class ScreenshotFromUrl:
 class MemesToVideo:
     @action(detail=False)
     def send_video(request):
-        top_five_memes = Meme.objects.values().order_by('-views')[:5]
-        file = Path('my_video.mp4')
+        top_five_memes = Meme.objects.values().order_by('-views')[:2]
+        file = Path('media/memeTemplates/my_video.mp4')
+        b = Blocker.objects.all()[0]
         if file.is_file():
-            with open("my_video.mp4", "rb") as videoFile:
-                text = str(base64.b64encode(videoFile.read()))
-                return JsonResponse(text, safe=False)
-        else:
+            HttpResponse(200)
+        elif not b.is_video_creation_running:
+            b.is_video_creation_running = True
+            b.save()
             images_to_video(top_five_memes)
-            with open("my_video.mp4", "rb") as videoFile:
-                text = str(base64.b64encode(videoFile.read()))
-                return JsonResponse(text, safe=False)
+            HttpResponse(200)
+            b.is_video_creation_running = False
+            b.save()
+        else:
+            HttpResponse(200)
+
+        return HttpResponse('OK')
 
 
 def load_images(top_five_memes):
-    new_top_five = Meme.objects.values().order_by('-views')[:5]
+    new_top_five = Meme.objects.values().order_by('-views')[:2]
     if new_top_five == top_five_memes:
         top_five_memes = top_five_memes
         vlqs = top_five_memes.values_list('image_string', flat=True)
@@ -472,4 +474,5 @@ def images_to_video(top_five_memes):
     framerate = 25
     clips = [ImageClip(v).set_duration(5) for k, v in image_dict.items()]
     concat_clip = concatenate_videoclips(clips, method="compose")
-    concat_clip.write_videofile('my_video.mp4', fps=framerate)
+    concat_clip.write_videofile('media/memeTemplates/my_video.mp4', fps=framerate)
+
