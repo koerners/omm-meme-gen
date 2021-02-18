@@ -82,4 +82,11 @@ export class MemeService {
   loadStatistics(): any{
     return this.http.get(environment.apiUrl + '/statistics/');
   }
+  loadUserStats(): any{
+    return this.http.get(environment.apiUrl + '/userStats/');
+  }
+
+  loadTopMemeVideo(): any{
+    return this.http.get(environment.apiUrl + '/memeVideo/');
+  }
 }

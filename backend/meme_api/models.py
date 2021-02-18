@@ -26,6 +26,8 @@ class Comment(models.Model):
     text = models.CharField(max_length=9999999999, default='')
 
 
+
+
     class Meta:
         ordering = ['created']
 

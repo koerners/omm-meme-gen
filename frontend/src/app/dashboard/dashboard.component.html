@@ -28,7 +28,30 @@
                     [plugins]="topMemeChartPlugins">
             </canvas>
           </div>
+
           </div>
+          <div *ngIf="card.title == 'Card 2'">
+            <div id="inner_video" >
+              <video #video id="video" autoplay></video>
+            </div>
+
+            <canvas #canvas id="canvas" width="1024" height="768">canvas</canvas>
+          </div>
+          <div *ngIf="card.title == 'Card 3'">
+            <div class="chart-wrapper" *ngIf="loginChartReady">
+              <canvas baseChart height="{{chartRowHeight}}"
+                      [datasets]="loginChartData"
+                      [labels]="loginChartLabels"
+                      [options]="loginChartOptions"
+                      [colors]="loginChartColors"
+                      [legend]="loginChartLegend"
+                      [chartType]="loginChartType"
+                      [plugins]="topMemeChartPlugins">
+              </canvas>
+            </div>
+
+          </div>
+
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
