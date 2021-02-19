@@ -4,6 +4,7 @@ import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {MemeService} from '../services/meme.service';
 import { ChartDataSets, ChartOptions } from 'chart.js';
 import { Color, Label } from 'ng2-charts';
+import {environment} from "../../environments/environment";
 
 @Component({
   selector: 'app-dashboard',
@@ -88,11 +89,18 @@ export class DashboardComponent implements  AfterViewInit{
   }
   loadVideo(): void{
     this.memeService.loadTopMemeVideo().subscribe(response => {
-      const videoString = response;
-      this.loadString = videoString;
-    }, null,
-      _ => {
-        this.video = 'data:video/mp4;base64,' + this.loadString.substring(2);
+      if (response.length < 4){
+        console.log(response);
+        return;
+      }
+      else {
+        this.video = response;
+      }
+      console.log(this.video);
+    }, null, _ => {
+      this.video = environment.apiUrl + this.video;
+      console.log(this.video);
+      this.vid.nativeElement.setAttribute('src', this.video);
     });
   }
 

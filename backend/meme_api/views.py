@@ -1,24 +1,18 @@
-import sys
 import urllib
 from pathlib import Path
 
-import torch
-from django.contrib.auth.models import User, Group
-from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
+from django.contrib.auth.models import User
+from django.http import JsonResponse, HttpResponse
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
-from numpy.core import shape
-from rest_framework import generics
 from rest_framework import permissions
 from rest_framework import viewsets
-from rest_framework import views
-from rest_framework.decorators import api_view, action, permission_classes
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from meme_api.models import Meme, Comment, Vote, Blocker
+from meme_api.models import Meme, Comment, Vote, VideoCreation, TopFiveMemes
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer
 
@@ -112,7 +106,6 @@ class CommentList(viewsets.ModelViewSet):
     @action(detail=False)
     def comments_by_meme(self, request):
         meme_id_ = int(request.GET.get("meme", ""))
-        print(meme_id_)
         comments_by_meme = Comment.objects.filter(meme_id=meme_id_).order_by('-created').values()
         for comment in comments_by_meme:
             comment['owner'] = User.objects.filter(id=comment['owner_id'])[0].last_name
@@ -131,13 +124,12 @@ class VoteList(viewsets.ModelViewSet):
     @action(detail=False)
     def votes_by_meme(self, request):
         meme_id_ = int(request.GET.get("meme", ""))
-        print(meme_id_)
+
         upvotes = len(Vote.objects.filter(meme_id=meme_id_, upvote=True))
         downvotes = len(Vote.objects.filter(meme_id=meme_id_, upvote=False))
         voted = False
         liked = False
         own_vote = Vote.objects.filter(owner=request.user, meme_id=meme_id_)
-        print(own_vote)
         if len(own_vote) > 0:
             voted = True
             liked = own_vote[0].upvote
@@ -174,7 +166,6 @@ class MemeTemplate:
                     base64_string = base64_bytes.decode('utf-8')
                     templates.append({'name': re.sub(r'.png$', '', image), 'base64_string': base64_string})
 
-            print(templates[0])
             cls.available_meme_templates = templates
 
         return cls.available_meme_templates
@@ -430,36 +421,54 @@ class ScreenshotFromUrl:
 
 class MemesToVideo:
     @action(detail=False)
-    def send_video(request):
-        top_five_memes = Meme.objects.values().order_by('-views')[:2]
-        file = Path('media/memeTemplates/my_video.mp4')
-        b = Blocker.objects.all()[0]
-        if file.is_file():
-            HttpResponse(200)
-        elif not b.is_video_creation_running:
-            b.is_video_creation_running = True
-            b.save()
-            images_to_video(top_five_memes)
-            HttpResponse(200)
-            b.is_video_creation_running = False
-            b.save()
-        else:
-            HttpResponse(200)
+    def send_video(self):
+        '''
+        turn top five memes into video
+        '''
+        file = Path('media/memeTemplates/my_video.ogv')
+        v = VideoCreation.objects.all()[0]
+        val = Meme.objects.values().count()
+        if val > 5:
+            val = 5
+        top_five_memes = Meme.objects.values().order_by('-views')[:val]
+        x = list(top_five_memes.values_list('id', flat=True))
+        print(list(x))
+        top_five = list(range(0,5))
+        y = list(TopFiveMemes.objects.all().values_list('top_five_memes', flat=True))
+        print(y)
+        '''
+        Check most views changes
+        '''
+        if(x != y):
+            print('yep')
+            for i in top_five:
+                obj = Meme.objects.get(id=x[i])
+                t = TopFiveMemes.objects.all()[i]
+                t.top_five_memes = obj
+                t.save()
 
-        return HttpResponse('OK')
+        if not file.is_file():
+            if not v.is_video_creation_running and (x == y):
+                v.is_video_creation_running = True
+                v.save()
+                images_to_video(top_five_memes)
+                v.is_video_creation_running = False
+                v.save()
+                return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
+            else:
+                return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
+        else:
+            return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
+
 
 
 def load_images(top_five_memes):
-    new_top_five = Meme.objects.values().order_by('-views')[:2]
-    if new_top_five == top_five_memes:
-        top_five_memes = top_five_memes
-        vlqs = top_five_memes.values_list('image_string', flat=True)
-    else:
-        vlqs = new_top_five.values_list('image_string', flat=True)
+    vlqs = top_five_memes.values_list('image_string', flat=True)
     return vlqs
 
 
 def images_to_video(top_five_memes):
+
     vlqs = load_images(top_five_memes)
     image_dict = {}
     count = 0
@@ -468,11 +477,11 @@ def images_to_video(top_five_memes):
         base64_decoded = base64.b64decode(img[22:])
         image = Image.open(io.BytesIO(base64_decoded))
         image_np = np.array(image, dtype='uint8')
-        open_cv_image = resize(image_np, (500, 700))
+        open_cv_image = resize(image_np, (300, 500))
         image_dict[count] = open_cv_image * 255
 
     framerate = 25
     clips = [ImageClip(v).set_duration(5) for k, v in image_dict.items()]
     concat_clip = concatenate_videoclips(clips, method="compose")
-    concat_clip.write_videofile('media/memeTemplates/my_video.mp4', fps=framerate)
+    concat_clip.write_videofile('media/memeTemplates/my_video.ogv', fps=framerate)
 
