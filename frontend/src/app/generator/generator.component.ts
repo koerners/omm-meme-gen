@@ -12,7 +12,6 @@ import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
-import {decodeBase64} from "@tensorflow/tfjs-converter/dist/operations/operation_mapper";
 
 /**
  * The interface for the InputDialogData
