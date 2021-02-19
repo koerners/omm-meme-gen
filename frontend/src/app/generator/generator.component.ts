@@ -134,7 +134,6 @@ export class GeneratorComponent implements AfterViewInit {
      height: {ideal: 576}
   };
   // latest snapshot
-  public webcamImageArray: WebcamImage[];
   public webcamImage: WebcamImage = null;
 
   // webcam snapshot trigger

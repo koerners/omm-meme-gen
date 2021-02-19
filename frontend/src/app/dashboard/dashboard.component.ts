@@ -49,7 +49,7 @@ export class DashboardComponent implements  AfterViewInit{
   loginChartData: ChartDataSets[];
   loginChartLegend = true;
   loginChartPlugins = [];
-  loginChartType = 'bar';
+  loginChartType = 'line';
   loginChartColors: Color[];
   loginChartOptions;
   loginChartLabels: Label[];
@@ -118,7 +118,7 @@ export class DashboardComponent implements  AfterViewInit{
     this.topMemeChartColors = [
       {
         borderColor: 'black',
-        backgroundColor: 'rgba(25,5,255,0.38)',
+        backgroundColor: '#47A31F',
       },
     ];
     this.chartReady = true;
@@ -148,7 +148,7 @@ export class DashboardComponent implements  AfterViewInit{
     this.loginChartColors = [
       {
         borderColor: 'black',
-        backgroundColor: 'rgba(25,5,255,0.38)',
+        backgroundColor: '#47A31F',
       },
     ];
     this.loginChartReady = true;

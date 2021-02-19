@@ -71,8 +71,7 @@ class MemeList(viewsets.ModelViewSet):
     def availableMemes(self, request):
         available = Meme.objects.filter(Q(owner=request.user) | Q(private=False)).order_by('-created').values('id')
 
-        serializer = self.get_serializer(available, many=True)
-        return Response(serializer.data)
+        return JsonResponse(list(available), safe=False)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
