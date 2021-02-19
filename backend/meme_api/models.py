@@ -10,7 +10,6 @@ class Meme(models.Model):
     views = models.IntegerField(default=0)
     private = models.BooleanField(default=False)
 
-
     class Meta:
         ordering = ['created']
 
@@ -21,7 +20,6 @@ class Comment(models.Model):
     owner = models.ForeignKey('auth.User', related_name='comment', on_delete=models.CASCADE)
     meme = models.ForeignKey('Meme', related_name='meme_comment', on_delete=models.CASCADE)
     text = models.CharField(max_length=9999999999, default='')
-
 
     class Meta:
         ordering = ['created']
@@ -36,3 +34,11 @@ class Vote(models.Model):
 
     class Meta:
         ordering = ['created']
+
+
+class VideoCreation(models.Model):
+    is_video_creation_running = models.BooleanField(default=False)
+
+
+class TopFiveMemes(models.Model):
+    top_five_memes = models.ForeignKey('Meme', related_name='top_five_memes', null=True, on_delete=models.SET('1'))

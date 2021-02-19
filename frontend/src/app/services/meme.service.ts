@@ -78,4 +78,15 @@ export class MemeService {
   getScreenshotFromUrl(url: string): any{
     return this.http.get(environment.apiUrl + '/screenshotFromUrl/?url=' + url, {responseType: 'text'});
   }
+
+  loadStatistics(): any{
+    return this.http.get(environment.apiUrl + '/statistics/');
+  }
+  loadUserStats(): any{
+    return this.http.get(environment.apiUrl + '/userStats/');
+  }
+
+  loadTopMemeVideo(): any{
+    return this.http.get(environment.apiUrl + '/memeVideo/');
+  }
 }

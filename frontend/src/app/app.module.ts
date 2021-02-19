@@ -46,6 +46,7 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {MatPaginatorModule} from '@angular/material/paginator';
 import {ShareButtonsModule} from 'ngx-sharebuttons/buttons';
 import {ShareIconsModule} from 'ngx-sharebuttons/icons';
+import { ChartsModule } from 'ng2-charts';
 
 @NgModule({
   declarations: [
@@ -93,7 +94,8 @@ import {ShareIconsModule} from 'ngx-sharebuttons/icons';
     MatPaginatorModule,
     ShareButtonsModule,
     ShareIconsModule,
-    MatDialogModule
+    MatDialogModule,
+    ChartsModule
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},
