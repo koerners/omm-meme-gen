@@ -17,18 +17,16 @@ export class DashboardComponent implements  AfterViewInit{
     map(({matches}) => {
       if (matches) {
         return [
-          {title: 'Card 1', cols: 2, rows: 1},
-          {title: 'Card 2', cols: 2, rows: 1},
-          {title: 'Card 3', cols: 2, rows: 1},
-          {title: 'Card 4', cols: 2, rows: 1}
+          {title: 'Top 5 Viewed Memes', cols: 2, rows: 1},
+          {title: 'Corresponding Image', cols: 2, rows: 1},
+          {title: 'Users Last Login', cols: 2, rows: 1}
         ];
       }
 
       return [
-        {title: 'Card 1', cols: 1, rows: 1},
-        {title: 'Card 2', cols: 1, rows: 1},
-        {title: 'Card 3', cols: 1, rows: 1},
-        {title: 'Card 4', cols: 1, rows: 1}
+        {title: 'Top 5 Viewed Memes', cols: 1, rows: 1},
+        {title: 'Corresponding Image', cols: 1, rows: 1},
+        {title: 'Users Last Login', cols: 2, rows: 1}
       ];
     })
   );
@@ -145,7 +143,8 @@ export class DashboardComponent implements  AfterViewInit{
       }
 
     };
-    this.loginChartLabels = Array.from(this.loginData.data, ({day, month, year}) => day + 'D ' + month + 'M ' + year + 'Y'   );
+    console.log(this.loginData.data);
+    this.loginChartLabels = Array.from(this.loginData.data, ({day, month, year}) => day + '.' + month + '.' + year);
     this.loginChartColors = [
       {
         borderColor: 'black',

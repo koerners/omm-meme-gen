@@ -29,7 +29,6 @@ import numpy as np
 from skimage.transform import resize
 
 
-
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -392,7 +391,7 @@ class SendUserStatistics:
                                        month=Month('last_login'),
                                        year=Year('last_login'))
                              .values('day', 'month', 'year', 'date', 'count'))
-
+        print(user_database)
         return JsonResponse(user_database, safe=False)
 
 
@@ -432,14 +431,12 @@ class MemesToVideo:
             val = 5
         top_five_memes = Meme.objects.values().order_by('-views')[:val]
         x = list(top_five_memes.values_list('id', flat=True))
-        print(list(x))
-        top_five = list(range(0,5))
+        top_five = list(range(0, 5))
         y = list(TopFiveMemes.objects.all().values_list('top_five_memes', flat=True))
-        print(y)
         '''
         Check most views changes
         '''
-        if(x != y):
+        if (x != y):
             print('yep')
             for i in top_five:
                 obj = Meme.objects.get(id=x[i])
@@ -449,17 +446,16 @@ class MemesToVideo:
 
         if not file.is_file():
             if not v.is_video_creation_running and (x == y):
-                v.is_video_creation_running = True
-                v.save()
-                images_to_video(top_five_memes)
-                v.is_video_creation_running = False
-                v.save()
+                do_create(v,top_five_memes)
                 return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
-            else:
+            elif not v.is_video_creation_running and (x != y):
+                do_create(v,top_five_memes)
                 return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
+        elif not v.is_video_creation_running and (x != y):
+            do_create(v,top_five_memes)
+            return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
         else:
             return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
-
 
 
 def load_images(top_five_memes):
@@ -468,7 +464,6 @@ def load_images(top_five_memes):
 
 
 def images_to_video(top_five_memes):
-
     vlqs = load_images(top_five_memes)
     image_dict = {}
     count = 0
@@ -485,3 +480,10 @@ def images_to_video(top_five_memes):
     concat_clip = concatenate_videoclips(clips, method="compose")
     concat_clip.write_videofile('media/memeTemplates/my_video.ogv', fps=framerate)
 
+
+def do_create(v, top_five_memes):
+    v.is_video_creation_running = True
+    v.save()
+    images_to_video(top_five_memes)
+    v.is_video_creation_running = False
+    v.save()

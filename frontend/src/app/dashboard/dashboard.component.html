@@ -6,17 +6,10 @@
         <mat-card-header>
           <mat-card-title>
             {{card.title}}
-            <button [matMenuTriggerFor]="menu" aria-label="Toggle menu" class="more-button" mat-icon-button>
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #menu="matMenu" xPosition="before">
-              <button mat-menu-item>Expand</button>
-              <button mat-menu-item>Remove</button>
-            </mat-menu>
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
-          <div *ngIf="card.title == 'Card 1'">
+          <div *ngIf="card.title == 'Top 5 Viewed Memes'">
           <div class="chart-wrapper" *ngIf="chartReady">
             <canvas baseChart height="{{chartRowHeight}}"
                     [datasets]="topMemeChartData"
@@ -30,13 +23,12 @@
           </div>
 
           </div>
-          <div *ngIf="card.title == 'Card 2'">
+          <div *ngIf="card.title == 'Corresponding Image'">
             <div id="inner_video" >
-              <video #video id="video" autoplay controls >Something went wrong
-              </video>
+              <video #video id="video" autoplay controls></video>
             </div>
           </div>
-          <div *ngIf="card.title == 'Card 3'">
+          <div *ngIf="card.title == 'Users Last Login'">
             <div class="chart-wrapper" *ngIf="loginChartReady">
               <canvas baseChart height="{{chartRowHeight}}"
                       [datasets]="loginChartData"
