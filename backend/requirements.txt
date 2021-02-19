@@ -7,3 +7,4 @@ requests
 Pillow
 selenium
 moviepy
+scikit-image
