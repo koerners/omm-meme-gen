@@ -70,7 +70,6 @@ class MemeList(viewsets.ModelViewSet):
     @action(detail=False)
     def availableMemes(self, request):
         available = Meme.objects.filter(Q(owner=request.user) | Q(private=False)).order_by('-created').values('id')
-
         return JsonResponse(list(available), safe=False)
 
     def perform_create(self, serializer):
