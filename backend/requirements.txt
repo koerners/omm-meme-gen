@@ -6,3 +6,5 @@ random-username
 requests
 Pillow
 selenium
+moviepy
+scikit-image
