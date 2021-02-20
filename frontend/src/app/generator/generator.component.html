@@ -3,15 +3,15 @@
 
   <div *ngIf="voiceSectionEnabled" style="background-color: darkslateblue">
     Voice Recognition: <br />
-    {{voiceStatus}}
-    <ng-container *ngIf="!voiceResultError; else failure" class="grid-container">
+    {{voiceStatusMsg}} {{voiceActionFeedback}}
+    <!--ng-container *ngIf="!voiceResultError; else failure" class="grid-container">
       <ng-container *ngIf="voiceResultSuccess; else start">
-        <span>{{voiceText}} {{voiceActionFeedback}}</span>
+        <span></span>
       </ng-container>
       <ng-template #start>
         <ng-container
           *ngIf="voiceActiveListening; else beginning">
-          <span>Listening... (after your command please be patient while the system process your input)</span>
+          <span></span>
         </ng-container>
         <ng-template #beginning>
           <span>Start talking...</span>
@@ -19,16 +19,18 @@
       </ng-template>
     </ng-container>
     <ng-template #failure>
-      <span>Speech recognition did not work. {{voiceText}}</span>
-    </ng-template>
-    <div class="grid-container">
-      Available commands... <br />
-      Navigation: 'open dashboard', 'open memes' <br />
-      Webcam: 'open webcam', 'close webcam', 'take picture' <br />
-      Text Fields: 'title *text', 'text top *text', 'text bottom *text' <br />
-      Memes: 'save public', 'save private', 'save draft', 'download meme' <br />
-      Help: 'help me', 'close help'
-    </div>
+      <span> {{voiceText}}</span>
+    </ng-template-->
+    <ng-container *ngIf="voiceShowHelp">
+      <div class="grid-container">
+        Available commands... <br />
+        Navigation: 'open dashboard', 'open memes' <br />
+        Webcam: 'open webcam', 'close webcam', 'take picture' <br />
+        Text Fields: 'title *text', 'text top *text', 'text bottom *text' <br />
+        Memes: 'save public', 'save private', 'save draft', 'download meme' <br />
+        Help: 'help me', 'close help'
+      </div>
+    </ng-container>
     <div class="grid-container">
       <br /><button (click)="closeVoiceSection()">Close</button>
     </div>
