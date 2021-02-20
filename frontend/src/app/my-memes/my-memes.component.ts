@@ -50,7 +50,6 @@ export class MyMemesComponent implements OnInit {
       );
       this.currentPage = $event.pageIndex;
     }
-    console.log(this.currentPage);
 
   }
 
@@ -61,7 +60,6 @@ export class MyMemesComponent implements OnInit {
           this.memeLength = data.count;
           this.nextUrl = data.next;
           this.prevUrl = data.previous;
-          console.log(this.nextUrl, this.prevUrl);
           return this.allMemes;
         }
       );
@@ -72,7 +70,6 @@ export class MyMemesComponent implements OnInit {
           this.memeLength = data.count;
           this.nextUrl = data.next;
           this.prevUrl = data.previous;
-          console.log(this.nextUrl, this.prevUrl);
           return this.allMemes;
         }
       );

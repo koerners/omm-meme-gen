@@ -59,7 +59,6 @@ export class DetailViewComponent implements OnInit {
 
   loadMeme(memeId: number): void {
     this.memeService.loadMeme(String(memeId)).subscribe(data => {
-      console.log(data);
       this.meme = new Meme();
       this.meme.id = data.id;
       this.meme.imageString = data.image_string;
@@ -122,9 +121,7 @@ export class DetailViewComponent implements OnInit {
   }
 
   async postComment(): Promise<void> {
-    console.log(this.commentText.value);
     this.memeService.postComment(String(this.meme.id), this.commentText.value).subscribe(data => {
-      console.log(data);
       this.openSnackBar('Comment posted', 'Dismiss');
       this.loadComments();
 
@@ -197,7 +194,6 @@ export class DetailViewComponent implements OnInit {
       this.subscription.unsubscribe();
     } else {
       this.slideShowRunning = true;
-      console.log(this.slideshowspeed, this.slideshowRandom);
       const source = interval(this.slideshowspeed * 1000);
       this.subscription = source.subscribe(val => {
         if (this.slideshowRandom) {

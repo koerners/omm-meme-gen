@@ -145,7 +145,6 @@ class VoteList(viewsets.ModelViewSet):
 
 
 class MemeTemplate:
-    #TODO
     available_meme_templates = []
 
     @classmethod
@@ -170,7 +169,6 @@ class MemeTemplate:
 
 
 class MemeCreation:
-    image_paths = None
     default_font_size = 30
     font_default = 'Ubuntu-M.ttf'
     font_bold = 'Ubuntu-B.ttf'
@@ -179,33 +177,20 @@ class MemeCreation:
     font_style_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/fonts')
     #TODO
     @classmethod
-    def get_image_paths(cls):
-        if not cls.image_paths:
-            backend_basename = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-            meme_templates_dir = 'media/memeTemplates'
-
-            cls.image_paths = [os.path.join(backend_basename, meme_templates_dir, image_name) for image_name in
-                               os.listdir(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                                       'media/memeTemplates'))]
-
-        return cls.image_paths
-
-    @classmethod
     def create_meme(cls, request):
         template_name = request.GET.get('templateName')
         if template_name is None:
             return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
 
-        meme_template_path = next(
-            (template for template in cls.get_image_paths() if template.endswith(template_name + '.png')), None)
-        if meme_template_path is None:
+        meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
+        print(meme_template)
+        if meme_template is None:
             return JsonResponse({'message': 'meme template could not be found'}, status=400)
 
         # rp is short for request parameters
         qp = cls.get_query_parameters(request)
-
-        img = Image.open(meme_template_path)
+        base64_decoded = base64.b64decode(meme_template)
+        img = Image.open(io.BytesIO(base64_decoded))
         image_draw = ImageDraw.Draw(img)
 
         top_text = request.GET.get('topText', '')
@@ -247,11 +232,10 @@ class MemeCreation:
         template_name = request.GET.get('templateName')
         if template_name is None:
             return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
-
-        meme_template_path = next(
-            (template for template in cls.get_image_paths() if template.endswith(template_name + '.png')), None)
-        if meme_template_path is None:
-            return JsonResponse({'message': 'meme template could not be found'}, status=400)
+        meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
+        print(meme_template)
+        if meme_template is None:
+                return JsonResponse({'message': 'meme template could not be found'}, status=400)
 
         # rp is short for request parameters
         qp = cls.get_query_parameters(request)
@@ -266,7 +250,9 @@ class MemeCreation:
             if isinstance(text_lists, list):
                 for text_list in text_lists:
                     if isinstance(text_list, list):
-                        img = Image.open(meme_template_path)
+
+                        base64_decoded = base64.b64decode(meme_template)
+                        img = Image.open(io.BytesIO(base64_decoded))
                         image_draw = ImageDraw.Draw(img)
                         buffer = io.BytesIO()
                         for cur_txt_dict in text_list:

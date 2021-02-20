@@ -553,7 +553,6 @@ export class GeneratorComponent implements AfterViewInit {
 
     this.memeService.getAllMemeTemplates().subscribe(memeTemplates => {
       memeTemplateContainer.innerHTML = '';
-      console.log(memeTemplates);
       this.memeTemplates = memeTemplates;
 
       this.showMemeTemplates();
@@ -585,7 +584,7 @@ export class GeneratorComponent implements AfterViewInit {
           this.textChanged();
         };
       });
-      newImg.src = 'data:image/jpg;base64,' + template.base64_string;
+      newImg.src = 'data:image/jpg;base64,' + template[2];
       newImg.alt = 'Loading';
       memeTemplateContainer.append(newImg);
     });
@@ -616,7 +615,6 @@ export class GeneratorComponent implements AfterViewInit {
 
   loadFromAPI(): void {
     this.clearCanvas();
-    console.log('pressed api');
     this.videoOn = false;
     this.emptyVideoContainer();
     this.memeService.getMemesFromImgFlip().subscribe(data => {
@@ -795,7 +793,6 @@ export class GeneratorComponent implements AfterViewInit {
           this.res = response;
           // add missing data info to base64 response string
           img.src = 'data:image/png;base64, ' + this.res;
-          console.log(img.src);
           this.width = img.width;
           img.onload = () => ctx.drawImage(img, 0, 100, img.width, img.height);
         });
