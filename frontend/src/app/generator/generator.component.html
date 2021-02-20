@@ -4,29 +4,14 @@
   <div *ngIf="voiceSectionEnabled" style="background-color: darkslateblue">
     Voice Recognition: <br />
     {{voiceStatusMsg}} {{voiceActionFeedback}}
-    <!--ng-container *ngIf="!voiceResultError; else failure" class="grid-container">
-      <ng-container *ngIf="voiceResultSuccess; else start">
-        <span></span>
-      </ng-container>
-      <ng-template #start>
-        <ng-container
-          *ngIf="voiceActiveListening; else beginning">
-          <span></span>
-        </ng-container>
-        <ng-template #beginning>
-          <span>Start talking...</span>
-        </ng-template>
-      </ng-template>
-    </ng-container>
-    <ng-template #failure>
-      <span> {{voiceText}}</span>
-    </ng-template-->
     <ng-container *ngIf="voiceShowHelp">
       <div class="grid-container">
         Available commands... <br />
         Navigation: 'open dashboard', 'open memes' <br />
         Webcam: 'open webcam', 'close webcam', 'take picture' <br />
         Text Fields: 'title *text', 'text top *text', 'text bottom *text' <br />
+        Fonts: 'font size :fsize', 'font style :style', 'alter bold', 'alter italic', 'alter underline' <br />
+        Color: 'text colour :colour', 'pen colour :colour', 'background colour :color' (colour = 'black', 'white', 'red', 'yellow', 'green', 'blue') <br />
         Memes: 'save public', 'save private', 'save draft', 'download meme' <br />
         Help: 'help me', 'close help'
       </div>

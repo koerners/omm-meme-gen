@@ -46,7 +46,7 @@ export class GeneratorComponent implements AfterViewInit {
 
   memeTemplates: {name, base64_string}[] = [];
 
-  colorOptions: string[] = ['#000000', '#808080', '#C0C0C0', '#FFFFFF', '#800000', '#FF0000', '#808000', '#FFFF00', '#008000', '#00FF00', '#008080', '#00FFFF', '#000080', '#0000FF', '#800080', '#FF00FF', '#795548', '#607d8b'];
+  colorOptions: string[] = ['black', '#808080', '#C0C0C0', 'white', '#800000', 'red', '#808000', 'yellow', 'green', '#00FF00', '#008080', '#00FFFF', '#000080', 'blue', '#800080', '#FF00FF', '#795548', '#607d8b'];
   colorText: string;
   colorPen: string;
   colorBackground: string;
@@ -755,6 +755,7 @@ export class GeneratorComponent implements AfterViewInit {
     SpeechKITT.setStartCommand( () => {
       this.ngZone.run(() => this.voiceSectionEnabled = true);
       this.ngZone.run(() => this.voiceStatusMsg = 'Start Talking...');
+      this.ngZone.run(() => this.voiceActionFeedback = undefined);
       annyang.start();
     });
 
@@ -768,14 +769,14 @@ export class GeneratorComponent implements AfterViewInit {
     annyang.addCallback('resultMatch', (userSaid) => {
       const queryText: any = userSaid[0];
       annyang.abort();
-      SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat.css');
+      // SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat.css');
       this.ngZone.run(() => this.voiceStatusMsg = 'Command detected...');
     });
 
     annyang.addCallback('resultNoMatch', (userSaid) => {
       const queryText: any = userSaid[0];
       annyang.abort();
-      SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat.css');
+      // SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat.css');
       this.ngZone.run(() => this.voiceStatusMsg = 'Sorry I did not understand what you want. You said: ' + queryText);
       this.ngZone.run(() => this.voiceActionSuccess = false);
     });
@@ -798,6 +799,7 @@ export class GeneratorComponent implements AfterViewInit {
     });
 
     annyang.addCallback('end', () => {
+      SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat.css');
       annyang.abort();
     });
   }
@@ -852,6 +854,106 @@ export class GeneratorComponent implements AfterViewInit {
         this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Bottom to "' + text + '"');
         this.textBottom.setValue(text);
         this.textChanged();
+      },
+      'font size :fsize': (fsize: string) => {
+        if (/^\d+$/.test(fsize)) {
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Font Size to "' + fsize + '"');
+          this.fontSize.setValue(fsize);
+          this.textChanged();
+        }
+        else {
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Font Size to "' + fsize + '" not possible.');
+        }
+      },
+      'font style arial': () => {
+        this.ngZone.run(() => this.voiceActionFeedback = 'Set Font Style to Arial');
+        this.fontFamily.setValue('Arial');
+        this.textChanged();
+      },
+      'font style verdana': () => {
+        this.ngZone.run(() => this.voiceActionFeedback = 'Set Font Style to Verdana');
+        this.fontFamily.setValue('Verdana');
+        this.textChanged();
+      },
+      'font style times new roman': () => {
+        this.ngZone.run(() => this.voiceActionFeedback = 'Set Font Style to Times New Roman');
+        this.fontFamily.setValue('Times New Roman');
+        this.textChanged();
+      },
+      'font style courier new': () => {
+        this.ngZone.run(() => this.voiceActionFeedback = 'Set Font Style to Courier New');
+        this.fontFamily.setValue('Courier New');
+        this.textChanged();
+      },
+      'font style serif': () => {
+        this.ngZone.run(() => this.voiceActionFeedback = 'Set Font Style to serif');
+        this.fontFamily.setValue('serif');
+        this.textChanged();
+      },
+      'font style sans-serif': () => {
+        this.ngZone.run(() => this.voiceActionFeedback = 'Set Font Style to sans-serif');
+        this.fontFamily.setValue('sans-serif');
+        this.textChanged();
+      },
+      'random font style': () => {
+        const fonts = ['Arial', 'Verdana', 'Times New Roman', 'Courier New', 'serif', 'sans-serif'];
+        const item = fonts[Math.floor(Math.random() * fonts.length)];
+        this.ngZone.run(() => this.voiceActionFeedback = 'Choose random Font Style: ' + item);
+        this.fontFamily.setValue(item);
+        this.textChanged();
+      },
+      'alter bold': () => {
+        this.ngZone.run(() => this.voiceActionFeedback = 'Change Font bold');
+        this.bold.setValue(!this.bold.value);
+        this.textChanged();
+      },
+      'alter underline': () => {
+        this.ngZone.run(() => this.voiceActionFeedback = 'Change Font underline');
+        this.underline.setValue(!this.underline.value);
+        this.textChanged();
+      },
+      'alter italic': () => {
+        this.ngZone.run(() => this.voiceActionFeedback = 'Change Font italic');
+        this.italic.setValue(!this.italic.value);
+        this.textChanged();
+      },
+      'text colour :color': (color: string) => {
+        const colorOptions = ['black', 'white', 'red', 'yellow', 'green', 'blue'];
+        if (colorOptions.includes(color)) {
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color);
+          this.colorText = color;
+          this.textChanged();
+        }
+        else {
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color + ' not possible');
+        }
+      },
+      'pen colour :color': (color: string) => {
+        const colorOptions = ['black', 'white', 'red', 'yellow', 'green', 'blue'];
+        if (colorOptions.includes(color)) {
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color);
+          this.colorPen = color;
+          const canvas = this.drawCanvas.nativeElement;
+          const ctx = canvas.getContext('2d');
+          ctx.strokeStyle = this.colorPen;
+        }
+        else {
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color + ' not possible');
+        }
+      },
+      'background colour :color': (color: string) => {
+        const colorOptions = ['black', 'white', 'red', 'yellow', 'green', 'blue'];
+        if (colorOptions.includes(color)) {
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color);
+          this.colorBackground = color;
+          const canvas = this.backgroundCanvas.nativeElement;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = this.colorBackground;
+          ctx.fillRect(0, 0, this.currentWidth, this.currentHeight);
+        }
+        else {
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color + ' not possible');
+        }
       },
       'save public': () => {
         this.ngZone.run(() => this.voiceActionFeedback = 'Save Meme (public)');
