@@ -1,5 +1,6 @@
-import {AfterViewInit, Component, Input, ViewChild, ElementRef} from '@angular/core';
+import {AfterViewInit, Component, Input, ViewChild, ElementRef, NgZone} from '@angular/core';
 import {FormControl} from '@angular/forms';
+import {Router} from '@angular/router';
 import {fromEvent, Subject, Observable, pipe} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
@@ -12,12 +13,14 @@ import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
-import {decodeBase64} from "@tensorflow/tfjs-converter/dist/operations/operation_mapper";
+import {decodeBase64} from '@tensorflow/tfjs-converter/dist/operations/operation_mapper';
 
 export interface DialogData {
   url: string;
 }
 
+declare const annyang: any;
+declare const SpeechKITT: any;
 
 @Component({
   selector: 'app-generator',
@@ -85,7 +88,17 @@ export class GeneratorComponent implements AfterViewInit {
   private imagesRecieved: any;
   private randomImageIndex: number;
 
-  constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog) {
+  // voice control
+  voiceSectionEnabled = false;
+  voiceResultError = false;
+  voiceResultSuccess = false;
+  voiceActiveListening = false;
+  voiceText: any;
+  voiceStatus: any;
+  voiceActionFeedback: any;
+
+  constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog,
+              private ngZone: NgZone, private router: Router) {
     this.colorBackground = '#FFFFFF';
     this.colorText = '#000000';
     this.colorPen = '#000000';
@@ -100,6 +113,8 @@ export class GeneratorComponent implements AfterViewInit {
 
       this.showMemeTemplates();
     });
+
+    this.initVoiceRecognition();
   }
   public ngAfterViewInit(): void {
     const canvasBackgroundEl: HTMLCanvasElement = this.backgroundCanvas.nativeElement;
@@ -722,5 +737,189 @@ export class GeneratorComponent implements AfterViewInit {
         });
       }
     });
+  }
+
+  // voice control
+  initVoiceRecognition(): void {
+    if (annyang) {
+      // Use KITT with annyang
+      SpeechKITT.annyang();
+      SpeechKITT.setInstructionsText('You can start talking.');
+      SpeechKITT.setSampleCommands(['Say "help me" to get all available comments.']);
+      this.initVoiceRecognitionCallback();
+      this.initVoiceRecognitionCommands();
+      SpeechKITT.setStartCommand( () => {
+        this.voiceSectionEnabled = true;
+        this.voiceStatus = 'Start Talking...';
+        // this.ngZone.run(() => this.voiceResultSuccess = false);
+        // this.ngZone.run(() => this.voiceActiveListening = false);
+        // this.ngZone.run(() => this.voiceResultError = false);
+        annyang.start();
+      });
+      SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat.css');
+      SpeechKITT.vroom();
+    }
+  }
+
+  initVoiceRecognitionCallback(): void {
+    annyang.addCallback('soundstart', (res) => {
+      this.voiceText = undefined;
+      this.voiceActionFeedback = undefined;
+      this.ngZone.run(() => this.voiceSectionEnabled = true);
+      this.ngZone.run(() => this.voiceResultSuccess = false);
+      this.ngZone.run(() => this.voiceActiveListening = true);
+      this.ngZone.run(() => this.voiceResultError = false);
+      SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat-turquoise.css');
+    });
+
+    annyang.addCallback('resultMatch', (userSaid) => {
+      const queryText: any = userSaid[0];
+      annyang.abort();
+      SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat.css');
+
+      this.voiceText = 'perform Action... ';
+      this.voiceStatus = 'result';
+      this.ngZone.run(() => this.voiceActiveListening = false);
+      this.ngZone.run(() => this.voiceResultSuccess = true);
+    });
+
+    annyang.addCallback('resultNoMatch', (userSaid) => {
+      const queryText: any = userSaid[0];
+      annyang.abort();
+      SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat.css');
+
+      this.voiceText = 'Sorry I did not understand what you want. You said: ' + queryText;
+      this.ngZone.run(() => this.voiceActiveListening = false);
+      this.ngZone.run(() => this.voiceResultSuccess = true);
+    });
+
+    annyang.addCallback('error', (err) => {
+      if (err.error === 'network'){
+        this.voiceText = 'Can\'t connect annyang voice service';
+        annyang.abort();
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+      } else if (err.error === 'permissionBlocked') {
+        this.voiceText = 'Your browser blocks the permission request to use Speech Recognition.';
+        annyang.abort();
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+      } else if (err.error === 'permissionDenied') {
+        this.voiceText = 'You blocked the permission request to use Speech Recognition.';
+        annyang.abort();
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+      } else if (this.voiceText === undefined) {
+        this.ngZone.run(() => this.voiceResultError = true);
+        annyang.abort();
+      }
+    });
+
+    annyang.addCallback('end', () => {
+      if (this.voiceText === undefined) {
+        this.ngZone.run(() => this.voiceResultError = true);
+        annyang.abort();
+      }
+    });
+  }
+
+  initVoiceRecognitionCommands(): void {
+    const commands = {
+      'echo *text': (text: string) => {
+        this.voiceActionFeedback = 'Echo: ' + text;
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        alert(text);
+      },
+      'open dashboard': () => {
+        this.voiceActionFeedback = 'Open Dashboard';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.router.navigate(['./dashboard']);
+      },
+      'open memes': () => {
+        this.voiceActionFeedback = 'Open Dashboard';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.router.navigate(['./memes']);
+      },
+      'open webcam': () => {
+        this.voiceActionFeedback = 'Open Webcam';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.loadFromWebcam();
+      },
+      'close webcam': () => {
+        if (this.cameraOn === true) {
+          this.voiceActionFeedback = 'Close Webcam';
+          this.ngZone.run(() => this.voiceResultSuccess = true);
+          this.showOnCanvas();
+        }
+        else {
+          this.voiceActionFeedback = 'Webcam is not open';
+          this.ngZone.run(() => this.voiceResultSuccess = true);
+        }
+      },
+      'take picture': () => {
+        if (this.cameraOn === true) {
+          this.voiceActionFeedback = 'Take Picture';
+          this.ngZone.run(() => this.voiceResultSuccess = true);
+          this.triggerSnapshot();
+        }
+        else {
+          this.voiceActionFeedback = 'Webcam is not open';
+          this.ngZone.run(() => this.voiceResultSuccess = true);
+        }
+      },
+      'title *text': (text: string) => {
+        this.voiceActionFeedback = 'Set title to "' + text + '"';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.name.setValue(text);
+        this.textChanged();
+      },
+      'text top *text': (text: string) => {
+        this.voiceActionFeedback = 'Set Text Top to "' + text + '"';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.textTop.setValue(text);
+        this.textChanged();
+      },
+      'text bottom *text': (text: string) => {
+        this.voiceActionFeedback = 'Set Text Bottom to "' + text + '"';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.textBottom.setValue(text);
+        this.textChanged();
+      },
+      'save public': () => {
+        this.voiceActionFeedback = 'Save Meme (public)';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.saveCanvas();
+      },
+      'save private': () => {
+        this.voiceActionFeedback = 'Save Meme (private)';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.saveCanvasPrivate();
+      },
+      'save draft': () => {
+        this.voiceActionFeedback = 'Save Draft';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.saveCanvasAsDraft();
+      },
+      'download meme': () => {
+        this.voiceActionFeedback = 'Download Meme';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+        this.downloadCanvas();
+      },
+      'help me': () => {
+        this.voiceActionFeedback = 'Show help';
+        this.ngZone.run(() => this.voiceResultSuccess = true);
+      },
+    };
+    annyang.addCommands(commands);
+  }
+
+  closeVoiceSection(): void {
+    this.voiceResultError = false;
+    this.voiceResultSuccess = false;
+    this.voiceActiveListening = false;
+    this.voiceText = undefined;
+    this.ngZone.run(() => this.voiceSectionEnabled = false);
+
+    if (annyang){
+      SpeechKITT.setStylesheet('//cdnjs.cloudflare.com/ajax/libs/SpeechKITT/1.0.0/themes/flat.css');
+      annyang.abort();
+    }
   }
 }
