@@ -12,9 +12,9 @@ from rest_framework.response import Response
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from meme_api.models import Meme, Comment, Vote, VideoCreation, TopFiveMemes
+from meme_api.models import Meme, Comment, Vote, VideoCreation, TopFiveMemes, Template, TemplateStats
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
-from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer
+from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer, TemplateSerializer, TemplateStatsSerializer
 
 from django.db.models import Q, Count
 from django.db.models.functions import ExtractMonth as Month, ExtractYear as Year, ExtractDay as Day, TruncDay
@@ -145,25 +145,15 @@ class VoteList(viewsets.ModelViewSet):
 
 
 class MemeTemplate:
-    available_meme_templates = None
+    #TODO
+    available_meme_templates = []
 
     @classmethod
     def get_available_meme_templates(cls):
         if not cls.available_meme_templates:
-            images = os.listdir(
-                os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))
-
-            backend_basename = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-            templates = []
-
-            for image in images:
-                with open(os.path.join(backend_basename, 'media/memeTemplates', image), "rb") as image_file:
-                    base64_bytes = base64.b64encode(image_file.read())
-                    base64_string = base64_bytes.decode('utf-8')
-                    templates.append({'name': re.sub(r'.png$', '', image), 'base64_string': base64_string})
-
-            cls.available_meme_templates = templates
+            t = list(Template.objects.all().values_list())
+            for elem in t:
+                cls.available_meme_templates.append(elem)
 
         return cls.available_meme_templates
 
@@ -174,15 +164,9 @@ class MemeTemplate:
     @classmethod
     def get_meme_template(cls, request):
         if not cls.available_meme_templates:
-            cls.load_available_meme_templates()
-
-        searched_template = request.GET.get('name')
-
-        meme_data = next(
-            (template for template in cls.get_available_meme_templates() if template['name'] == searched_template),
-            {'error': 'meme template not found'})
-
-        return JsonResponse(meme_data)
+            cls.get_available_meme_templates()
+        id = int(request.GET.get('id'))
+        return JsonResponse(cls.available_meme_templates[id], safe=False)
 
 
 class MemeCreation:
@@ -193,7 +177,7 @@ class MemeCreation:
     font_italic = 'Ubuntu-MI.ttf'
     font_bold_italic = 'Ubuntu-BI.ttf'
     font_style_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/fonts')
-
+    #TODO
     @classmethod
     def get_image_paths(cls):
         if not cls.image_paths:
@@ -271,7 +255,7 @@ class MemeCreation:
 
         # rp is short for request parameters
         qp = cls.get_query_parameters(request)
-
+        #TODO
         created_memes = []
 
         # keys which are necessary to place a text (other than topText or bottomText) in image
@@ -422,14 +406,27 @@ class MemesToVideo:
         '''
         turn top five memes into video
         '''
-        file = Path('media/memeTemplates/my_video.ogv')
+
+        file = Path('media/videoMedia/my_video.ogv')
+        print(file.is_file())
         v = VideoCreation.objects.all()[0]
         val = Meme.objects.values().count()
-        if val > 5:
+        if val > 5 :
             val = 5
-        top_five_memes = Meme.objects.values().order_by('-views')[:val]
-        x = list(top_five_memes.values_list('id', flat=True))
-        top_five = list(range(0, 5))
+        if val < 5 and val > 1:
+            val = val
+        print(val)
+        if val == 1:
+            top_five_memes = Meme.objects.values().order_by('-views')[0]
+            x = [top_five_memes['id']]
+        else:
+            top_five_memes = Meme.objects.values().order_by('-views')[:val]
+            x = list(top_five_memes.values_list('id', flat=True))
+        if val == 1:
+            top_five = [0]
+        else:
+            top_five = list(range(0, val))
+            print(top_five)
         y = list(TopFiveMemes.objects.all().values_list('top_five_memes', flat=True))
         '''
         Check most views changes
@@ -437,32 +434,40 @@ class MemesToVideo:
         if (x != y):
             print('yep')
             for i in top_five:
+                print(i)
                 obj = Meme.objects.get(id=x[i])
+                if len(list(TopFiveMemes.objects.all())) < len(x):
+                    t = TopFiveMemes(top_five_memes=obj)
+                    t.save()
                 t = TopFiveMemes.objects.all()[i]
                 t.top_five_memes = obj
                 t.save()
-
         if not file.is_file():
             if not v.is_video_creation_running and (x == y):
-                do_create(v,top_five_memes)
-                return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
+                do_create(v,top_five_memes, val)
+                return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
             elif not v.is_video_creation_running and (x != y):
-                do_create(v,top_five_memes)
-                return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
+                do_create(v,top_five_memes, val)
+                return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
+            else:
+                return JsonResponse('ok', safe=False)
         elif not v.is_video_creation_running and (x != y):
-            do_create(v,top_five_memes)
-            return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
+            do_create(v,top_five_memes, val)
+            return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
         else:
-            return JsonResponse('/media/memeTemplates/my_video.ogv', safe=False)
+            return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
 
 
-def load_images(top_five_memes):
-    vlqs = top_five_memes.values_list('image_string', flat=True)
+def load_images(top_five_memes, val):
+    if val > 1:
+        vlqs = top_five_memes.values_list('image_string', flat=True)
+    else:
+        vlqs = [top_five_memes['image_string']]
     return vlqs
 
 
-def images_to_video(top_five_memes):
-    vlqs = load_images(top_five_memes)
+def images_to_video(top_five_memes, val):
+    vlqs = load_images(top_five_memes, val)
     image_dict = {}
     count = 0
     for img in vlqs:
@@ -476,12 +481,12 @@ def images_to_video(top_five_memes):
     framerate = 25
     clips = [ImageClip(v).set_duration(5) for k, v in image_dict.items()]
     concat_clip = concatenate_videoclips(clips, method="compose")
-    concat_clip.write_videofile('media/memeTemplates/my_video.ogv', fps=framerate)
+    concat_clip.write_videofile('media/videoMedia/my_video.ogv', fps=framerate)
 
 
-def do_create(v, top_five_memes):
+def do_create(v, top_five_memes, val):
     v.is_video_creation_running = True
     v.save()
-    images_to_video(top_five_memes)
+    images_to_video(top_five_memes, val)
     v.is_video_creation_running = False
     v.save()

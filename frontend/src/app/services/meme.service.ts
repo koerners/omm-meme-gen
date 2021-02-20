@@ -48,15 +48,10 @@ export class MemeService {
 
   /**
    *
-   * TODO: write doc
    * @param templateName the template name
    */
-  getMemeTemplateByString(templateName: string): any {
-    this.http.get(environment.apiUrl + '/memeTemplate/?name=' + templateName)
-      .subscribe(template => {
-        console.log('meme template:', template);
-        return template;
-      });
+  getMemeTemplateByString(id: number): any {
+    return this.http.get(environment.apiUrl + '/memeTemplate/?id=' + id);
   }
 
   /**

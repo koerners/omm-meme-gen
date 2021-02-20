@@ -85,7 +85,7 @@ export class GeneratorComponent implements AfterViewInit {
    */
   rowHeight = 95;
 
-  memeTemplates: {name, base64_string}[] = [];
+  memeTemplates: {id, name, base64_string}[] = [];
   /**
    * The Color options available
    */
@@ -150,15 +150,9 @@ export class GeneratorComponent implements AfterViewInit {
     this.currentWidth = this.width;
     this.currentHeight = this.height;
 
-    this.memeService.getAllMemeTemplates().subscribe(memeTemplates => {
-      const memeTemplateContainer = document.getElementById('memeTemplatesContainer');
-      memeTemplateContainer.innerHTML = '';
-      this.memeTemplates = memeTemplates;
-
-      this.showMemeTemplates();
-    });
   }
   public ngAfterViewInit(): void {
+    this.getMemeTemplates();
     const canvasBackgroundEl: HTMLCanvasElement = this.backgroundCanvas.nativeElement;
     canvasBackgroundEl.width = this.currentWidth;
     canvasBackgroundEl.height = this.currentHeight;
@@ -186,6 +180,16 @@ export class GeneratorComponent implements AfterViewInit {
     canvasDrawCtx.lineCap = 'round';
     canvasDrawCtx.strokeStyle = this.colorPen;
     this.captureEvents(canvasDrawEl);
+  }
+
+  getMemeTemplates(): void{
+    this.memeService.getAllMemeTemplates().subscribe(memeTemplates => {
+      const memeTemplateContainer = document.getElementById('memeTemplatesContainer');
+      memeTemplateContainer.innerHTML = '';
+      this.memeTemplates = memeTemplates;
+
+      this.showMemeTemplates();
+    });
   }
 
   selectFile(event: any): void {
@@ -552,16 +556,15 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.width = 80;
       newImg.height = 80;
       newImg.addEventListener('click', () => {
+
+        this.currentlyShownMemeTemplateIndex = (template[0] - 1);
         this.videoOn = false;
         this.emptyVideoContainer();
-        this.currentlyShownMemeTemplateIndex = this.memeTemplates.indexOf(template);
-
         const canvas = this.fileCanvas.nativeElement;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
-
         const memeTemplate = new Image();
-        memeTemplate.src = 'data:image/png;base64,' + template.base64_string;
+        memeTemplate.src = 'data:image/png;base64,' + template[2];
         memeTemplate.onload = () => {
           const scaleFactor = memeTemplate.width / this.width;
           this.resizeCanvasHeight(memeTemplate.height / scaleFactor);
@@ -570,7 +573,9 @@ export class GeneratorComponent implements AfterViewInit {
           this.textChanged();
         };
       });
-      newImg.src = 'data:image/jpg;base64,' + template.base64_string;
+      const st = template[2];
+      console.log(st);
+      newImg.src = 'data:image/jpg;base64,' + template[2];
       newImg.alt = 'Loading';
       memeTemplateContainer.append(newImg);
     });
@@ -718,13 +723,13 @@ export class GeneratorComponent implements AfterViewInit {
     return Math.ceil(this.currentHeight / this.rowHeight + 0.2);
   }
 
-  memeTemplateChosen(template: { name: string, base64_string: string }): void {
+  memeTemplateChosen(template): void {
     const canvas = this.fileCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
     const memeTemplate = new Image();
-    memeTemplate.src = 'data:image/png;base64,' + template.base64_string;
+    memeTemplate.src = 'data:image/png;base64,' + template[2];
     memeTemplate.onload = () => {
       const scaleFactor = memeTemplate.width / this.width;
       this.resizeCanvasHeight(memeTemplate.height / scaleFactor);
@@ -740,8 +745,9 @@ export class GeneratorComponent implements AfterViewInit {
     } else {
       this.currentlyShownMemeTemplateIndex--;
     }
+    const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
 
-    this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
+    this.memeTemplateChosen(meme);
   }
 
   nextTemplateButtonClicked(): void {
@@ -751,8 +757,9 @@ export class GeneratorComponent implements AfterViewInit {
     } else {
       this.currentlyShownMemeTemplateIndex++;
     }
+    const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
 
-    this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
+    this.memeTemplateChosen(meme);
   }
 
   /**

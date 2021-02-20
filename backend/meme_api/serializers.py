@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
-from meme_api.models import Meme, Comment, Vote
+from meme_api.models import Meme, Comment, Vote, Template, TemplateStats
 from random_username.generate import generate_username
 
 
@@ -50,3 +50,16 @@ class VoteSerializer(serializers.ModelSerializer):
         fields = ['meme', 'upvote', 'owner']
 
     owner = serializers.ReadOnlyField(source='owner.username')
+
+
+
+class TemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'title', 'image_string']
+
+
+class TemplateStatsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'template_id', 'meme', 'created', 'viewed']
