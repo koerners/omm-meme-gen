@@ -1,3 +1,20 @@
+<button (click)="screenReader()">Speak</button>
+<button (click)="stopScreenReader()">Stop</button>
+
+<div *ngIf="voiceRecognitionService.voiceFeedbackEnabled" style="background-color: darkslateblue">
+  Voice Recognition: <br />
+  {{voiceRecognitionService.voiceStatusMsg}} {{voiceRecognitionService.voiceActionFeedback}}
+  <ng-container *ngIf="voiceRecognitionService.voiceFeedbackShowHelp">
+    <div class="grid-container">
+      Available commands... <br />
+      Help: 'help me', 'close help'
+    </div>
+  </ng-container>
+  <div class="grid-container">
+    <br /><button (click)="voiceRecognitionService.closeVoiceFeedback()">Close</button>
+  </div>
+</div>
+
 <div class="grid-container">
   <h1 class="mat-h1">Dashboard</h1>
   <mat-grid-list cols="2" rowHeight="350px">

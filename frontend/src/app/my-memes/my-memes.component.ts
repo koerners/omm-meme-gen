@@ -151,9 +151,9 @@ export class MyMemesComponent implements OnInit {
   // VoiceRecognition and its functions //
   private initVoiceRecognitionCommands(): void {
     const commands = {
-      test: () => {
-        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Test');
-        alert('test');
+      'start screen reader': () => {
+        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Start Screen Reader');
+        this.screenReader();
       },
     };
     this.voiceRecognitionService.setUp(commands);
