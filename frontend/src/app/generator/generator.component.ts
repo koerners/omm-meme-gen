@@ -148,6 +148,8 @@ export class GeneratorComponent implements AfterViewInit {
 
   // Map for ScreenReader Output
   private screenReaderText: Map<string, string>;
+  private isTemplate: boolean;
+  private currentMeme: any;
 
 
   constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog,
@@ -568,6 +570,7 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.width = 80;
       newImg.height = 80;
       newImg.addEventListener('click', () => {
+        this.isTemplate = true;
         this.videoOn = false;
         this.emptyVideoContainer();
         this.currentlyShownMemeTemplateIndex = this.memeTemplates.indexOf(template);
@@ -768,7 +771,13 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex++;
     }
 
-    this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
+    const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
+    if (this.isTemplate){
+      this.memeService.postTemplateStat(meme.id);
+    }
+    this.currentMeme = meme.id;
+    this.isTemplate = true;
+    this.memeTemplateChosen(meme);
   }
 
   /**
