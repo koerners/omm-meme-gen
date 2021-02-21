@@ -22,7 +22,7 @@ export class MyMemesComponent implements OnInit {
   prevUrl: string;
   screenReaderText: Map<string, string>;
 
-  constructor(private memeService: MemeService, private ngZone: NgZone,
+  constructor(private memeService: MemeService, private ngZone: NgZone, private router: Router,
               private speechService: SpeechService, public voiceRecognitionService: VoiceRecognitionService) {
     this.screenReaderText = new Map<string, string>();
     this.screenReaderText.set('Welcome', 'This page is Meme Life Gallery.');
@@ -121,12 +121,12 @@ export class MyMemesComponent implements OnInit {
   }
 
   private readCurrentMemeSet(): void {
-    this.screenReaderText.set('Amount', this.memeLength + 'Memes are available.');
+    this.screenReaderText.set('Amount', this.memeLength + ' Memes are available.');
     let memeTitles = '';
     let countEmpty = 0;
     this.allMemes.forEach(element => {
       if (element.title) {
-        memeTitles += element.title + ' - ';
+        memeTitles += element.title + '! ';
       }
       else {
         countEmpty++;
@@ -154,6 +154,15 @@ export class MyMemesComponent implements OnInit {
       'start screen reader': () => {
         this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Start Screen Reader');
         this.screenReader();
+      },
+      'open meme :pos': (pos: number) => {
+        if (pos > 0 && pos <= 6) {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Start Screen Reader');
+          this.router.navigate(['./meme/' + pos]);
+        }
+        else {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open Meme ' + pos + ' not possible');
+        }
       },
     };
     this.voiceRecognitionService.setUp(commands);
