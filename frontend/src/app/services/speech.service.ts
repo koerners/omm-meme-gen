@@ -6,7 +6,7 @@ import {Injectable} from '@angular/core';
 export class SpeechService {
   public voices: SpeechSynthesisVoice[];
   public selectedVoice: SpeechSynthesisVoice | null;
-  private defaultVoiceName = 'Google UK English Male';
+  private preferredVoice = 'Google UK English Male';
 
   constructor(){
     // Speech out
@@ -23,32 +23,28 @@ export class SpeechService {
       () => {
         this.voices = speechSynthesis.getVoices();
         this.selectedVoice = this.voices.find(i => {
-          return i.name.indexOf(this.defaultVoiceName) > -1;
+          return i.name.indexOf(this.preferredVoice) > -1;
         });
-        // Fallback: If selected voice not available (OS depending) take the first available
-        if (!this.selectedVoice) {
-          this.selectedVoice = ( this.voices[0] || null );
-        }
       }
     );
   }
 
   // Synthesize speech from the current text for the selected voice.
   public speak(text: string): void {
-    if (!this.selectedVoice || !text) {
-      console.log('SpeechSynthesis: Cannot talk. (voice: ' + this.selectedVoice + ', text: ' + text + ')');
+    if (!text) {
+      console.log('SpeechSynthesis: Cannot talk, nothing to say.');
       return;
     }
     this.stop();
     console.log('SpeechSynthesis: ' + text);
     this.synthesizeSpeechFromText(this.selectedVoice, 1, text);
 
-    // Chrome Bug stops speech out after 15s
+    // Chrome Bug stops speech out after 15s, does not work good with Firefox
     const synthesisInterval = setInterval(() => {
       if (!speechSynthesis.speaking) {
         clearInterval(synthesisInterval);
       } else {
-        console.log('SpeechSynthesis: extending voice out by pause/resume (Chrome Bug)');
+        console.log('SpeechSynthesis: extending voice out by pause/resume (Chrome Bug), causes delays in Firefox.');
         speechSynthesis.pause();
         speechSynthesis.resume();
       }
@@ -57,7 +53,6 @@ export class SpeechService {
 
   // Synthesize speech from the current text for the selected voice.
   public demo(): void {
-    if (!this.selectedVoice) { return; }
     this.stop();
     this.synthesizeSpeechFromText(this.selectedVoice, 1, 'I’m the Dude, so that’s what you call me. That or, uh, His Dudeness, or uh, Duder, or El Duderino, if you’re not into the whole brevity thing.');
   }
@@ -71,18 +66,19 @@ export class SpeechService {
   }
 
   // Performs the low-level speech synthesis for the given voice, rate, and text.
-  private synthesizeSpeechFromText(
-    voice: SpeechSynthesisVoice,
-    rate: number,
-    text: string
-  ): void {
-    const utterance = new SpeechSynthesisUtterance( text );
-    utterance.voice = voice;
+  private synthesizeSpeechFromText(voice: SpeechSynthesisVoice, rate: number, text: string): void {
+    const utterance = new SpeechSynthesisUtterance(text);
+    // if preferred voice is not available choose by language
+    if (voice) {
+      utterance.voice = voice;
+    }
+    else {
+      utterance.lang = 'en-us';
+    }
     utterance.rate = rate;
-    utterance.lang = 'en-GB';
     utterance.onend = () => {
       speechSynthesis.cancel();
     };
-    speechSynthesis.speak( utterance );
+    speechSynthesis.speak(utterance);
   }
 }
