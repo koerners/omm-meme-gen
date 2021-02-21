@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from django.conf.urls.static import static
@@ -10,6 +11,7 @@ import os
 from django.http import HttpResponse
 
 from meme_api import views
+from django.views.decorators.csrf import csrf_exempt
 
 
 router = routers.DefaultRouter()
@@ -32,5 +34,8 @@ urlpatterns = [
     path('memeTemplate/', views.MemeTemplate.get_meme_template),
     path('createMeme/', views.MemeCreation.create_meme),
     path('createMemes/', views.MemeCreation.create_memes),
-    path('imgFlip/', views.IMGFlip.get_imgflip_memes)
-] + static('/media/memeTemplates', document_root=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/memeTemplates'))
+    path('imgFlip/', views.IMGFlip.get_imgflip_memes),
+    path('convertVideoToImages/', csrf_exempt(views.VideoTemplates.upload_video_to_server)),
+    path('addTextToVideo/', csrf_exempt(views.VideoTemplates.add_text_to_video)),
+    path('convertImagesToVideo/', csrf_exempt(views.VideoTemplates.get_video_from_images))
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

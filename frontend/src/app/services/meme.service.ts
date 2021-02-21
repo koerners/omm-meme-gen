@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 import {Meme} from '../Meme';
 
@@ -42,6 +42,31 @@ export class MemeService {
       title: meme.title,
       image_string: meme.imageString, private: meme.private
     }).subscribe(data => {
+      console.log(data);
+    });
+  }
+
+  convertVideoToImages(videoString: string): any {
+    return this.http.post(environment.apiUrl + '/convertVideoToImages/', {
+      video_string: videoString
+    });
+  }
+
+  addTextToVideo(textData: {}): any {
+    return this.http.post(environment.apiUrl + '/addTextToVideo/', textData);
+  }
+
+  convertImagesToVideo(videoData: string): any {
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type':  'application/json',
+      })
+    };
+
+    console.log('convertImagesToVideo');
+    return this.http.post(environment.apiUrl + '/convertImagesToVideo/', {
+      video_data: videoData
+    }, httpOptions).subscribe(data => {
       console.log(data);
     });
   }

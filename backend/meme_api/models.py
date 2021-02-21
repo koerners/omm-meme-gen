@@ -36,3 +36,12 @@ class Vote(models.Model):
 
     class Meta:
         ordering = ['created']
+
+class Video(models.Model):
+    video = models.FileField()
+
+    class Meta:
+        verbose_name_plural = "Videos"
+
+    def __str__(self):
+        return self.video.name
