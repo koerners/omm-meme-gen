@@ -25,7 +25,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class MemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meme
-        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private']
+        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private', 'type']
 
     owner = serializers.ReadOnlyField(source='owner.username')
 

@@ -13,7 +13,7 @@ from django.core.files.base import ContentFile
 import uuid
 import numpy as np
 
-from backend.settings import BASE_DIR
+from backend.settings import BASE_DIR, MEDIA_URL
 from meme_api.models import Meme, Comment, Vote
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer
@@ -375,7 +375,7 @@ class IMGFlip:
 
 
 class VideoTemplates(viewsets.ModelViewSet):
-    video_folder = 'media/videos/'
+    video_folder = 'media/videoMedia/'
 
     @classmethod
     def upload_video_to_server(cls, request):
@@ -388,36 +388,14 @@ class VideoTemplates(viewsets.ModelViewSet):
         video_bytes = bytes_io.read()
 
         random_name = uuid.uuid4().hex
-        video_file_name = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), cls.video_folder, random_name + '.mp4');
+        video_file_path = os.path.join(cls.video_folder, random_name + '.mp4')
 
         # video needs to be stored locally, because cv2.VideoCapture does not work with buffer
-        with open(video_file_name, 'wb') as f:
+        with open(video_file_path, 'wb') as f:
             f.write(video_bytes)
 
-        vidcap = cv2.VideoCapture(video_file_name)
+        vidcap = cv2.VideoCapture(video_file_path)
         fps = vidcap.get(cv2.CAP_PROP_FPS)
-
-        # # here we can delete the video file from the server again
-        # os.remove(video_file_name)
-        #
-        # images = []
-        #
-        # success, image_as_np_array = vidcap.read()
-        # while success:
-        #     image_as_np_array = cv2.cvtColor(image_as_np_array, cv2.COLOR_BGR2RGB)
-        #     image = Image.fromarray(image_as_np_array)
-        #
-        #     # convert image to base64 to make it json serializable
-        #     image_bytes = io.BytesIO()
-        #     image.save(image_bytes, format='JPEG')
-        #     im_data = image_bytes.getvalue()
-        #     base64_bytes = base64.b64encode(im_data)
-        #     image_string = 'data:image/jpg;base64,' + base64_bytes.decode('utf-8')
-        #
-        #     images.append(image_string)
-        #     success, image_as_np_array = vidcap.read()
-        #
-        # return JsonResponse({'video_file_name': random_name, 'frames': len(images)}, safe=False, status=200)
 
         frame_counter = 0
         success, image_as_np_array = vidcap.read()
@@ -425,7 +403,7 @@ class VideoTemplates(viewsets.ModelViewSet):
             frame_counter += 1
             success, image_as_np_array = vidcap.read()
 
-        return JsonResponse({'video_file_name': video_file_name, 'frames': frame_counter, 'video_string': video_string},
+        return JsonResponse({'video_url': video_file_path, 'frames': frame_counter},
                             safe=False, status=200)
 
     @classmethod
@@ -439,14 +417,15 @@ class VideoTemplates(viewsets.ModelViewSet):
         text_to_add = body['text']
         x_pos = body['x']
         y_pos = body['y']
-        font_size = body['font_size']
         from_frame = body['from_frame']
         to_frame = body['to_frame']
-        underline = body['underline']
-        bold = body['bold']
+
+        print(video_file_name)
 
         vidcap = cv2.VideoCapture(body['video_file_name'])
         fps = vidcap.get(cv2.CAP_PROP_FPS)
+
+        os.remove(os.path.join(cls.video_folder, video_file_name + '.mp4'))
 
         images = []
 
@@ -479,18 +458,15 @@ class VideoTemplates(viewsets.ModelViewSet):
                                  fps=fps,
                                  frameSize=(width, height))
 
-        for image in images[:100]:
+        for image in images:
             opencv_image = np.array(image)
             opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
             writer.write(opencv_image)
 
-        with open(video_file_name, "rb") as vid_file:
-            base64_bytes = base64.b64encode(vid_file.read())
-            video_string = base64_bytes.decode('utf-8')
+        video_file_path = os.path.join(cls.video_folder, video_file_name + '.mp4')
 
-        return JsonResponse(
-            {'video_file_name': video_file_name, 'frames': frame_counter, 'video_string': video_string},
-            safe=False, status=200)
+        return JsonResponse({'video_url': video_file_path, 'frames': frame_counter},
+                            safe=False, status=200)
 
     @classmethod
     def get_video_from_images(cls, request):

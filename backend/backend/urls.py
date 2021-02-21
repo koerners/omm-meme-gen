@@ -38,4 +38,4 @@ urlpatterns = [
     path('convertVideoToImages/', csrf_exempt(views.VideoTemplates.upload_video_to_server)),
     path('addTextToVideo/', csrf_exempt(views.VideoTemplates.add_text_to_video)),
     path('convertImagesToVideo/', csrf_exempt(views.VideoTemplates.get_video_from_images))
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static('/media/videoMedia', document_root=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/videoMedia'))

@@ -12,6 +12,7 @@ import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
+import {environment} from "../../environments/environment";
 
 export interface DialogData {
   url: string;
@@ -207,7 +208,7 @@ export class GeneratorComponent implements AfterViewInit {
         videoContainer.appendChild(videoEl);
         // create source element
         const source = document.createElement('source');
-        source.setAttribute('src', videoString);
+        source.setAttribute('src', environment.apiUrl + '/' + data.video_url);
         videoEl.appendChild(source);
         const containerWidth = this.width;
         const containerHeight = this.height;
@@ -363,7 +364,7 @@ export class GeneratorComponent implements AfterViewInit {
         videoContainer.appendChild(videoEl);
         // create source element
         const source = document.createElement('source');
-        source.setAttribute('src', 'data:video/mp4;' + data.video_string);
+        source.setAttribute('src', environment.apiUrl + '/' + data.video_url);
         videoEl.appendChild(source);
         const containerWidth = this.width;
         const containerHeight = this.height;
