@@ -13,7 +13,7 @@
             </button>
             <mat-menu #menu="matMenu" xPosition="before">
               <button (click)="downloadCanvas()" mat-menu-item>Download</button>
-
+              <button (click)="shareLink('This goes to Clipboard')" value="click to copy"  mat-menu-item>Copy this</button>
             </mat-menu>
           </mat-card-title>
 
