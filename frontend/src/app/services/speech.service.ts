@@ -12,10 +12,10 @@ export class SpeechService {
     // Speech out
     this.voices = [];
     this.selectedVoice = null;
-    this.initVoice();
+    this.initSpeech();
   }
 
-  private initVoice(): void {
+  private initSpeech(): void {
     // The voices aren't immediately available (or so it seems). We need to wait for
     // the "voiceschanged" event to fire before we can access them.
     speechSynthesis.addEventListener(
@@ -61,6 +61,7 @@ export class SpeechService {
   // Stop any current speech synthesis.
   public stop(): void {
     if (speechSynthesis.speaking) {
+      console.log('speech aborted by stop()');
       speechSynthesis.cancel();
     }
   }
