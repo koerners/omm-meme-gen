@@ -3,6 +3,7 @@ from pathlib import Path
 
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
 from rest_framework import permissions
@@ -368,7 +369,7 @@ class SendUserStatistics:
 
 
 class TemplateStats:
-    #@csrf_exempt
+    @csrf_exempt
     def update_stats(request):
         print(request.POST)
         post_data = request.POST
