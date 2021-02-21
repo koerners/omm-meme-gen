@@ -1,10 +1,12 @@
-import {Component, OnInit} from '@angular/core';
-import {BreakpointObserver} from '@angular/cdk/layout';
-import {MemeService} from '../services/meme.service';
-import {Meme} from '../Meme';
+import {Component, NgZone, OnInit} from '@angular/core';
+import {Router} from '@angular/router';
 import {PageEvent} from '@angular/material/paginator';
 import {MatTabChangeEvent} from '@angular/material/tabs';
+import {BreakpointObserver} from '@angular/cdk/layout';
+import {Meme} from '../Meme';
+import {MemeService} from '../services/meme.service';
 import {SpeechService} from '../services/speech.service';
+import {VoiceRecognitionService} from '../services/voice-recognition.service';
 
 @Component({
   selector: 'app-my-memes',
@@ -20,18 +22,15 @@ export class MyMemesComponent implements OnInit {
   prevUrl: string;
   screenReaderText: Map<string, string>;
 
-  constructor(private memeService: MemeService, private speechService: SpeechService) {
+  constructor(private memeService: MemeService, private ngZone: NgZone,
+              private speechService: SpeechService, public voiceRecognitionService: VoiceRecognitionService) {
     this.screenReaderText = new Map<string, string>();
-    // this.screenReaderText.set('', '');
     this.screenReaderText.set('Welcome', 'This page is Meme Life Gallery.');
+    this.initVoiceRecognitionCommands();
   }
 
   ngOnInit(): void {
-
-  this.loadMemes(0);
-
-
-
+    this.loadMemes(0);
   }
 
   getData($event: PageEvent): any {
@@ -71,7 +70,7 @@ export class MyMemesComponent implements OnInit {
           this.memeLength = data.count;
           this.nextUrl = data.next;
           this.prevUrl = data.previous;
-          console.log(this.nextUrl, this.prevUrl);
+          // console.log(this.nextUrl, this.prevUrl);
 
           this.screenReaderText.set('Paging', 'You are on page ' + 1 +
             ' of ' + (Math.floor(this.memeLength / 6) + 1) +
@@ -88,7 +87,7 @@ export class MyMemesComponent implements OnInit {
           this.memeLength = data.count;
           this.nextUrl = data.next;
           this.prevUrl = data.previous;
-          console.log(this.nextUrl, this.prevUrl);
+          // console.log(this.nextUrl, this.prevUrl);
 
           this.screenReaderText.set('Paging', 'You are on page ' + 1 +
             ' of ' + (Math.floor(this.memeLength / 6) + 1) +
@@ -106,7 +105,7 @@ export class MyMemesComponent implements OnInit {
 
   }
 
-  // ScreenReader and its helper functions //
+  // ScreenReader and its functions //
   public screenReader(): void {
     this.speechService.speak(this.screenReaderBuilder());
   }
@@ -147,5 +146,16 @@ export class MyMemesComponent implements OnInit {
 
   public stopScreenReader(): void {
     this.speechService.stop();
+  }
+
+  // VoiceRecognition and its functions //
+  private initVoiceRecognitionCommands(): void {
+    const commands = {
+      test: () => {
+        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Test');
+        alert('test');
+      },
+    };
+    this.voiceRecognitionService.setUp(commands);
   }
 }
