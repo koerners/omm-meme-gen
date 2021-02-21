@@ -123,7 +123,7 @@ export class VoiceRecognitionService {
       },
       'navigate generate': () => {
         this.ngZone.run(() => this.voiceActionFeedback = 'Open Generate');
-        this.router.navigate(['./memes']);
+        this.router.navigate(['./generator']);
       },
       'navigate memes': () => {
         this.ngZone.run(() => this.voiceActionFeedback = 'Open Memes');
