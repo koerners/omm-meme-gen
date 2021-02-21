@@ -17,14 +17,18 @@ export class VoiceRecognitionService {
   voiceActionSuccess = false;
 
   constructor(private ngZone: NgZone, private router: Router, private speechService: SpeechService) {
-    this.initVoiceRecognition();
+    if (annyang) {
+      this.initVoiceRecognition();
+    }
   }
 
   public setUp(commands): void {
-    this.closeVoiceFeedback();
-    annyang.removeCommands();
-    this.initVoiceRecognitionCommands();
-    annyang.addCommands(commands);
+    if (annyang) {
+      this.closeVoiceFeedback();
+      annyang.removeCommands();
+      this.initVoiceRecognitionCommands();
+      annyang.addCommands(commands);
+    }
   }
 
   public closeVoiceFeedback(): void {
