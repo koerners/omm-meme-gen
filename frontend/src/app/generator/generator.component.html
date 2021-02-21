@@ -55,6 +55,7 @@
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
           <div [hidden]="!videoOn" id="videoContainer" class="meme-canvas">
+            <video></video>
           </div>
           <div [hidden]="videoOn">
             <canvas [hidden]="cameraOn" #previewBackground [style.background]="colorBackground" class="meme-canvas"></canvas>

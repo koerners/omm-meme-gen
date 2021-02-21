@@ -9,7 +9,7 @@ class Meme(models.Model):
     image_string = models.CharField(max_length=9999999999999999999, default='')
     views = models.IntegerField(default=0)
     private = models.BooleanField(default=False)
-    video = models.IntegerField(default=0)
+    type = models.IntegerField(default=0)
 
 
     class Meta:

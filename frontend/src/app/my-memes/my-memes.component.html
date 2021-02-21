@@ -16,8 +16,11 @@
                 {{meme.title}}
               </mat-card-title>
             </mat-card-header>
-            <mat-card-content class="dashboard-card-content">
+            <mat-card-content *ngIf="meme.type==0" class="dashboard-card-content">
               <img [src]="meme.image_string" alt="Loading">
+            </mat-card-content>
+            <mat-card-content *ngIf="meme.type==1" class="dashboard-card-content">
+              <video [src]="meme.image_string" autoplay="autoplay" controls="controls" alt="Loading"></video>
             </mat-card-content>
           </mat-card>
         </mat-grid-tile>
@@ -37,9 +40,12 @@
               <mat-card-title>
                 {{meme.title}}
               </mat-card-title>
-            </mat-card-header>
-            <mat-card-content class="dashboard-card-content">
+            </mat-card-header>>
+            <mat-card-content *ngIf="meme.type==0" class="dashboard-card-content">
               <img [src]="meme.image_string" alt="Loading">
+            </mat-card-content>
+            <mat-card-content *ngIf="meme.type==1" class="dashboard-card-content">
+              <video [src]="meme.image_string" autoplay="autoplay" controls="controls" alt="Loading"></video>
             </mat-card-content>
           </mat-card>
         </mat-grid-tile>

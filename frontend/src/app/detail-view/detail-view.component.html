@@ -33,8 +33,11 @@
                 <mat-icon>navigate_before</mat-icon>
               </button>
             </mat-grid-tile>
-            <mat-grid-tile colspan="8">
-              <img [src]="meme.imageString" #preview alt="Loading">
+            <mat-grid-tile *ngIf="meme.type==0" colspan="8">
+              <img  [src]="meme.imageString" #preview alt="Loading">
+            </mat-grid-tile>
+            <mat-grid-tile *ngIf="meme.type==1" colspan="8">
+              <video [src]="meme.imageString" autoplay="autoplay" controls="controls" muted #preview alt="Loading"></video>
             </mat-grid-tile>
             <mat-grid-tile colspan="1">
               <button (click)="nextImage()" mat-fab color="primary" aria-label="Example icon button with a delete icon">

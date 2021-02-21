@@ -40,7 +40,9 @@ export class MemeService {
   saveMeme(meme: Meme): void {
     this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,
-      image_string: meme.imageString, private: meme.private
+      image_string: meme.imageString,
+      private: meme.private,
+      type: meme.type
     }).subscribe(data => {
       console.log(data);
     });

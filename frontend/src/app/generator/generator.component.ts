@@ -12,7 +12,7 @@ import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
-import {environment} from "../../environments/environment";
+import {environment} from '../../environments/environment';
 
 export interface DialogData {
   url: string;
@@ -200,6 +200,7 @@ export class GeneratorComponent implements AfterViewInit {
         const videoContainer = document.getElementById('videoContainer');
         // create video element
         const videoEl: HTMLVideoElement = document.createElement('video');
+        videoEl.id = 'video_element';
         videoEl.loop = true;
         videoEl.controls = false;
         // videoEl.setAttribute('class', 'meme-canvas');
@@ -326,6 +327,8 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   saveTextbox(textbox: Textbox): void {
+    this.newTextbox = null;
+
     if (this.videoOn) {
       const textData = {
         video_url: this.currentVideoData.video_url,
@@ -342,6 +345,12 @@ export class GeneratorComponent implements AfterViewInit {
       };
 
       const self = this;
+
+      // this.memeService.addTextToVideo(textData);
+      //
+      // this.emptyVideoContainer();
+
+      // this.memeService.addTextToVideo(textData).subscribe()
 
       this.memeService.addTextToVideo(textData).subscribe(data => {
         this.clearCanvas();
@@ -363,10 +372,11 @@ export class GeneratorComponent implements AfterViewInit {
         // create source element
         const source = document.createElement('source');
         source.setAttribute('src', environment.apiUrl + '/' + data.video_url);
+        console.log(environment.apiUrl + '/' + data.video_url);
         videoEl.appendChild(source);
         const containerWidth = this.width;
         const containerHeight = this.height;
-        console.log('before meta data loaded')
+
         videoEl.addEventListener( 'loadedmetadata', function(e): void {
           console.log('meta data loaded')
           // wait till loadedmetadata to have video element's videoWidth and videoHeight
@@ -380,7 +390,6 @@ export class GeneratorComponent implements AfterViewInit {
           // play video after scaling
           this.play().then(r => {console.log('playing')} );
         });
-
       });
 
       // textData.text = textbox.formControl.value;
@@ -763,13 +772,18 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   saveCanvas(): void {
-    const image = this.createImageStringFromCanvas();
     const meme = new Meme();
-    meme.imageString = image;
+    if (this.videoOn) {
+      meme.imageString = environment.apiUrl + '/' + this.currentVideoData.video_url;
+      meme.type = 1;
+    } else {
+      const image = this.createImageStringFromCanvas();
+      meme.imageString = image;
+      meme.type = 0;
+    }
     meme.private = false;
     meme.title = this.name.value;
     this.memeService.saveMeme(meme);
-
   }
 
   saveCanvasAsDraft(): void {
@@ -777,9 +791,15 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   saveCanvasPrivate(): void {
-    const image = this.createImageStringFromCanvas();
     const meme = new Meme();
-    meme.imageString = image;
+    if (this.videoOn) {
+      meme.imageString = environment.apiUrl + '/' + this.currentVideoData.video_url;
+      meme.type = 1;
+    } else {
+      const image = this.createImageStringFromCanvas();
+      meme.imageString = image;
+      meme.type = 0;
+    }
     meme.private = true;
     meme.title = this.name.value;
     this.memeService.saveMeme(meme);
