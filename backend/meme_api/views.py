@@ -28,9 +28,6 @@ import numpy as np
 from skimage.transform import resize
 
 
-from django.views.decorators.csrf import csrf_exempt
-
-
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -371,7 +368,7 @@ class SendUserStatistics:
 
 
 class TemplateStats:
-    @csrf_exempt
+    #@csrf_exempt
     def update_stats(request):
         print(request.POST)
         post_data = request.POST
@@ -389,6 +386,10 @@ class TemplateStats:
         t_entry.save()
 
         return HttpResponse(200)
+
+    def get_stats(request):
+        pass
+
 
 
 class ScreenshotFromUrl:
@@ -422,8 +423,13 @@ class MemesToVideo:
         '''
 
         file = Path('media/videoMedia/my_video.ogv')
-        print(file.is_file())
-        v = VideoCreation.objects.all()[0]
+
+        v = list(VideoCreation.objects.all())
+        print(v)
+        if v == []:
+            VideoCreation.objects.create(is_video_creation_running=False)
+            v = VideoCreation.objects.all()[0]
+        v = v[0]
         val = Meme.objects.values().count()
         if val > 5:
             val = 5
@@ -432,9 +438,11 @@ class MemesToVideo:
         print(val)
         if val == 1:
             top_five_memes = Meme.objects.values().order_by('-views')[0]
+            #top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[0]
             x = [top_five_memes['id']]
         else:
             top_five_memes = Meme.objects.values().order_by('-views')[:val]
+            #top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[:val]
             x = list(top_five_memes.values_list('id', flat=True))
         if val == 1:
             top_five = [0]

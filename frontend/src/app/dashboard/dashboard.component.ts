@@ -2,7 +2,7 @@ import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/
 import {map} from 'rxjs/operators';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {MemeService} from '../services/meme.service';
-import { ChartDataSets, ChartOptions } from 'chart.js';
+import { ChartDataSets } from 'chart.js';
 import { Color, Label } from 'ng2-charts';
 import {environment} from "../../environments/environment";
 
@@ -112,13 +112,21 @@ export class DashboardComponent implements  AfterViewInit{
     this.topMemeChartOptions = {
       responsive: true,
       maintainAspectRatio: false,
+      scales: {
+        yAxes: [{
+          ticks: {
+            stepSize: 1,
+            fontColor: 'white,'
+          }
+        }]
+      }
     };
     this.topMemeChartLabels = Array.from(this.topMemes.data, ({title}) => title );
     console.log(this.topMemeChartLabels);
     this.topMemeChartColors = [
       {
         borderColor: 'black',
-        backgroundColor: '#47A31F',
+        backgroundColor: '#47A31F'
       },
     ];
     this.chartReady = true;
@@ -126,8 +134,8 @@ export class DashboardComponent implements  AfterViewInit{
     private drawUserChart(): void{
     const chartData = Array.from(this.loginData.data, ({count}) => count);
     this.loginChartData = [
-      { data: chartData, label: 'Last Login of Users' },
-    ];
+      { data: chartData, label: 'Last Login of Users', backgroundColor: 'white'},
+    ]
 
     this.loginChartOptions = {
       responsive: true,
@@ -137,18 +145,46 @@ export class DashboardComponent implements  AfterViewInit{
         yAxes: [{
           ticks: {
             beginAtZero: true,
-            stepSize: 1
+            stepSize: 1,
+            fontColor: 'white'
           }
-        }]
+        }],
+        xAxes: [{
+          ticks: {
+            display: true,
+            fontColor: 'white'
+          }
+        }],
+        plugins: {
+          outlabels: {
+            backgroundColor: "white", // Background color of Label
+            borderColor: "none", // Border color of Label
+            borderRadius: 0, // Border radius of Label
+            borderWidth: 0, // Thickness of border
+            color: "black", // Font color
+            display: false,
+            lineWidth: 1, // Thickness of line between chart arc and Label
+            padding: 0,
+            lineColor: "black",
+            textAlign: "center",
+            stretch: 45,
+          },
+          labels: false
+        },
+        legend: [{
+          display: true,
+        }],
+        title: [{
+          display: true,
+        }],
       }
-
     };
     console.log(this.loginData.data);
     this.loginChartLabels = Array.from(this.loginData.data, ({day, month, year}) => day + '.' + month + '.' + year);
     this.loginChartColors = [
       {
         borderColor: 'black',
-        backgroundColor: '#47A31F',
+        backgroundColor: '#47A31F'
       },
     ];
     this.loginChartReady = true;
