@@ -26,6 +26,7 @@ class MemeSerializer(serializers.ModelSerializer):
     pos_votes = serializers.SerializerMethodField('how_many_pos')
 
     def how_many_pos(self, meme):
+
         return len(Vote.objects.filter(meme=meme, upvote=True))
 
     class Meta:

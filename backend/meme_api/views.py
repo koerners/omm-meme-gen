@@ -12,10 +12,9 @@ from rest_framework.response import Response
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-from meme_api.models import Meme, Comment, Vote, VideoCreation, TopFiveMemes, Template, TemplateStats
+from meme_api.models import Meme, Comment, Vote, VideoCreation, TopFiveMemes, Template, TemplatesOvertime
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
-from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer, TemplateSerializer, TemplateStatsSerializer
-
+from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer, TemplateSerializer
 from django.db.models import Q, Count
 from django.db.models.functions import ExtractMonth as Month, ExtractYear as Year, ExtractDay as Day, TruncDay
 import os
@@ -27,6 +26,9 @@ import json, io, zipfile
 import urllib.parse
 import numpy as np
 from skimage.transform import resize
+
+
+from django.views.decorators.csrf import csrf_exempt
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -153,11 +155,13 @@ class MemeTemplate:
             t = list(Template.objects.all().values_list())
             for elem in t:
                 cls.available_meme_templates.append(elem)
+        print("----------------4--------------------")
 
         return cls.available_meme_templates
 
     @classmethod
     def get_all_meme_templates(cls, request):
+        print("-------------------2-----------------")
         return JsonResponse(cls.get_available_meme_templates(), safe=False)
 
     @classmethod
@@ -165,7 +169,11 @@ class MemeTemplate:
         if not cls.available_meme_templates:
             cls.get_available_meme_templates()
         id = int(request.GET.get('id'))
-        return JsonResponse(cls.available_meme_templates[id], safe=False)
+        resp = cls.available_meme_templates[id]
+        print(resp)
+        print("------------------------------------")
+
+        return JsonResponse(resp, safe=False)
 
 
 class MemeCreation:
@@ -175,7 +183,7 @@ class MemeCreation:
     font_italic = 'Ubuntu-MI.ttf'
     font_bold_italic = 'Ubuntu-BI.ttf'
     font_style_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/fonts')
-    #TODO
+
     @classmethod
     def create_meme(cls, request):
         template_name = request.GET.get('templateName')
@@ -235,11 +243,10 @@ class MemeCreation:
         meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
         print(meme_template)
         if meme_template is None:
-                return JsonResponse({'message': 'meme template could not be found'}, status=400)
+            return JsonResponse({'message': 'meme template could not be found'}, status=400)
 
         # rp is short for request parameters
         qp = cls.get_query_parameters(request)
-        #TODO
         created_memes = []
 
         # keys which are necessary to place a text (other than topText or bottomText) in image
@@ -363,6 +370,27 @@ class SendUserStatistics:
         return JsonResponse(user_database, safe=False)
 
 
+class TemplateStats:
+    @csrf_exempt
+    def update_stats(request):
+        print(request.POST)
+        post_data = request.POST
+        print(post_data)
+        template_id = post_data.get("t_id")
+        print(template_id)
+        created = post_data.get("isCreated")
+        meme_id = post_data.get("m_id")
+        t_entry = TemplatesOvertime()
+        t_entry.template = list(Template.objects.filter(id=template_id))[0]
+        m = list(Meme.objects.filter(id=meme_id))
+        if m != []:
+            t_entry.meme = list(Meme.objects.filter(id=meme_id))[0]
+        t_entry.created = created == "true"
+        t_entry.save()
+
+        return HttpResponse(200)
+
+
 class ScreenshotFromUrl:
     @action(detail=False)
     def get_screenshot(request):
@@ -397,7 +425,7 @@ class MemesToVideo:
         print(file.is_file())
         v = VideoCreation.objects.all()[0]
         val = Meme.objects.values().count()
-        if val > 5 :
+        if val > 5:
             val = 5
         if val < 5 and val > 1:
             val = val
@@ -430,15 +458,15 @@ class MemesToVideo:
                 t.save()
         if not file.is_file():
             if not v.is_video_creation_running and (x == y):
-                do_create(v,top_five_memes, val)
+                do_create(v, top_five_memes, val)
                 return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
             elif not v.is_video_creation_running and (x != y):
-                do_create(v,top_five_memes, val)
+                do_create(v, top_five_memes, val)
                 return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
             else:
                 return JsonResponse('ok', safe=False)
         elif not v.is_video_creation_running and (x != y):
-            do_create(v,top_five_memes, val)
+            do_create(v, top_five_memes, val)
             return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
         else:
             return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
