@@ -35,8 +35,12 @@ export class SpeechService {
 
   // Synthesize speech from the current text for the selected voice.
   public speak(text: string): void {
-    if (!this.selectedVoice || !text) { return; }
+    if (!this.selectedVoice || !text) {
+      console.log('SpeechSynthesis: Cannot talk. (voice: ' + this.selectedVoice + ', text: ' + text + ')');
+      return;
+    }
     this.stop();
+    console.log('SpeechSynthesis: ' + text);
     this.synthesizeSpeechFromText(this.selectedVoice, 1, text);
 
     // Chrome Bug stops speech out after 15s
@@ -44,7 +48,7 @@ export class SpeechService {
       if (!speechSynthesis.speaking) {
         clearInterval(synthesisInterval);
       } else {
-        console.log('extending voice out by pause/resume (Chrome Bug)');
+        console.log('SpeechSynthesis: extending voice out by pause/resume (Chrome Bug)');
         speechSynthesis.pause();
         speechSynthesis.resume();
       }
@@ -61,7 +65,7 @@ export class SpeechService {
   // Stop any current speech synthesis.
   public stop(): void {
     if (speechSynthesis.speaking) {
-      console.log('speech aborted by stop()');
+      console.log('SpeechSynthesis: speech aborted by stop()');
       speechSynthesis.cancel();
     }
   }
@@ -75,6 +79,7 @@ export class SpeechService {
     const utterance = new SpeechSynthesisUtterance( text );
     utterance.voice = voice;
     utterance.rate = rate;
+    utterance.lang = 'en-GB';
     utterance.onend = () => {
       speechSynthesis.cancel();
     };
