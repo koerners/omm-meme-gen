@@ -38,13 +38,13 @@ export class MyMemesComponent implements OnInit {
     this.screenReaderText.set('Paging', 'You are on page ' + ($event.pageIndex + 1) +
       ' of ' + (Math.floor(this.memeLength / 6) + 1) +
       ', showing ' + ($event.pageIndex < Math.floor(this.memeLength / 6) ? 6 : (this.memeLength % 6)) + ' memes.');
-    this.readCurrentMemeSet();
     if ($event.pageIndex > this.currentPage) {
       this.memeService.paginator(this.nextUrl).subscribe(data => {
         this.allMemes = data.results;
         this.memeLength = data.count;
         this.nextUrl = data.next;
         this.prevUrl = data.previous;
+        this.readCurrentMemeSet();
         }
       );
       this.currentPage = $event.pageIndex;
@@ -54,6 +54,7 @@ export class MyMemesComponent implements OnInit {
           this.memeLength = data.count;
           this.nextUrl = data.next;
           this.prevUrl = data.previous;
+          this.readCurrentMemeSet();
         }
       );
       this.currentPage = $event.pageIndex;
@@ -122,7 +123,7 @@ export class MyMemesComponent implements OnInit {
 
   private readCurrentMemeSet(): void {
     this.screenReaderText.set('Amount', this.memeLength + 'Memes are available.');
-    let memeTitles = 'The memes are called: ';
+    let memeTitles = '';
     let countEmpty = 0;
     this.allMemes.forEach(element => {
       if (element.title) {
@@ -132,8 +133,14 @@ export class MyMemesComponent implements OnInit {
         countEmpty++;
       }
     });
-    if (countEmpty > 0) {
+    if (memeTitles) {
+      memeTitles = 'The memes are called: ' + memeTitles;
+    }
+    if (countEmpty > 1) {
       memeTitles += 'There are ' + countEmpty + ' memes with no title.';
+    }
+    else if (countEmpty === 1) {
+      memeTitles += 'There is 1 meme with no title.';
     }
     this.screenReaderText.set('MemeTitles', memeTitles);
   }

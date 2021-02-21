@@ -44,7 +44,7 @@ export class SpeechService {
       if (!speechSynthesis.speaking) {
         clearInterval(synthesisInterval);
       } else {
-        console.log('called');
+        console.log('extending voice out by pause/resume (Chrome Bug)');
         speechSynthesis.pause();
         speechSynthesis.resume();
       }
