@@ -189,7 +189,7 @@ export class DashboardComponent implements  AfterViewInit{
     this.loginChartReady = true;
 
     // Text for ScreenReader
-    let text = (this.loginData.data.length > 0 ? 'The last login date of ' : '');
+    let text = (this.loginData.data.length > 0 ? 'The last login date ' : '');
     this.loginData.data.forEach(element => {
       text += 'of ' + element.count + ' user' + (element.count !== 1 ? 's' : '')
         + ' was on ' + element.day + '.' + element.month + '.' + element.year + ', ';

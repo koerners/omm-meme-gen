@@ -17,14 +17,18 @@ export class VoiceRecognitionService {
   voiceActionSuccess = false;
 
   constructor(private ngZone: NgZone, private router: Router, private speechService: SpeechService) {
-    this.initVoiceRecognition();
+    if (annyang) {
+      this.initVoiceRecognition();
+    }
   }
 
   public setUp(commands): void {
-    this.closeVoiceFeedback();
-    annyang.removeCommands();
-    this.initVoiceRecognitionCommands();
-    annyang.addCommands(commands);
+    if (annyang) {
+      this.closeVoiceFeedback();
+      annyang.removeCommands();
+      this.initVoiceRecognitionCommands();
+      annyang.addCommands(commands);
+    }
   }
 
   public closeVoiceFeedback(): void {
@@ -119,7 +123,7 @@ export class VoiceRecognitionService {
       },
       'navigate generate': () => {
         this.ngZone.run(() => this.voiceActionFeedback = 'Open Generate');
-        this.router.navigate(['./memes']);
+        this.router.navigate(['./generator']);
       },
       'navigate memes': () => {
         this.ngZone.run(() => this.voiceActionFeedback = 'Open Memes');

@@ -64,7 +64,7 @@ export class MyMemesComponent implements OnInit {
 
   loadMemes(what: number): any {
     if (what === 0){
-      this.screenReaderText.set('WhatPage', 'You´re watching public memes from all users.');
+      this.screenReaderText.set('WhatPage', 'You are watching public memes from all users.');
       this.memeService.getAll().subscribe(data => {
           this.allMemes = data.results;
           this.memeLength = data.count;
@@ -81,7 +81,7 @@ export class MyMemesComponent implements OnInit {
       );
     }
     if (what === 1){
-      this.screenReaderText.set('WhatPage', 'You´re watching your own memes.');
+      this.screenReaderText.set('WhatPage', 'You are watching your own memes.');
       this.memeService.getOwn().subscribe(data => {
           this.allMemes = data.results;
           this.memeLength = data.count;
