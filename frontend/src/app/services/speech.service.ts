@@ -38,6 +38,17 @@ export class SpeechService {
     if (!this.selectedVoice || !text) { return; }
     this.stop();
     this.synthesizeSpeechFromText(this.selectedVoice, 1, text);
+
+    // Chrome Bug stops speech out after 15s
+    const synthesisInterval = setInterval(() => {
+      if (!speechSynthesis.speaking) {
+        clearInterval(synthesisInterval);
+      } else {
+        console.log('called');
+        speechSynthesis.pause();
+        speechSynthesis.resume();
+      }
+    }, 14000);
   }
 
   // Synthesize speech from the current text for the selected voice.
@@ -63,6 +74,9 @@ export class SpeechService {
     const utterance = new SpeechSynthesisUtterance( text );
     utterance.voice = voice;
     utterance.rate = rate;
+    utterance.onend = () => {
+      speechSynthesis.cancel();
+    };
     speechSynthesis.speak( utterance );
   }
 }
