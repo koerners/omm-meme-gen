@@ -1,13 +1,16 @@
 <div class="grid-container">
   <h1 class="mat-h1">Create your Meme</h1>
 
-  <div *ngIf="voiceSectionEnabled" style="background-color: darkslateblue">
+  <button (click)="screenReader()">Speak</button>
+  <button (click)="stopScreenReader()">Stop</button>
+
+  <div *ngIf="vRS.voiceFeedbackEnabled" style="background-color: darkslateblue">
     Voice Recognition: <br />
-    {{voiceStatusMsg}} {{voiceActionFeedback}}
-    <ng-container *ngIf="voiceShowHelp">
+    {{vRS.voiceStatusMsg}} {{vRS.voiceActionFeedback}}
+    <ng-container *ngIf="vRS.voiceFeedbackShowHelp">
       <div class="grid-container">
         Available commands... <br />
-        Navigation: 'open dashboard', 'open memes' <br />
+        Navigation: 'navigate dashboard', 'navigate memes' <br />
         Webcam: 'open webcam', 'close webcam', 'take picture' <br />
         Text Fields: 'title *text', 'text top *text', 'text bottom *text' <br />
         Fonts: 'font size :fsize', 'font style :style', 'alter bold', 'alter italic', 'alter underline' <br />
@@ -17,7 +20,7 @@
       </div>
     </ng-container>
     <div class="grid-container">
-      <br /><button (click)="closeVoiceSection()">Close</button>
+      <br /><button (click)="vRS.closeVoiceFeedback()">Close</button>
     </div>
   </div>
 
