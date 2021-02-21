@@ -931,20 +931,20 @@ export class GeneratorComponent implements AfterViewInit {
       'pen colour :color': (color: string) => {
         const colorOptions = ['black', 'white', 'red', 'yellow', 'green', 'blue'];
         if (colorOptions.includes(color)) {
-          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color);
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Pen Color = ' + color);
           this.colorPen = color;
           const canvas = this.drawCanvas.nativeElement;
           const ctx = canvas.getContext('2d');
           ctx.strokeStyle = this.colorPen;
         }
         else {
-          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color + ' not possible');
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Pen Color = ' + color + ' not possible');
         }
       },
       'background colour :color': (color: string) => {
         const colorOptions = ['black', 'white', 'red', 'yellow', 'green', 'blue'];
         if (colorOptions.includes(color)) {
-          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color);
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Background Color = ' + color);
           this.colorBackground = color;
           const canvas = this.backgroundCanvas.nativeElement;
           const ctx = canvas.getContext('2d');
@@ -952,7 +952,7 @@ export class GeneratorComponent implements AfterViewInit {
           ctx.fillRect(0, 0, this.currentWidth, this.currentHeight);
         }
         else {
-          this.ngZone.run(() => this.voiceActionFeedback = 'Set Text Color = ' + color + ' not possible');
+          this.ngZone.run(() => this.voiceActionFeedback = 'Set Background Color = ' + color + ' not possible');
         }
       },
       'save public': () => {
