@@ -1,10 +1,12 @@
-import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnInit, ViewChild, NgZone} from '@angular/core';
 import {map} from 'rxjs/operators';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {MemeService} from '../services/meme.service';
 import { ChartDataSets } from 'chart.js';
 import { Color, Label } from 'ng2-charts';
 import {environment} from "../../environments/environment";
+import {SpeechService} from '../services/speech.service';
+import {VoiceRecognitionService} from '../services/voice-recognition.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -58,9 +60,17 @@ export class DashboardComponent implements  AfterViewInit{
   private videoCanvas: any;
   video;
   private loadString: any;
-  constructor(private breakpointObserver: BreakpointObserver, private memeService: MemeService) {
+
+  screenReaderText: Map<string, string>;
+
+  constructor(private breakpointObserver: BreakpointObserver, private memeService: MemeService, private ngZone: NgZone,
+              private speechService: SpeechService, public voiceRecognitionService: VoiceRecognitionService) {
     this.loadStatistics();
     this.loadVideo();
+
+    this.screenReaderText = new Map<string, string>();
+    this.screenReaderText.set('Welcome', 'This page is Meme Life Dashboard.');
+    this.initVoiceRecognitionCommands();
   }
 
   ngAfterViewInit(): void {}
@@ -188,5 +198,31 @@ export class DashboardComponent implements  AfterViewInit{
       },
     ];
     this.loginChartReady = true;
+  }
+
+  // ScreenReader and its functions //
+  public screenReader(): void {
+    this.speechService.speak(this.screenReaderBuilder());
+  }
+
+  private screenReaderBuilder(): string {
+    let text = '';
+    text += this.screenReaderText.get('Welcome') + ' ';
+    return text;
+  }
+
+  public stopScreenReader(): void {
+    this.speechService.stop();
+  }
+
+  // VoiceRecognition and its functions //
+  private initVoiceRecognitionCommands(): void {
+    const commands = {
+      'start screen reader': () => {
+        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Start Screen Reader');
+        this.screenReader();
+      },
+    };
+    this.voiceRecognitionService.setUp(commands);
   }
 }
