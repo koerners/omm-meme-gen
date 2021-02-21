@@ -191,8 +191,6 @@ export class GeneratorComponent implements AfterViewInit {
       // extract images from video
       const videoString = event1.target.result as string;
       this.memeService.convertVideoToImages(videoString).subscribe(data => {
-        console.log('converted video to images');
-
         console.log(data);
         this.currentVideoData = data;
         this.fromFrame.setValue(0);
@@ -330,7 +328,7 @@ export class GeneratorComponent implements AfterViewInit {
   saveTextbox(textbox: Textbox): void {
     if (this.videoOn) {
       const textData = {
-        video_file_name: this.currentVideoData.video_file_name,
+        video_url: this.currentVideoData.video_url,
         text: textbox.formControl.value,
         x: textbox.xPos,
         y: textbox.yPos,
@@ -368,7 +366,9 @@ export class GeneratorComponent implements AfterViewInit {
         videoEl.appendChild(source);
         const containerWidth = this.width;
         const containerHeight = this.height;
+        console.log('before meta data loaded')
         videoEl.addEventListener( 'loadedmetadata', function(e): void {
+          console.log('meta data loaded')
           // wait till loadedmetadata to have video element's videoWidth and videoHeight
           // calculate scaleFactor to properly show in meme container
           self.videoScaleFactor = Math.min(containerWidth / this.videoWidth, containerHeight / this.videoHeight);
@@ -378,7 +378,7 @@ export class GeneratorComponent implements AfterViewInit {
           videoEl.height = this.videoHeight * self.videoScaleFactor;
           self.resizeCanvasHeight(this.videoHeight * self.videoScaleFactor);
           // play video after scaling
-          this.play().then(r => {} );
+          this.play().then(r => {console.log('playing')} );
         });
 
       });

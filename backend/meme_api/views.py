@@ -410,22 +410,17 @@ class VideoTemplates(viewsets.ModelViewSet):
     def add_text_to_video(cls, request):
         body = json.loads(request.body)
 
-        # with open(body['video_file_name'], 'wb') as f:
-        #     f.write(video_bytes)
-
-        video_file_name = body['video_file_name']
+        video_file_url = body['video_url']
         text_to_add = body['text']
         x_pos = body['x']
         y_pos = body['y']
         from_frame = body['from_frame']
         to_frame = body['to_frame']
 
-        print(video_file_name)
-
-        vidcap = cv2.VideoCapture(body['video_file_name'])
+        vidcap = cv2.VideoCapture(video_file_url)
         fps = vidcap.get(cv2.CAP_PROP_FPS)
 
-        os.remove(os.path.join(cls.video_folder, video_file_name + '.mp4'))
+        os.remove(video_file_url)
 
         images = []
 
@@ -453,19 +448,19 @@ class VideoTemplates(viewsets.ModelViewSet):
         print('width and height', width, height)
 
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        writer = cv2.VideoWriter(video_file_name,
+        writer = cv2.VideoWriter(video_file_url,
                                  fourcc,
                                  fps=fps,
                                  frameSize=(width, height))
 
-        for image in images:
+        for image in images[:100]:
             opencv_image = np.array(image)
             opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
             writer.write(opencv_image)
 
-        video_file_path = os.path.join(cls.video_folder, video_file_name + '.mp4')
+        writer.release()
 
-        return JsonResponse({'video_url': video_file_path, 'frames': frame_counter},
+        return JsonResponse({'video_url': video_file_url, 'frames': frame_counter},
                             safe=False, status=200)
 
     @classmethod
