@@ -2,14 +2,18 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 import {Meme} from '../Meme';
+import {env} from "@tensorflow/tfjs-core";
 
 /**
- * MemeSerivce Class
+ * MemeService Class
  *
  * Allows communication between Frontend and Backend
  */
 @Injectable()
 export class MemeService {
+
+  currentMemeId: string;
+
   /**
    * MemeService
    * @param http HttpClient
@@ -65,12 +69,10 @@ export class MemeService {
    * save the current meme
    * @param meme the current meme
    */
-  saveMeme(meme: Meme): void {
-    this.http.post(environment.apiUrl + '/meme/', {
+  saveMeme(meme: Meme): any {
+    return this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,
       image_string: meme.imageString, private: meme.private
-    }).subscribe(data => {
-      console.log(data);
     });
   }
 
@@ -115,6 +117,7 @@ export class MemeService {
    * @param upvoteIn the value of the vote
    */
   vote(id: string, upvoteIn: boolean): any {
+
     return this.http.post(environment.apiUrl + '/vote/', {
       meme: id,
       upvote: upvoteIn
@@ -142,4 +145,60 @@ export class MemeService {
   loadTopMemeVideo(): any{
     return this.http.get(environment.apiUrl + '/memeVideo/');
   }
+
+
+  /**
+   * Not nice POST method
+   * @param templateID the templateID
+   */
+  postTemplateStat(templateID: number): any{
+    console.log('Doing >>>>' + templateID);
+    if (this.currentMemeId == null){
+      const data = new FormData();
+      data.append("t_id", templateID.toString());
+      data.append("isCreated", "false");
+
+      let xhr = new XMLHttpRequest();
+      xhr.withCredentials = false;
+
+      xhr.addEventListener('readystatechange', function() {
+        if (this.readyState === 4) {
+          console.log(this.responseText);
+        }
+      });
+
+      xhr.open('POST', environment.apiUrl +'/templateStats/');
+
+      xhr.send(data);
+    }
+    else{
+      let data = new FormData();
+      data.append("t_id", templateID.toString());
+      data.append("m_id", this.currentMemeId.toString());
+      data.append("isCreated", "true");
+
+      let xhr = new XMLHttpRequest();
+      xhr.withCredentials = false;
+
+      xhr.addEventListener('readystatechange', function() {
+        if (this.readyState === 4) {
+          console.log(this.responseText);
+        }
+      });
+
+      xhr.open('POST', environment.apiUrl +'/templateStats/');
+
+      xhr.send(data);
+      this.setMemeServiceCurrentMeme(null);
+      }
+  }
+
+  /**
+   * set the meme id if generate, else set null
+   * @param id
+   */
+  setMemeServiceCurrentMeme(id): void{
+    this.currentMemeId = id;
+  }
+
 }

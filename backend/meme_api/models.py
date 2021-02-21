@@ -50,13 +50,11 @@ class Template(models.Model):
     image_string = models.CharField(max_length=9999999999999999999, default='')
 
 
-class TemplateStats(models.Model):
+class TemplatesOvertime(models.Model):
     id = models.AutoField(primary_key=True)
-    template_id = models.ForeignKey('Template', related_name='template', on_delete=models.CASCADE)
-    meme = models.ForeignKey('Meme', related_name='meme', on_delete=models.CASCADE)
-    created = models.DateTimeField(null=True, blank=True)
-    viewed = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True, editable=True, blank=False)
+    used = models.BooleanField(default=False)
+    template = models.ForeignKey('Template', on_delete=models.CASCADE)
+    meme = models.ForeignKey('Meme', on_delete=models.CASCADE, blank=True, null=True)
 
-    class Meta:
-        ordering = ['created']
 

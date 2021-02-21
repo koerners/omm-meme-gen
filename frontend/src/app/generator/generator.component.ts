@@ -1,16 +1,15 @@
 import {AfterViewInit, Component, Input, ViewChild, ElementRef, NgZone} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {Router} from '@angular/router';
-import {fromEvent, Subject, Observable, pipe} from 'rxjs';
-import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
+import {fromEvent, Subject, Observable} from 'rxjs';
 import {ColorEvent} from 'ngx-color';
 import {Meme} from '../Meme';
 import {MemeService} from '../services/meme.service';
 import {WebcamImage, WebcamInitError} from 'ngx-webcam';
 import {MatSelectChange} from '@angular/material/select';
-import {MatButtonToggleChange, MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatButtonToggleChange} from '@angular/material/button-toggle';
 import {Textbox} from '../Textbox';
-import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
+import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
 
@@ -144,6 +143,7 @@ export class GeneratorComponent implements AfterViewInit {
   posts: any;
   private imagesRecieved: any;
   private randomImageIndex: number;
+  isTemplate = false;
 
   // voice control
   voiceSectionEnabled = false;
@@ -151,6 +151,7 @@ export class GeneratorComponent implements AfterViewInit {
   voiceActionFeedback: any;
   voiceActionSuccess = false;
   voiceShowHelp = false;
+  currentMeme: number;
 
   constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog,
               private ngZone: NgZone, private router: Router) {
@@ -205,6 +206,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   selectFile(event: any): void {
+    this.isTemplate = false;
     this.videoOn = false;
     this.emptyVideoContainer();
     // An image is uploaded from the users desktop
@@ -234,6 +236,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   selectVideo(event: any): void {
+    this.isTemplate = false;
     // A video is uploaded from the users desktop
     if (!event.target.files[0] || event.target.files[0].length === 0) {
       // if no video
@@ -559,6 +562,10 @@ export class GeneratorComponent implements AfterViewInit {
     });
   }
 
+  /**
+   * show Meme Templates as thumbnails for image selection <br>
+   * on <b>click</b> show selected Meme on Canvas
+   */
   showMemeTemplates(): void {
     const memeTemplateContainer = document.getElementById('memeTemplatesContainer');
     this.memeTemplates.forEach(template => {
@@ -567,7 +574,9 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.width = 80;
       newImg.height = 80;
       newImg.addEventListener('click', () => {
-
+        this.isTemplate = true;
+        this.memeService.postTemplateStat(template[0]);
+        this.currentMeme = template[0];
         this.currentlyShownMemeTemplateIndex = (template[0] - 1);
         this.videoOn = false;
         this.emptyVideoContainer();
@@ -591,6 +600,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   loadFromWebcam(): void {
+    this.isTemplate = false;
     console.log('opening webcam');
     this.videoOn = false;
     this.emptyVideoContainer();
@@ -603,6 +613,7 @@ export class GeneratorComponent implements AfterViewInit {
    * load image from a given url
    */
   loadFromURL(): void {
+    this.isTemplate = false;
     this.clearCanvas();
     console.log('pressed url');
     const ctx = this.fileCanvas.nativeElement.getContext('2d');
@@ -614,6 +625,7 @@ export class GeneratorComponent implements AfterViewInit {
 
 
   loadFromAPI(): void {
+    this.isTemplate = false;
     this.clearCanvas();
     this.videoOn = false;
     this.emptyVideoContainer();
@@ -671,7 +683,14 @@ export class GeneratorComponent implements AfterViewInit {
     meme.imageString = image;
     meme.private = false;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme);
+    this.memeService.saveMeme(meme).subscribe(data => {
+      if (this.isTemplate){
+        console.log(data.id);
+        this.memeService.setMemeServiceCurrentMeme(data.id);
+        console.log(this.memeService.currentMemeId);
+        this.memeService.postTemplateStat(this.currentMeme);
+      }
+    });
 
   }
 
@@ -685,7 +704,13 @@ export class GeneratorComponent implements AfterViewInit {
     meme.imageString = image;
     meme.private = true;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme);
+    this.memeService.saveMeme(meme).subscribe(data => {
+      if (this.isTemplate){
+        this.memeService.setMemeServiceCurrentMeme(data.id);
+        this.memeService.postTemplateStat(this.currentMeme);
+      }
+    });
+
 
   }
 
@@ -745,7 +770,11 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex--;
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
-
+    this.currentMeme = meme.id;
+    this.isTemplate = true;
+    if (this.isTemplate){
+      this.memeService.postTemplateStat(meme.id);
+    }
     this.memeTemplateChosen(meme);
   }
 
@@ -757,7 +786,11 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex++;
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
-
+    if (this.isTemplate){
+      this.memeService.postTemplateStat(meme.id);
+    }
+    this.currentMeme = meme.id;
+    this.isTemplate = true;
     this.memeTemplateChosen(meme);
   }
 
@@ -781,8 +814,10 @@ export class GeneratorComponent implements AfterViewInit {
     }, null , () => {
       // Switch toggle between image from url and screenshot from url
       if (toggle === 'url') {
+        this.isTemplate = false;
         this.loadFromURL();
       } else {
+        this.isTemplate = false;
         this.videoOn = false;
         this.emptyVideoContainer();
         this.clearCanvas();
