@@ -126,7 +126,7 @@ export class MyMemesComponent implements OnInit {
     let countEmpty = 0;
     this.allMemes.forEach(element => {
       if (element.title) {
-        memeTitles += element.title + ' - ';
+        memeTitles += element.title + '! ';
       }
       else {
         countEmpty++;
