@@ -393,7 +393,6 @@ class TemplateStats:
 
 
 
-
 class ScreenshotFromUrl:
     @action(detail=False)
     def get_screenshot(request):

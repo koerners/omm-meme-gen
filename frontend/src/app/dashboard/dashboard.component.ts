@@ -67,7 +67,7 @@ export class DashboardComponent implements  AfterViewInit{
   constructor(private breakpointObserver: BreakpointObserver, private memeService: MemeService, private ngZone: NgZone,
               private speechService: SpeechService, public voiceRecognitionService: VoiceRecognitionService) {
     this.loadStatistics();
-    // this.loadVideo();
+    this.loadVideo();
 
     this.screenReaderText = new Map<string, string>();
     this.screenReaderText.set('Welcome', 'This page is Meme Life Dashboard.');
