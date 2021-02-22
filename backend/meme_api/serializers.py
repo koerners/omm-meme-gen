@@ -35,7 +35,7 @@ class MemeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Meme
-        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private', 'pos_votes', 'type']
+        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private', 'pos_votes', 'type', 'text_concated']
 
     owner = serializers.ReadOnlyField(source='owner.username')
 
