@@ -30,7 +30,8 @@
             ],
             "scripts": [
               "src/assets/js/annyang.min.js",
-              "src/assets/js/speechkitt.min.js"
+              "src/assets/js/speechkitt.min.js",
+              "./node_modules/gifler/gifler.js"
             ]
           },
           "configurations": {

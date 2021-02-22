@@ -47,6 +47,7 @@ import {MatPaginatorModule} from '@angular/material/paginator';
 import {ShareButtonsModule} from 'ngx-sharebuttons/buttons';
 import {ShareIconsModule} from 'ngx-sharebuttons/icons';
 import { ChartsModule } from 'ng2-charts';
+import { KonvaModule } from 'ng2-konva';
 
 @NgModule({
   declarations: [
@@ -95,7 +96,8 @@ import { ChartsModule } from 'ng2-charts';
     ShareButtonsModule,
     ShareIconsModule,
     MatDialogModule,
-    ChartsModule
+    ChartsModule,
+    KonvaModule
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},

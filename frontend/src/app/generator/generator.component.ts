@@ -1,7 +1,7 @@
-import {AfterViewInit, Component, Input, ViewChild, ElementRef, NgZone} from '@angular/core';
+import {AfterViewInit, Component, Input, ViewChild, ElementRef, NgZone, OnInit} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {Router} from '@angular/router';
-import {fromEvent, Subject, Observable, pipe} from 'rxjs';
+import {fromEvent, Subject, Observable, pipe, of} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
 import {Meme} from '../Meme';
@@ -15,6 +15,7 @@ import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.comp
 import {MatDialog} from '@angular/material/dialog';
 import {SpeechService} from '../services/speech.service';
 import {VoiceRecognitionService} from '../services/voice-recognition.service';
+import * as gifler from 'gifler';
 
 /**
  * The interface for the InputDialogData
@@ -28,7 +29,14 @@ export interface DialogData {
   templateUrl: './generator.component.html',
   styleUrls: ['./generator.component.css']
 })
-export class GeneratorComponent implements AfterViewInit {
+export class GeneratorComponent implements AfterViewInit, OnInit {
+
+
+  public configStage: Observable<any> = of({
+    width: 200,
+    height: 200
+  });
+
   /**
    * The form for the text on the top
    */
@@ -89,7 +97,8 @@ export class GeneratorComponent implements AfterViewInit {
 
   memeTemplates: {
     id: number;
-    name, base64_string}[] = [];
+    name, base64_string
+  }[] = [];
   /**
    * The Color options available
    */
@@ -126,6 +135,7 @@ export class GeneratorComponent implements AfterViewInit {
   @ViewChild('previewText', {static: false}) textCanvas;
   @ViewChild('previewTextbox', {static: false}) textboxCanvas;
   @ViewChild('previewDraw', {static: false}) drawCanvas;
+  @ViewChild('layer', {static: false}) layer;
   @Input() public width = 500;
   @Input() public height = 700;
 
@@ -135,8 +145,8 @@ export class GeneratorComponent implements AfterViewInit {
 
   public errors: WebcamInitError[] = [];
   public videoOptions: MediaTrackConstraints = {
-     width: {ideal: 1024},
-     height: {ideal: 576}
+    width: {ideal: 1024},
+    height: {ideal: 576}
   };
   // latest snapshot
   public webcamImage: WebcamImage = null;
@@ -153,6 +163,7 @@ export class GeneratorComponent implements AfterViewInit {
   private isTemplate: boolean;
   private currentMeme: any;
 
+  private isGif: boolean = true;
 
   constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog,
               private ngZone: NgZone, private router: Router,
@@ -177,6 +188,20 @@ export class GeneratorComponent implements AfterViewInit {
     this.screenReaderText.set('Welcome', 'This page is Meme Life Generate Meme.');
     this.configureVoiceRecognition();
   }
+
+  ngOnInit(): void {
+
+  }
+
+  // use external library to parse and draw gif animation
+  onDrawFrame(ctx, frame): void {
+    // update canvas size
+    // update canvas that we are using for Konva.Image
+    ctx.drawImage(frame.buffer, 0, 0);
+    // redraw t he layer
+    this.layer.nativeElement.draw();
+  }
+
 
   public ngAfterViewInit(): void {
     const canvasBackgroundEl: HTMLCanvasElement = this.backgroundCanvas.nativeElement;
@@ -227,13 +252,21 @@ export class GeneratorComponent implements AfterViewInit {
     // Read in image
     reader.readAsDataURL(event.target.files[0]);
     reader.onload = event1 => {
+      if (this.isGif) {
+        gifler('https://media.giphy.com/media/PxMltakiJaPT0ib0qy/giphy.gif').frames(canvas, this.onDrawFrame);
+
+      }
+      else {
+        const img = new Image();
+        img.src = event1.target.result as string;
+        img.onload = () => {
+          // Image to canvas
+          ctx.drawImage(img, 0, 100, 600, 500);
+        };
+      }
       console.log(event1);
-      const img = new Image();
-      img.src = event1.target.result as string;
-      img.onload = () => {
-        // Image to canvas
-        ctx.drawImage(img, 0, 100, 600, 500);
-      };
+
+
     };
   }
 
@@ -270,15 +303,16 @@ export class GeneratorComponent implements AfterViewInit {
       videoEl.appendChild(source);
       const containerWidth = this.width;
       const containerHeight = this.height;
-      videoEl.addEventListener( 'loadedmetadata', function(e): void {
+      videoEl.addEventListener('loadedmetadata', function(e): void {
         // wait till loadedmetadata to have video element's videoWidth and videoHeight
         // calculate scaleFactor to properly show in meme container
         const scaleFactor = Math.min(containerWidth / this.videoWidth, containerHeight / this.videoHeight);
         videoEl.width = this.videoWidth * scaleFactor;
         videoEl.height = this.videoHeight * scaleFactor;
         // play video after scaling
-        this.play().then(r => {} );
-      }, false );
+        this.play().then(r => {
+        });
+      }, false);
     };
   }
 
@@ -398,24 +432,24 @@ export class GeneratorComponent implements AfterViewInit {
     return fontStyle;
   }
 
-    fontFamilyChanged(e: MatSelectChange): void {
-      this.textChanged();
-    }
+  fontFamilyChanged(e: MatSelectChange): void {
+    this.textChanged();
+  }
 
-    boldButtonClicked(e: MatButtonToggleChange): void {
-      this.bold.setValue(!this.bold.value);
-      this.textChanged();
-    }
+  boldButtonClicked(e: MatButtonToggleChange): void {
+    this.bold.setValue(!this.bold.value);
+    this.textChanged();
+  }
 
-    italicButtonClicked(e: MatButtonToggleChange): void {
-      this.italic.setValue(!this.italic.value);
-      this.textChanged();
-    }
+  italicButtonClicked(e: MatButtonToggleChange): void {
+    this.italic.setValue(!this.italic.value);
+    this.textChanged();
+  }
 
-    underlineButtonClicked(e: MatButtonToggleChange): void {
-      this.underline.setValue(!this.underline.value);
-      this.textChanged();
-    }
+  underlineButtonClicked(e: MatButtonToggleChange): void {
+    this.underline.setValue(!this.underline.value);
+    this.textChanged();
+  }
 
   clearCanvas(): void {
     this.resizeCanvasHeight(this.height);
@@ -603,7 +637,7 @@ export class GeneratorComponent implements AfterViewInit {
     console.log('opening webcam');
     this.videoOn = false;
     this.emptyVideoContainer();
-    if (this.cameraOn === false){
+    if (this.cameraOn === false) {
       this.cameraOn = true;
     }
   }
@@ -659,6 +693,7 @@ export class GeneratorComponent implements AfterViewInit {
   public get triggerObservable(): Observable<void> {
     return this.trigger.asObservable();
   }
+
   public handleImage(webcamImage: WebcamImage): void {
     console.log('received webcam image', webcamImage);
     this.webcamImage = webcamImage;
@@ -667,6 +702,7 @@ export class GeneratorComponent implements AfterViewInit {
   public triggerSnapshot(): void {
     this.trigger.next();
   }
+
   public handleInitError(error: WebcamInitError): void {
     if (error.mediaStreamError && error.mediaStreamError.name === 'NotAllowedError') {
       console.warn('Camera access was not allowed by user!');
@@ -691,7 +727,7 @@ export class GeneratorComponent implements AfterViewInit {
     meme.private = false;
     meme.title = this.name.value;
     this.memeService.saveMeme(meme).subscribe(data => {
-      if (this.isTemplate){
+      if (this.isTemplate) {
         console.log(data.id);
         this.memeService.setMemeServiceCurrentMeme(data.id);
         console.log(this.memeService.currentMemeId);
@@ -711,8 +747,8 @@ export class GeneratorComponent implements AfterViewInit {
     meme.imageString = image;
     meme.private = true;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme) .subscribe(data => {
-      if (this.isTemplate){
+    this.memeService.saveMeme(meme).subscribe(data => {
+      if (this.isTemplate) {
         this.memeService.setMemeServiceCurrentMeme(data.id);
         this.memeService.postTemplateStat(this.currentMeme);
       }
@@ -814,7 +850,7 @@ export class GeneratorComponent implements AfterViewInit {
       console.log('The dialog was closed');
       toggle = result.split(' ')[0];
       this.url = result.split(' ')[1];
-    }, null , () => {
+    }, null, () => {
       // Switch toggle between image from url and screenshot from url
       if (toggle === 'url') {
         this.loadFromURL();
@@ -863,8 +899,7 @@ export class GeneratorComponent implements AfterViewInit {
         if (this.cameraOn === true) {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Close Webcam');
           this.showOnCanvas();
-        }
-        else {
+        } else {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Webcam is not open');
         }
       },
@@ -872,8 +907,7 @@ export class GeneratorComponent implements AfterViewInit {
         if (this.cameraOn === true) {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Take Picture');
           this.triggerSnapshot();
-        }
-        else {
+        } else {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Webcam is not open');
         }
       },
@@ -897,8 +931,7 @@ export class GeneratorComponent implements AfterViewInit {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Size to "' + fsize + '"');
           this.fontSize.setValue(fsize);
           this.textChanged();
-        }
-        else {
+        } else {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Size to "' + fsize + '" not possible.');
         }
       },
@@ -960,8 +993,7 @@ export class GeneratorComponent implements AfterViewInit {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Text Color = ' + color);
           this.colorText = color;
           this.textChanged();
-        }
-        else {
+        } else {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Text Color = ' + color + ' not possible');
         }
       },
@@ -973,8 +1005,7 @@ export class GeneratorComponent implements AfterViewInit {
           const canvas = this.drawCanvas.nativeElement;
           const ctx = canvas.getContext('2d');
           ctx.strokeStyle = this.colorPen;
-        }
-        else {
+        } else {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Pen Color = ' + color + ' not possible');
         }
       },
@@ -987,8 +1018,7 @@ export class GeneratorComponent implements AfterViewInit {
           const ctx = canvas.getContext('2d');
           ctx.fillStyle = this.colorBackground;
           ctx.fillRect(0, 0, this.currentWidth, this.currentHeight);
-        }
-        else {
+        } else {
           this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Background Color = ' + color + ' not possible');
         }
       },

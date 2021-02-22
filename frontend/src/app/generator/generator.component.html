@@ -78,6 +78,12 @@
         <mat-card-content class="dashboard-card-content">
           <div [hidden]="videoOn">
             <canvas [hidden]="cameraOn" #previewBackground [style.background]="colorBackground" class="meme-canvas"></canvas>
+
+            <ko-stage [config]="configStage" >
+              <ko-layer #layer>
+              </ko-layer>
+            </ko-stage>
+
             <canvas [hidden]="cameraOn" #previewFile class="meme-canvas"></canvas>
             <canvas [hidden]="cameraOn" #previewText class="meme-canvas"></canvas>
             <canvas [hidden]="cameraOn" #previewTextbox class="meme-canvas"></canvas>
