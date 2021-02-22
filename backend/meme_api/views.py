@@ -1,3 +1,4 @@
+import datetime
 import urllib
 from pathlib import Path
 
@@ -27,7 +28,7 @@ import json, io, zipfile
 import urllib.parse
 import numpy as np
 from skimage.transform import resize
-
+from zipfile import ZipFile
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -52,6 +53,44 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
     permission_classes = [IsAdminOrCreateOnly]
+
+
+class Zip:
+    def split2(self, string):
+        if not "," in string:
+            return None, None
+
+        s = string.split(",")
+
+        return s[0], s[1]
+
+    @classmethod
+    @csrf_exempt
+    def get_as_zip(cls, request):
+
+        q = Meme.objects.all()
+        start_date, end_date = cls.split2(cls, string=request.POST.get("creation"))
+        start_votes, end_votes = cls.split2(cls, string=request.POST.get("votes"))
+        start_viewes, end_viewes = cls.split2(cls, string=request.POST.get("views"))
+        text = request.POST.get("text")
+
+        if start_date is not None:
+            q = q.filter(created__range=(start_date, end_date))
+        if start_viewes is not None:
+            q = q.filter(views__range=(start_viewes, end_viewes))
+
+        # TODO: Die neuen Felder vom order / filter branch
+
+        zip_archive = io.BytesIO()
+        with zipfile.ZipFile(zip_archive, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for index, meme in enumerate(q):
+                base64_decoded = base64.b64decode(meme.image_string[22:])
+                zf.writestr('meme_' + str(index) + "_" + meme.title + '.png', base64_decoded)
+
+        response = HttpResponse(zip_archive.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="%s"' % 'memes.zip'
+        return response
+
 
 
 class MemeList(viewsets.ModelViewSet):
