@@ -13,7 +13,8 @@
             </button>
             <mat-menu #menu="matMenu" xPosition="before">
               <button (click)="downloadCanvas()" mat-menu-item>Download</button>
-
+              <button (click)="shareLink('This goes to Clipboard')" value="click to copy" mat-menu-item>Copy this
+              </button>
             </mat-menu>
           </mat-card-title>
 
@@ -40,7 +41,12 @@
               <button (click)="nextImage()" mat-fab color="primary" aria-label="Example icon button with a delete icon">
                 <mat-icon>navigate_next</mat-icon>
               </button>
+              <button style="margin-left: 5px;" (click)="randomImage()" mat-fab color="secondary"
+                      aria-label="Example icon button with a delete icon">
+                <mat-icon>auto_fix_high</mat-icon>
+              </button>
             </mat-grid-tile>
+
           </mat-grid-list>
 
           <button (click)="upvote()" [disabled]="meme.voted" style="margin-right: 5px;" mat-fab color="accent"
@@ -82,8 +88,6 @@
               : </b> {{comment.text}} - <i>{{comment.created | date}}</i></mat-card>
 
           </mat-list>
-
-
 
 
         </mat-card-content>

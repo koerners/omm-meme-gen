@@ -12,10 +12,6 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import '@tensorflow/tfjs-backend-webgl';
 import {ObjectRecognitionService, Prediction} from '../services/object-recognition-service';
-import {MatChipsModule} from '@angular/material/chips';
-import {delay} from 'rxjs/operators';
-import {Observable} from 'rxjs';
-import {User} from '../User';
 import {Comment} from '../Comment';
 import {FormControl} from '@angular/forms';
 import {interval, Subscription} from 'rxjs';
@@ -59,7 +55,6 @@ export class DetailViewComponent implements OnInit {
 
   loadMeme(memeId: number): void {
     this.memeService.loadMeme(String(memeId)).subscribe(data => {
-      console.log(data);
       this.meme = new Meme();
       this.meme.id = data.id;
       this.meme.imageString = data.image_string;
@@ -122,9 +117,7 @@ export class DetailViewComponent implements OnInit {
   }
 
   async postComment(): Promise<void> {
-    console.log(this.commentText.value);
     this.memeService.postComment(String(this.meme.id), this.commentText.value).subscribe(data => {
-      console.log(data);
       this.openSnackBar('Comment posted', 'Dismiss');
       this.loadComments();
 
@@ -191,13 +184,26 @@ export class DetailViewComponent implements OnInit {
     link.click();
   }
 
+  shareLink(val: string): void {
+      const selBox = document.createElement('textarea');
+      selBox.style.position = 'fixed';
+      selBox.style.left = '0';
+      selBox.style.top = '0';
+      selBox.style.opacity = '0';
+      selBox.value = val;
+      document.body.appendChild(selBox);
+      selBox.focus();
+      selBox.select();
+      document.execCommand('copy');
+      document.body.removeChild(selBox);
+    }
+
   slideshow(): void {
     if (this.slideShowRunning) {
       this.slideShowRunning = false;
       this.subscription.unsubscribe();
     } else {
       this.slideShowRunning = true;
-      console.log(this.slideshowspeed, this.slideshowRandom);
       const source = interval(this.slideshowspeed * 1000);
       this.subscription = source.subscribe(val => {
         if (this.slideshowRandom) {
@@ -207,5 +213,10 @@ export class DetailViewComponent implements OnInit {
       });
 
     }
+  }
+
+  randomImage(): void {
+    this.meme.id = this.availableMemes[Math.floor(Math.random() * this.availableMemes.length)].id;
+    this.nextImage();
   }
 }
