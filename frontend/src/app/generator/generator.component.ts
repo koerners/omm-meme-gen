@@ -87,7 +87,9 @@ export class GeneratorComponent implements AfterViewInit {
    */
   rowHeight = 95;
 
-  memeTemplates: {name, base64_string}[] = [];
+  memeTemplates: {
+    id: number;
+    name, base64_string}[] = [];
   /**
    * The Color options available
    */
@@ -148,6 +150,8 @@ export class GeneratorComponent implements AfterViewInit {
 
   // Map for ScreenReader Output
   private screenReaderText: Map<string, string>;
+  private isTemplate: boolean;
+  private currentMeme: any;
 
 
   constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog,
@@ -568,16 +572,19 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.width = 80;
       newImg.height = 80;
       newImg.addEventListener('click', () => {
+        this.currentMeme = template[0];
+
+        this.isTemplate = true;
+        this.memeService.postTemplateStat(template[0]);
         this.videoOn = false;
         this.emptyVideoContainer();
-        this.currentlyShownMemeTemplateIndex = this.memeTemplates.indexOf(template);
-
+        this.currentlyShownMemeTemplateIndex = (template[0] - 1);
         const canvas = this.fileCanvas.nativeElement;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
         const memeTemplate = new Image();
-        memeTemplate.src = 'data:image/png;base64,' + template.base64_string;
+        memeTemplate.src = 'data:image/png;base64,' + template[2];
         memeTemplate.onload = () => {
           const scaleFactor = memeTemplate.width / this.width;
           this.resizeCanvasHeight(memeTemplate.height / scaleFactor);
@@ -586,7 +593,7 @@ export class GeneratorComponent implements AfterViewInit {
           this.textChanged();
         };
       });
-      newImg.src = 'data:image/jpg;base64,' + template.base64_string;
+      newImg.src = 'data:image/jpg;base64,' + template[2];
       newImg.alt = 'Loading';
       memeTemplateContainer.append(newImg);
     });
@@ -683,7 +690,14 @@ export class GeneratorComponent implements AfterViewInit {
     meme.imageString = image;
     meme.private = false;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme);
+    this.memeService.saveMeme(meme).subscribe(data => {
+      if (this.isTemplate){
+        console.log(data.id);
+        this.memeService.setMemeServiceCurrentMeme(data.id);
+        console.log(this.memeService.currentMemeId);
+        this.memeService.postTemplateStat(this.currentMeme);
+      }
+    });
 
   }
 
@@ -697,7 +711,12 @@ export class GeneratorComponent implements AfterViewInit {
     meme.imageString = image;
     meme.private = true;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme);
+    this.memeService.saveMeme(meme) .subscribe(data => {
+      if (this.isTemplate){
+        this.memeService.setMemeServiceCurrentMeme(data.id);
+        this.memeService.postTemplateStat(this.currentMeme);
+      }
+    });
 
   }
 
@@ -756,8 +775,12 @@ export class GeneratorComponent implements AfterViewInit {
     } else {
       this.currentlyShownMemeTemplateIndex--;
     }
-
-    this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
+    const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
+    this.currentMeme = meme.id;
+    this.isTemplate = true;
+    this.memeService.postTemplateStat(meme.id);
+    this.isTemplate = true;
+    this.memeTemplateChosen(meme);
   }
 
   nextTemplateButtonClicked(): void {
@@ -767,8 +790,11 @@ export class GeneratorComponent implements AfterViewInit {
     } else {
       this.currentlyShownMemeTemplateIndex++;
     }
-
-    this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
+    const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
+    this.memeService.postTemplateStat(meme.id);
+    this.currentMeme = meme.id;
+    this.isTemplate = true;
+    this.memeTemplateChosen(meme);
   }
 
   /**
