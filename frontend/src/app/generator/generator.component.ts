@@ -688,7 +688,14 @@ export class GeneratorComponent implements AfterViewInit {
     meme.imageString = image;
     meme.private = false;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme);
+    this.memeService.saveMeme(meme).subscribe(data => {
+      if (this.isTemplate){
+        console.log(data.id);
+        this.memeService.setMemeServiceCurrentMeme(data.id);
+        console.log(this.memeService.currentMemeId);
+        this.memeService.postTemplateStat(this.currentMeme);
+      }
+    });
 
   }
 
@@ -702,7 +709,12 @@ export class GeneratorComponent implements AfterViewInit {
     meme.imageString = image;
     meme.private = true;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme);
+    this.memeService.saveMeme(meme) .subscribe(data => {
+      if (this.isTemplate){
+        this.memeService.setMemeServiceCurrentMeme(data.id);
+        this.memeService.postTemplateStat(this.currentMeme);
+      }
+    });
 
   }
 
