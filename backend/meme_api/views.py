@@ -59,13 +59,8 @@ class MemeList(viewsets.ModelViewSet):
     def own(self, request):
         own_memes = Meme.objects.filter(owner=request.user).order_by('-created').values()
 
-        page = self.paginate_queryset(own_memes)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+        return JsonResponse(list(own_memes), safe=False)
 
-        serializer = self.get_serializer(own_memes, many=True)
-        return Response(serializer.data)
 
     @action(detail=False)
     def availableMemes(self, request):
