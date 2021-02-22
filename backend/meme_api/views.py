@@ -73,6 +73,7 @@ class Zip:
         start_votes, end_votes = cls.split2(cls, string=request.POST.get("votes"))
         start_viewes, end_viewes = cls.split2(cls, string=request.POST.get("views"))
         text = request.POST.get("text")
+        max = request.POST.get("max")
 
         if start_date is not None:
             q = q.filter(created__range=(start_date, end_date))
@@ -84,6 +85,8 @@ class Zip:
         zip_archive = io.BytesIO()
         with zipfile.ZipFile(zip_archive, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             for index, meme in enumerate(q):
+                if index > max:
+                    return
                 base64_decoded = base64.b64decode(meme.image_string[22:])
                 zf.writestr('meme_' + str(index) + "_" + meme.title + '.png', base64_decoded)
 
