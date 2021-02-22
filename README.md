@@ -1,6 +1,9 @@
 # omm-meme-gen
 
 
+to function it needs one manually created video_creation object, set to false
+
+
 ## API
 
 ### Create a single image with bottom/top text
