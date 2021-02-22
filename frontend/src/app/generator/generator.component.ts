@@ -778,9 +778,8 @@ export class GeneratorComponent implements AfterViewInit {
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
     this.currentMeme = meme.id;
     this.isTemplate = true;
-    if (this.isTemplate){
-      this.memeService.postTemplateStat(meme.id);
-    }
+    this.memeService.postTemplateStat(meme.id);
+    this.isTemplate = true;
     this.memeTemplateChosen(meme);
   }
 
@@ -792,9 +791,7 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex++;
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
-    if (this.isTemplate){
-      this.memeService.postTemplateStat(meme.id);
-    }
+    this.memeService.postTemplateStat(meme.id);
     this.currentMeme = meme.id;
     this.isTemplate = true;
     this.memeTemplateChosen(meme);
