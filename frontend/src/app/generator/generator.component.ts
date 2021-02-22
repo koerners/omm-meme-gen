@@ -769,6 +769,7 @@ export class GeneratorComponent implements AfterViewInit {
     };
   }
 
+
   previousTemplateButtonClicked(): void {
     if (this.currentlyShownMemeTemplateIndex === -1 || this.currentlyShownMemeTemplateIndex === 0) {
       this.currentlyShownMemeTemplateIndex = this.memeTemplates.length - 1;
@@ -776,13 +777,15 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex--;
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
+    console.log(meme);
     this.currentMeme = meme.id;
-    console.log(this.currentMeme);
     this.isTemplate = true;
-    this.memeService.postTemplateStat(meme.id);
-    this.isTemplate = true;
+    if (this.isTemplate){
+      this.memeService.postTemplateStat(meme[0]);
+    }
     this.memeTemplateChosen(meme);
   }
+
 
   nextTemplateButtonClicked(): void {
     const amountOfMemeTemplates = this.memeTemplates.length;
@@ -792,8 +795,10 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex++;
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
+    if (this.isTemplate){
+      this.memeService.postTemplateStat(meme[0]);
+    }
     this.currentMeme = meme.id;
-    this.memeService.postTemplateStat(meme.id);
     this.isTemplate = true;
     this.memeTemplateChosen(meme);
   }
