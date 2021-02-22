@@ -753,13 +753,13 @@ export class GeneratorComponent implements AfterViewInit {
     return Math.ceil(this.currentHeight / this.rowHeight + 0.2);
   }
 
-  memeTemplateChosen(template: { name: string, base64_string: string }): void {
+  memeTemplateChosen(template: { id: number, name: string, base64_string: string }): void {
     const canvas = this.fileCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
     const memeTemplate = new Image();
-    memeTemplate.src = 'data:image/png;base64,' + template.base64_string;
+    memeTemplate.src = 'data:image/png;base64,' + template[2];
     memeTemplate.onload = () => {
       const scaleFactor = memeTemplate.width / this.width;
       this.resizeCanvasHeight(memeTemplate.height / scaleFactor);
@@ -777,6 +777,7 @@ export class GeneratorComponent implements AfterViewInit {
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
     this.currentMeme = meme.id;
+    console.log(this.currentMeme);
     this.isTemplate = true;
     this.memeService.postTemplateStat(meme.id);
     this.isTemplate = true;
@@ -791,8 +792,8 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex++;
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
-    this.memeService.postTemplateStat(meme.id);
     this.currentMeme = meme.id;
+    this.memeService.postTemplateStat(meme.id);
     this.isTemplate = true;
     this.memeTemplateChosen(meme);
   }
