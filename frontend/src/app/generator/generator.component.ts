@@ -572,6 +572,8 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.width = 80;
       newImg.height = 80;
       newImg.addEventListener('click', () => {
+        this.currentMeme = template[0];
+
         this.isTemplate = true;
         this.memeService.postTemplateStat(template[0]);
         this.videoOn = false;
