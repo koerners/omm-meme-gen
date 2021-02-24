@@ -8,3 +8,4 @@ Pillow
 selenium
 moviepy
 scikit-image
+opencv-python
