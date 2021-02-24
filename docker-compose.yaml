@@ -10,7 +10,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "8001:8000"
+      - "80:8080"
 
 
 
