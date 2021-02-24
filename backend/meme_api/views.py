@@ -454,7 +454,7 @@ class MemesToVideo:
             val = 5
         if val < 5 and val > 1:
             val = val
-        print(val)
+
         if val == 1:
             top_five_memes = Meme.objects.values().order_by('-views')[0]
             #top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[0]
@@ -467,15 +467,16 @@ class MemesToVideo:
             top_five = [0]
         else:
             top_five = list(range(0, val))
-            print(top_five)
+        print(x)
         y = list(TopFiveMemes.objects.all().values_list('top_five_memes', flat=True))
+        print(y)
         '''
         Check most views changes
         '''
         if (x != y):
-            print('yep')
+
             for i in top_five:
-                print(i)
+
                 obj = Meme.objects.get(id=x[i])
                 if len(list(TopFiveMemes.objects.all())) < len(x):
                     t = TopFiveMemes(top_five_memes=obj)
@@ -483,24 +484,31 @@ class MemesToVideo:
                 t = TopFiveMemes.objects.all()[i]
                 t.top_five_memes = obj
                 t.save()
+
+        if (len(x) or len(y)) == 0:
+            return JsonResponse({'type': 1, 'res': 'There are no Memes to show yet; <br/>'
+                                               'Later there will be a video made up of the top most viewed Memes'}, safe=False)
         if not file.is_file():
-            if not v.is_video_creation_running and (x == y):
+            print(len(x), len(y))
+            if (len(x) and len(y)) == 0:
+                return JsonResponse({'type': 1, 'res': 'There are no Memes to show yet;'
+                                                       'Later, there will be a video made up of the top five most viewed Memes'}, safe=False)
+            elif not v.is_video_creation_running and (x == y):
                 do_create(v, top_five_memes, val)
-                return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
+                return JsonResponse({'type':0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
             elif not v.is_video_creation_running and (x != y):
                 do_create(v, top_five_memes, val)
-                return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
+                return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
+
             else:
-                return JsonResponse('ok', safe=False)
+                return JsonResponse({'type': 2, 'res': 'Error'}, safe=False)
         elif not v.is_video_creation_running and (x != y):
             do_create(v, top_five_memes, val)
-            return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
-        elif not file.is_file() and (len(x) and len(y)) == 0:
-            return HttpResponse('There are no Memes to show yet;'
-                                'Later there will be a video made up of the top most viewed Memes')
+            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
 
         else:
-            return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
+            print('lol')
+            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
 
 
 def load_images(top_five_memes, val):
@@ -523,10 +531,10 @@ def images_to_video(top_five_memes, val):
         open_cv_image = resize(image_np, (300, 500))
         image_dict[count] = open_cv_image * 255
 
-    framerate = 25
+    framerate = 30
     clips = [ImageClip(v).set_duration(5) for k, v in image_dict.items()]
     concat_clip = concatenate_videoclips(clips, method="compose")
-    concat_clip.write_videofile('media/videoMedia/my_video.ogv', fps=framerate)
+    concat_clip.write_videofile('media/videoMedia/my_video.ogv', fps=framerate, bitrate='100000')
 
 
 def do_create(v, top_five_memes, val):

@@ -61,7 +61,8 @@ export class DashboardComponent implements  AfterViewInit{
   private videoCanvas: any;
   video;
   private loadString: any;
-
+  noVid = true;
+  text = 'Loading';
   screenReaderText: Map<string, string>;
 
   constructor(private breakpointObserver: BreakpointObserver, private memeService: MemeService, private ngZone: NgZone,
@@ -84,7 +85,7 @@ export class DashboardComponent implements  AfterViewInit{
         });
         this.topMemes = {data};
       },
-      null,
+      () => console.error('ERROR. CANNOT LOAD Meme Stats'),
       () => this.drawTopMemeChart());
 
     // User Statistics
@@ -95,21 +96,32 @@ export class DashboardComponent implements  AfterViewInit{
         this.loginData = {data};
         console.log(this.loginData);
       },
-      null,
+      () => console.error('ERROR'),
       () => this.drawUserChart());
   }
 
   loadVideo(): void {
     this.memeService.loadTopMemeVideo().subscribe(response => {
-      if (response.length < 4){
+      console.log(response.type);
+      if (response.type === 2){
         console.log(response);
+        this.text = response.res;
         return;
       }
-      else {
-        this.video = response;
+      else if (response.type === 0) {
+        console.log('TEST');
+        this.noVid = false;
+        this.text = '';
+        this.video = response.res;
+      }
+      else{
+        console.log(response);
+        this.text = 'ERROR';
+        return;
       }
       console.log(this.video);
     }, null, _ => {
+      console.log(this.noVid);
       this.video = environment.apiUrl + this.video;
       console.log(this.video);
       this.vid.nativeElement.setAttribute('src', this.video);
