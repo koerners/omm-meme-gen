@@ -637,18 +637,15 @@ export class GeneratorComponent implements AfterViewInit {
     this.videoOn = false;
     this.emptyVideoContainer();
     this.memeService.getMemesFromImgFlip().subscribe(data => {
-      console.log(data);
-      this.imagesRecieved = JSON.parse(JSON.stringify(data));
-    }, null, () => {
-      this.imagesRecieved = this.imagesRecieved.data.memes;
-      this.randomImageIndex = Math.floor(Math.random() * this.imagesRecieved.length);
-      const randomImage = this.imagesRecieved[this.randomImageIndex];
+      console.log(data.img)
+      const imgSrc = 'data:image/png;base64,' + data.img;
+      console.log(imgSrc)
       const ctx = this.fileCanvas.nativeElement.getContext('2d');
       const img = new Image();
-      img.src = randomImage.url;
+      img.src = imgSrc;
       img.onload = () => {
-        const scaleFactor = randomImage.width / this.width;
-        this.resizeCanvasHeight(randomImage.height / scaleFactor);
+        const scaleFactor = data.width / this.width;
+        this.resizeCanvasHeight(data.height / scaleFactor);
         this.getCanvasRowspan();
 
         ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, this.width, this.currentHeight);
