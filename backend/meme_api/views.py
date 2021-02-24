@@ -559,7 +559,8 @@ def images_to_video(top_five_memes, val):
         concat_clip = concatenate_videoclips(clips, method="compose")
         concat_clip.write_videofile('media/videoMedia/my_video.ogv', fps=framerate)
     else:
-        retval, buffer = cv2.imencode('.png', img)
+        b, g, r, a = np.dsplit(img, img.shape[-1])
+        retval, buffer = cv2.imencode('.png', np.dstack((r, g, b, a)))
 
         # Write to a file to show conversion worked
         with open('media/videoMedia/post.png', 'wb') as f_output:
