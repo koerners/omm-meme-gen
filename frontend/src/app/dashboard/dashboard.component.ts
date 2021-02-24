@@ -64,6 +64,8 @@ export class DashboardComponent implements  AfterViewInit{
   noVid = true;
   text = 'Loading';
   screenReaderText: Map<string, string>;
+  type: number;
+  poster;
 
   constructor(private breakpointObserver: BreakpointObserver, private memeService: MemeService, private ngZone: NgZone,
               private speechService: SpeechService, public voiceRecognitionService: VoiceRecognitionService) {
@@ -103,28 +105,41 @@ export class DashboardComponent implements  AfterViewInit{
   loadVideo(): void {
     this.memeService.loadTopMemeVideo().subscribe(response => {
       console.log(response.type);
-      if (response.type === 2){
+      if (response.type === 1){
         console.log(response);
+        this.type = response.type;
         this.text = response.res;
-        return;
       }
       else if (response.type === 0) {
         console.log('TEST');
-        this.noVid = false;
         this.text = '';
+        this.type = response.type;
         this.video = response.res;
+      }
+      else if (response.type === 3) {
+        this.text = '';
+        this.poster = environment.apiUrl + response.res;
       }
       else{
         console.log(response);
+        this.type = response.type;
         this.text = 'ERROR';
-        return;
       }
       console.log(this.video);
     }, null, _ => {
       console.log(this.noVid);
-      this.video = environment.apiUrl + this.video;
-      console.log(this.video);
-      this.vid.nativeElement.setAttribute('src', this.video);
+      if (this.type === 0) {
+        this.video = environment.apiUrl + this.video;
+        console.log(this.video);
+        this.vid.nativeElement.setAttribute('src', this.video);
+        this.noVid = false;
+      }
+      else if (this.type === 1){
+        return;
+      }
+      else{
+        return;
+      }
     });
   }
 

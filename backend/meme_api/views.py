@@ -2,6 +2,7 @@ import urllib
 from pathlib import Path
 from random import Random, randint
 
+import cv2
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -154,13 +155,12 @@ class MemeTemplate:
             t = list(Template.objects.all().values_list())
             for elem in t:
                 cls.available_meme_templates.append(elem)
-        print("----------------4--------------------")
+
 
         return cls.available_meme_templates
 
     @classmethod
     def get_all_meme_templates(cls, request):
-        print("-------------------2-----------------")
         return JsonResponse(cls.get_available_meme_templates(), safe=False)
 
     @classmethod
@@ -169,8 +169,6 @@ class MemeTemplate:
             cls.get_available_meme_templates()
         id = int(request.GET.get('id'))
         resp = cls.available_meme_templates[id]
-        print(resp)
-        print("------------------------------------")
 
         return JsonResponse(resp, safe=False)
 
@@ -190,7 +188,6 @@ class MemeCreation:
             return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
 
         meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
-        print(meme_template)
         if meme_template is None:
             return JsonResponse({'message': 'meme template could not be found'}, status=400)
 
@@ -240,7 +237,6 @@ class MemeCreation:
         if template_name is None:
             return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
         meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
-        print(meme_template)
         if meme_template is None:
             return JsonResponse({'message': 'meme template could not be found'}, status=400)
 
@@ -347,7 +343,6 @@ class IMGFlip:
         x = imgflip_response.json()['data']['memes'][random]
         width, height = x['width'],x['height']
         image_to_load = requests.get(x['url'])
-        print(width,height)
         string_image = str(base64.b64encode(image_to_load.content).decode("utf-8"))
         # uri = ("data:" +
         #        image_to_load.headers['Content-Type'] + ";" +
@@ -355,9 +350,9 @@ class IMGFlip:
 
         png_bytes_io = io.BytesIO(base64.b64decode(string_image))
         img = Image.open(png_bytes_io)
-        dudud = io.BytesIO()
-        img.save(dudud,'PNG')
-        res = str(base64.b64encode(dudud.getvalue()))
+        bytes_io_open = io.BytesIO()
+        img.save(bytes_io_open,'PNG')
+        res = str(base64.b64encode(bytes_io_open.getvalue()))
 
         if image_to_load.status_code == 200:
 
@@ -382,18 +377,14 @@ class SendUserStatistics:
                                        month=Month('last_login'),
                                        year=Year('last_login'))
                              .values('day', 'month', 'year', 'date', 'count'))
-        print(user_database)
         return JsonResponse(user_database, safe=False)
 
 
 class TemplateStats:
     @csrf_exempt
     def update_stats(request):
-        print(request.POST)
         post_data = request.POST
-        print(post_data)
         template_id = post_data.get("t_id")
-        print(template_id)
         created = post_data.get("isCreated")
         meme_id = post_data.get("m_id")
         t_entry = TemplatesOvertime()
@@ -444,7 +435,6 @@ class MemesToVideo:
         file = Path('media/videoMedia/my_video.ogv')
 
         v = list(VideoCreation.objects.all())
-        print(v)
         if v == []:
             VideoCreation.objects.create(is_video_creation_running=False)
             v = VideoCreation.objects.all()[0]
@@ -467,9 +457,9 @@ class MemesToVideo:
             top_five = [0]
         else:
             top_five = list(range(0, val))
-        print(x)
+
         y = list(TopFiveMemes.objects.all().values_list('top_five_memes', flat=True))
-        print(y)
+
         '''
         Check most views changes
         '''
@@ -486,20 +476,18 @@ class MemesToVideo:
                 t.save()
 
         if (len(x) or len(y)) == 0:
-            return JsonResponse({'type': 1, 'res': 'There are no Memes to show yet; <br/>'
+            return JsonResponse({'type': 1, 'res': 'There are no Memes to show yet;\n'
                                                'Later there will be a video made up of the top most viewed Memes'}, safe=False)
+        if(len(x) or len(y)) == 1:
+            do_create(v, top_five_memes, val)
+            return JsonResponse({'type': 3, 'res':'/media/videoMedia/post.png'})
         if not file.is_file():
-            print(len(x), len(y))
-            if (len(x) and len(y)) == 0:
-                return JsonResponse({'type': 1, 'res': 'There are no Memes to show yet;'
-                                                       'Later, there will be a video made up of the top five most viewed Memes'}, safe=False)
-            elif not v.is_video_creation_running and (x == y):
+            if not v.is_video_creation_running and (x == y):
                 do_create(v, top_five_memes, val)
                 return JsonResponse({'type':0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
             elif not v.is_video_creation_running and (x != y):
                 do_create(v, top_five_memes, val)
                 return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
-
             else:
                 return JsonResponse({'type': 2, 'res': 'Error'}, safe=False)
         elif not v.is_video_creation_running and (x != y):
@@ -524,17 +512,29 @@ def images_to_video(top_five_memes, val):
     image_dict = {}
     count = 0
     for img in vlqs:
-        count += 1
         base64_decoded = base64.b64decode(img[22:])
         image = Image.open(io.BytesIO(base64_decoded))
         image_np = np.array(image, dtype='uint8')
         open_cv_image = resize(image_np, (300, 500))
         image_dict[count] = open_cv_image * 255
+        count += 1
+        print(count)
 
-    framerate = 30
-    clips = [ImageClip(v).set_duration(5) for k, v in image_dict.items()]
-    concat_clip = concatenate_videoclips(clips, method="compose")
-    concat_clip.write_videofile('media/videoMedia/my_video.ogv', fps=framerate, bitrate='100000')
+    framerate = 25
+    img = image_dict.get(0)
+
+    if count > 1:
+        print('yes')
+        clips = [ImageClip(v).set_duration(5) for k, v in image_dict.items()]
+        concat_clip = concatenate_videoclips(clips, method="compose")
+        concat_clip.write_videofile('media/videoMedia/my_video.ogv', fps=framerate)
+    else:
+        retval, buffer = cv2.imencode('.png', img)
+
+        # Write to a file to show conversion worked
+        with open('media/videoMedia/post.png', 'wb') as f_output:
+            f_output.write(buffer)
+
 
 
 def do_create(v, top_five_memes, val):
