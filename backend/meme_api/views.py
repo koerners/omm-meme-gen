@@ -359,6 +359,35 @@ class IMGFlip:
             return JsonResponse({'img': res[2:-1], 'width': width, 'height':height}, safe=False)
 
 
+class LoadImage:
+        '''
+        CORS is annoying
+        '''
+        @action(detail=False)
+        def load_img(request):
+            encoded_url = request.GET.get('url')
+            if encoded_url is not None and encoded_url != '':
+                url = urllib.parse.unquote(encoded_url)
+                response = requests.get(url)
+                print(response)
+                if response.status_code == 200:
+                    x = response.content
+                    print(x)
+
+
+                    string_image = str(base64.b64encode(x).decode("utf-8"))
+                    print(string_image)
+                    png_bytes_io = io.BytesIO(base64.b64decode(string_image))
+                    img = Image.open(png_bytes_io)
+                    bytes_io_open = io.BytesIO()
+                    img.save(bytes_io_open,'PNG')
+                    res = str(base64.b64encode(bytes_io_open.getvalue()))
+                    print(res)
+
+                return JsonResponse({'img': res[2:-1]}, safe=False)
+                #return HttpResponse('OK')
+
+
 class SendStatistics:
     @action(detail=False)
     def send_statisticis(self):
