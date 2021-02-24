@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 import {Meme} from '../Meme';
+import { map } from 'rxjs/operators';
 import {env} from "@tensorflow/tfjs-core";
 
 /**
@@ -134,6 +135,9 @@ export class MemeService {
   getScreenshotFromUrl(url: string): any{
     return this.http.get(environment.apiUrl + '/screenshotFromUrl/?url=' + url, {responseType: 'text'});
   }
+  getImageFrom(url: string): any{
+    return this.http.get(environment.apiUrl + '/loadImg/?url=' + url, {responseType: 'json'});
+  }
 
   loadStatistics(): any{
     return this.http.get(environment.apiUrl + '/statistics/');
@@ -200,5 +204,4 @@ export class MemeService {
   setMemeServiceCurrentMeme(id): void{
     this.currentMemeId = id;
   }
-
 }

@@ -42,7 +42,11 @@
           </div>
           <div *ngIf="card.title == 'Corresponding Image'">
             <div id="inner_video" >
-              <video #video id="video" autoplay controls></video>
+              <div *ngIf="noVid" [innerText]="text"></div>
+              <img [hidden]="!noVid" [src]="poster">
+              <video [hidden]="noVid" #video id="video"  autoplay="autoplay" controls >
+              </video>
+
             </div>
           </div>
           <div *ngIf="card.title == 'Users Last Login'">

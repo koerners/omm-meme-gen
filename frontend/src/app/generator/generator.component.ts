@@ -612,13 +612,33 @@ export class GeneratorComponent implements AfterViewInit {
    * load image from a given url
    */
   loadFromURL(): void {
-    this.clearCanvas();
-    console.log('pressed url');
-    const ctx = this.fileCanvas.nativeElement.getContext('2d');
-    const img = new Image();
-    img.src = this.url;
-    img.onload = () => ctx.drawImage(img, 0, 100, 600, 500);
-
+    this.memeService.getImageFrom(encodeURIComponent(this.url)).subscribe(res => {
+      console.log(res);
+      const ctx = this.fileCanvas.nativeElement.getContext('2d');
+      const img = new Image();
+      img.src =  'data:image/jpg;base64,' + res.img;
+      img.onload = () => ctx.drawImage(img, 0, 100, 600, 500);
+    });
+    //
+    // const ctx = this.fileCanvas.nativeElement.getContext('2d');
+    // const canv  = document.createElement('canvas');
+    // canv.setAttribute('hidden', 'true');
+    // const temp = new Image();
+    // temp.src = this.url;
+    // temp.setAttribute('crossorigin', 'anonymous');
+    // const ctxTemp = canv.getContext('2d');
+    // const img = new Image();
+    // let stuff;
+    // temp.onload = () => {
+    //   ctxTemp.drawImage(temp, 0, 0);
+    //   canv.toBlob((blob) => {
+    //     stuff = URL.createObjectURL(blob);
+    //     img.src = stuff;
+    //     console.log(stuff);
+    //   }, 'image/png', 1);
+    // };
+    //
+    // img.onload = () => ctx.drawImage(img, 0, 100, 600, 500);
   }
 
 
@@ -637,9 +657,7 @@ export class GeneratorComponent implements AfterViewInit {
     this.videoOn = false;
     this.emptyVideoContainer();
     this.memeService.getMemesFromImgFlip().subscribe(data => {
-      console.log(data.img)
       const imgSrc = 'data:image/png;base64,' + data.img;
-      console.log(imgSrc)
       const ctx = this.fileCanvas.nativeElement.getContext('2d');
       const img = new Image();
       img.src = imgSrc;
