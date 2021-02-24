@@ -2,7 +2,7 @@ import urllib
 from pathlib import Path
 from random import Random, randint
 
-import cv2
+
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -29,6 +29,7 @@ import json, io, zipfile
 import urllib.parse
 import numpy as np
 from skimage.transform import resize
+import cv2
 
 
 class UserViewSet(viewsets.ModelViewSet):
