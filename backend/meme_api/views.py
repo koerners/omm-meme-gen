@@ -1,5 +1,6 @@
 import urllib
 from pathlib import Path
+from random import Random, randint
 
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
@@ -341,9 +342,26 @@ class IMGFlip:
     @action(detail=False)
     def get_imgflip_memes(self):
         imgflip_response = requests.get('https://api.imgflip.com/get_memes')
+        random = randint(0,100)
 
-        if imgflip_response.status_code == 200:
-            return HttpResponse(imgflip_response)
+        x = imgflip_response.json()['data']['memes'][random]
+        width, height = x['width'],x['height']
+        image_to_load = requests.get(x['url'])
+        print(width,height)
+        string_image = str(base64.b64encode(image_to_load.content).decode("utf-8"))
+        # uri = ("data:" +
+        #        image_to_load.headers['Content-Type'] + ";" +
+        #        "base64," +
+
+        png_bytes_io = io.BytesIO(base64.b64decode(string_image))
+        img = Image.open(png_bytes_io)
+        dudud = io.BytesIO()
+        img.save(dudud,'PNG')
+        res = str(base64.b64encode(dudud.getvalue()))
+
+        if image_to_load.status_code == 200:
+
+            return JsonResponse({'img': res[2:-1], 'width': width, 'height':height}, safe=False)
 
 
 class SendStatistics:
@@ -477,6 +495,10 @@ class MemesToVideo:
         elif not v.is_video_creation_running and (x != y):
             do_create(v, top_five_memes, val)
             return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
+        elif not file.is_file() and (len(x) and len(y)) == 0:
+            return HttpResponse('There are no Memes to show yet;'
+                                'Later there will be a video made up of the top most viewed Memes')
+
         else:
             return JsonResponse('/media/videoMedia/my_video.ogv', safe=False)
 
