@@ -50,7 +50,6 @@ export class GeneratorComponent implements AfterViewInit {
 
   cameraOn = false;
   videoOn = false;
-  videoChunks = [];
   videoEl: HTMLVideoElement = null;
   sourceEl = null;
 
@@ -61,6 +60,7 @@ export class GeneratorComponent implements AfterViewInit {
   fromFrame = new FormControl('');
   toFrame = new FormControl('');
   addingText = false;
+  maxFileSize = 5242880;
 
   @ViewChild('preview', {static: false}) previewCanvas: ElementRef<HTMLCanvasElement>;
   @ViewChild('previewBackground', {static: false}) backgroundCanvas;
@@ -182,13 +182,27 @@ export class GeneratorComponent implements AfterViewInit {
     // A video is uploaded from the users desktop
     if (!event.target.files[0] || event.target.files[0].length === 0) {
       // if no video
+      this.emptyVideoContainer();
       return;
     }
+
+    console.log('target', event.target);
+    console.log('files', event.target.files[0]);
+    console.log('size', event.target.files[0].size);
+
     const mimeType = event.target.files[0].type;
     if (mimeType.match(/video\/*/) == null) {
       // Check if video
+      this.emptyVideoContainer();
       return;
     }
+
+    if (event.target.files[0].size > this.maxFileSize) {
+      alert('File to big, maximum of ' + this.maxFileSize + ' bytes.');
+      this.emptyVideoContainer();
+      return;
+    }
+
     const reader = new FileReader();
     // Read in video
     reader.readAsDataURL(event.target.files[0]);
@@ -367,6 +381,8 @@ export class GeneratorComponent implements AfterViewInit {
 
       console.log(textData);
 
+      this.currentVideoData = null;
+
       this.memeService.addTextToVideo(textData).subscribe(data => {
         this.currentVideoData = data;
         this.videoEl.pause();
@@ -376,7 +392,6 @@ export class GeneratorComponent implements AfterViewInit {
       });
     } else {
       this.textboxes.push(textbox);
-      this.newTextbox = null;
 
       const textboxCanvasCtx = this.textboxCanvas.nativeElement.getContext('2d');
       textboxCanvasCtx.clearRect(0, 0, this.currentWidth, this.currentHeight);
