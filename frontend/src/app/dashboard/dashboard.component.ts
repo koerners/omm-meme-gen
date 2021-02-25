@@ -61,8 +61,11 @@ export class DashboardComponent implements  AfterViewInit{
   private videoCanvas: any;
   video;
   private loadString: any;
-
+  noVid = true;
+  text = 'Loading';
   screenReaderText: Map<string, string>;
+  type: number;
+  poster;
 
   constructor(private breakpointObserver: BreakpointObserver, private memeService: MemeService, private ngZone: NgZone,
               private speechService: SpeechService, public voiceRecognitionService: VoiceRecognitionService) {
@@ -84,7 +87,7 @@ export class DashboardComponent implements  AfterViewInit{
         });
         this.topMemes = {data};
       },
-      null,
+      () => console.error('ERROR. CANNOT LOAD Meme Stats'),
       () => this.drawTopMemeChart());
 
     // User Statistics
@@ -95,24 +98,48 @@ export class DashboardComponent implements  AfterViewInit{
         this.loginData = {data};
         console.log(this.loginData);
       },
-      null,
+      () => console.error('ERROR'),
       () => this.drawUserChart());
   }
 
   loadVideo(): void {
     this.memeService.loadTopMemeVideo().subscribe(response => {
-      if (response.length < 4){
+      console.log(response.type);
+      if (response.type === 1){
         console.log(response);
-        return;
+        this.type = response.type;
+        this.text = response.res;
       }
-      else {
-        this.video = response;
+      else if (response.type === 0) {
+        console.log('TEST');
+        this.text = '';
+        this.type = response.type;
+        this.video = response.res;
+      }
+      else if (response.type === 3) {
+        this.text = '';
+        this.poster = environment.apiUrl + response.res;
+      }
+      else{
+        console.log(response);
+        this.type = response.type;
+        this.text = 'ERROR';
       }
       console.log(this.video);
     }, null, _ => {
-      this.video = environment.apiUrl + this.video;
-      console.log(this.video);
-      this.vid.nativeElement.setAttribute('src', this.video);
+      console.log(this.noVid);
+      if (this.type === 0) {
+        this.video = environment.apiUrl + this.video;
+        console.log(this.video);
+        this.vid.nativeElement.setAttribute('src', this.video);
+        this.noVid = false;
+      }
+      else if (this.type === 1){
+        return;
+      }
+      else{
+        return;
+      }
     });
   }
 
