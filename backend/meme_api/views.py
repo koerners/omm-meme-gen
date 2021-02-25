@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User, Group
 from django.http import JsonResponse, HttpResponse
+from moviepy.video.compositing.concatenate import concatenate_videoclips
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework import viewsets
@@ -12,6 +13,7 @@ import sys
 from django.core.files.base import ContentFile
 import uuid
 import numpy as np
+from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 
 from backend.settings import BASE_DIR, MEDIA_URL
 from meme_api.models import Meme, Comment, Vote
@@ -25,7 +27,6 @@ import base64
 import requests
 from PIL import Image, ImageDraw, ImageFont
 import json, io, zipfile
-
 
 DEFAULT_FONT_SIZE = 30
 FONT_DEFAULT = 'Ubuntu-M.ttf'
@@ -388,11 +389,13 @@ class VideoTemplates(viewsets.ModelViewSet):
         video_bytes = bytes_io.read()
 
         random_name = uuid.uuid4().hex
-        video_file_path = os.path.join(cls.video_folder, random_name + '.mp4')
+        video_file_path = os.path.join(cls.video_folder, random_name + '.webm')
 
         # video needs to be stored locally, because cv2.VideoCapture does not work with buffer
         with open(video_file_path, 'wb') as f:
             f.write(video_bytes)
+
+        images = []
 
         vidcap = cv2.VideoCapture(video_file_path)
         fps = vidcap.get(cv2.CAP_PROP_FPS)
@@ -401,10 +404,14 @@ class VideoTemplates(viewsets.ModelViewSet):
         success, image_as_np_array = vidcap.read()
         while success:
             frame_counter += 1
+            image = Image.fromarray(image_as_np_array)
+            images.append(cv2.cvtColor(np.array(image, dtype='uint8'), cv2.COLOR_BGR2RGB))
             success, image_as_np_array = vidcap.read()
 
-        return JsonResponse({'video_url': video_file_path, 'frames': frame_counter},
-                            safe=False, status=200)
+        clips = ImageSequenceClip(images, fps=fps)
+        clips.write_videofile(video_file_path, fps=fps)
+
+        return JsonResponse({'video_url': video_file_path, 'frames': frame_counter}, safe=False, status=200)
 
     @classmethod
     def add_text_to_video(cls, request):
@@ -412,8 +419,8 @@ class VideoTemplates(viewsets.ModelViewSet):
 
         video_file_url = body['video_url']
         text_to_add = body['text']
-        x_pos = body['x']
-        y_pos = body['y']
+        x_center_in_percent = body['x_center_in_percent']
+        y_center_in_percent = body['y_center_in_percent']
         from_frame = body['from_frame']
         to_frame = body['to_frame']
 
@@ -428,126 +435,74 @@ class VideoTemplates(viewsets.ModelViewSet):
 
         success, image_as_np_array = vidcap.read()
 
+        image_height, image_width, _ = image_as_np_array.shape
+        image_draw = ImageDraw.Draw(Image.fromarray(image_as_np_array))
+        font_data = cls.get_font_data_from_body(body, image_width, image_draw)
+
+        x_pos_center = image_width * x_center_in_percent
+        y_pos_center = image_height * y_center_in_percent
+
         while success:
             image_as_np_array = cv2.cvtColor(image_as_np_array, cv2.COLOR_BGR2RGB)
             image = Image.fromarray(image_as_np_array)
 
             if (from_frame <= frame_counter) and (frame_counter <= to_frame):
                 image_draw = ImageDraw.Draw(image)
-                cls.draw_text(image_draw, text_to_add, x_pos, y_pos, cls.get_font_data_from_body(body))
+                cls.draw_text(image_draw, text_to_add, x_pos_center, y_pos_center, font_data)
 
-            images.append(image)
+            images.append(np.array(image, dtype='uint8'))
 
             success, image_as_np_array = vidcap.read()
 
             frame_counter += 1
 
+        clips = ImageSequenceClip(images, fps=fps)
+        clips.write_videofile(video_file_url, fps=fps)
 
-        width, height = images[0].size
-
-        print('width and height', width, height)
-
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        writer = cv2.VideoWriter(video_file_url,
-                                 fourcc,
-                                 fps=fps,
-                                 frameSize=(width, height))
-
-        for image in images[:100]:
-            opencv_image = np.array(image)
-            opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-            writer.write(opencv_image)
-
-        writer.release()
-
-        return JsonResponse({'video_url': video_file_url, 'frames': frame_counter},
-                            safe=False, status=200)
+        return JsonResponse({'video_url': video_file_url, 'frames': frame_counter}, safe=False, status=200)
 
     @classmethod
-    def get_video_from_images(cls, request):
-        body = json.loads(request.body)
-        fps = body['video_data']['fps']
-        images = body['video_data']['images']
-
-        random_name = uuid.uuid4().hex
-        video_file_name = random_name + '.mp4'
-
-        pil_image = Image.open(io.BytesIO(base64.b64decode(images[0].split(';base64,')[-1])))
-        width, height = pil_image.size
-
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        writer = cv2.VideoWriter(video_file_name,
-                                 fourcc,
-                                 fps=fps,
-                                 frameSize=(width, height))
-
-        counter = 0
-        for image in images:
-            if counter == 0:
-                blub = Image.open(io.BytesIO(base64.b64decode(image.split(';base64,')[-1])))
-                blub.save('test.png', 'PNG')
-            pil_image = Image.open(io.BytesIO(base64.b64decode(image.split(';base64,')[-1])))
-            opencv_image = np.array(pil_image)
-            opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-            writer.write(opencv_image)
-            counter += 1
-
-        cv2.destroyAllWindows()
-        writer.release()
-
-        video_bytes = io.BytesIO()
-        with open(video_file_name, 'rb') as f:
-            video_bytes.write(f.read())
-
-        pil_image = Image.open('test.png')
-        response = HttpResponse(content_type='image/png')
-
-        pil_image.save(response, 'PNG')
-
-        return response
-
-        # print('before creating response')
-        # response = HttpResponse(video_bytes.getvalue(), content_type='video/x-msvideo')
-        # response['Content-Disposition'] = "attachment; filename=" + video_file_name
-        # response['Content-Length'] = len(video_file_name)
-        # print('after creating response')
-        #
-        # return response
-
-    @classmethod
-    def draw_text(cls, image_draw, text, x, y, qp):
-        text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, text, qp.get('font'))
-        ascent, _ = qp.get('font').getmetrics()
-        image_draw.text((x, y), text, fill=qp.get('fill_color'), font=qp.get('font'))
-        if qp.get('underline') in ["True", "true"]:
-            image_draw.line(((x, y + ascent), (x + text_width, y + ascent)), fill=qp.get('fill_color'),
+    def draw_text(cls, image_draw, text, x_pos_center, y_pos_center, qp):
+        text_width, text_height = ImageDraw.ImageDraw.textsize(image_draw, text, qp.get('font'))
+        ascent, descent = qp.get('font').getmetrics()
+        image_draw.text((x_pos_center - text_width / 2, y_pos_center - text_height / 2), text,
+                        fill=qp.get('fill_color'), font=qp.get('font'))
+        if qp.get('underline') in ["True", "true", True]:
+            image_draw.line(((x_pos_center - text_width / 2, y_pos_center + ascent - text_height / 2),
+                             (x_pos_center + text_width / 2, y_pos_center + ascent - text_height / 2)),
+                            fill=qp.get('fill_color'),
                             width=int(qp.get('font_size') / 10))
 
     @classmethod
-    def get_font_data_from_body(cls, body):
+    def get_font_data_from_body(cls, body, image_width, image_draw):
+        expected_text_width = image_width * body['width_in_percent']
+
         def get_font_style_path(font_style):
             return os.path.join(FONT_STYLE_PATH, font_style)
-
-        try:
-            font_size = int(body['font_size'])
-        except (ValueError, TypeError):
-            font_size = DEFAULT_FONT_SIZE
 
         bold = body['bold']
         italic = body['italic']
         underline = body['underline']
 
-        if bold in ["True", "true"] and italic in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(FONT_BOLD_ITALIC), font_size)
-        elif bold in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(FONT_BOLD), font_size)
-        elif italic in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(FONT_ITALIC), font_size)
+        if bold in ["True", "true", True] and italic in ["True", "true", True]:
+            font_style = get_font_style_path(FONT_BOLD_ITALIC)
+        elif bold in ["True", "true", True]:
+            font_style = get_font_style_path(FONT_BOLD)
+        elif italic in ["True", "true", True]:
+            font_style = get_font_style_path(FONT_ITALIC)
         else:
-            font = ImageFont.truetype(get_font_style_path(FONT_DEFAULT), font_size)
+            font_style = get_font_style_path(FONT_DEFAULT)
+
+        font_size = 0
+        font = ImageFont.truetype(font_style, font_size)
+        text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, body['text'], font)
+        while text_width < expected_text_width:
+            font_size += 1
+            font = ImageFont.truetype(font_style, font_size)
+            text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, body['text'], font)
 
         try:
-            fill_color = tuple(int(body['text_color'][i:i + 2], 16) for i in (0, 2, 4))
+            fill_color = tuple(int(body['text_color'][i:i + 2], 16) for i in (1, 3, 5))
         except (ValueError, TypeError):
             fill_color = (0, 0, 0)
 

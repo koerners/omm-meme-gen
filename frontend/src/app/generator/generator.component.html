@@ -48,23 +48,22 @@
               <button (click)="saveCanvas()" mat-menu-item>Save to Account (Public)</button>
               <button (click)="saveCanvasPrivate()" mat-menu-item>Save to Account (Private)</button>
               <button (click)="saveCanvasAsDraft()" mat-menu-item>Save as Draft</button>
-              <button (click)="downloadCanvas()" mat-menu-item>Download</button>
+              <div [hidden]="this.videoOn"><button (click)="downloadCanvas()" mat-menu-item>Download</button></div>
               <button (click)="clearCanvas()" mat-menu-item>Clear</button>
             </mat-menu>
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
           <div [hidden]="!videoOn" id="videoContainer" class="meme-canvas">
-            <video></video>
           </div>
           <div [hidden]="videoOn">
             <canvas [hidden]="cameraOn" #previewBackground [style.background]="colorBackground" class="meme-canvas"></canvas>
             <canvas [hidden]="cameraOn" #previewFile class="meme-canvas"></canvas>
           </div>
           <div>
-            <canvas [hidden]="cameraOn" #previewText class="meme-canvas"></canvas>
-            <canvas [hidden]="cameraOn" #previewTextbox class="meme-canvas"></canvas>
-            <canvas [hidden]="cameraOn" #previewDraw class="meme-canvas"></canvas>
+            <canvas [hidden]="cameraOn || videoOn && !addingText" #previewText class="meme-canvas"></canvas>
+            <canvas [hidden]="cameraOn || videoOn && !addingText" #previewTextbox class="meme-canvas"></canvas>
+            <canvas [hidden]="cameraOn || videoOn && !addingText" #previewDraw class="meme-canvas"></canvas>
           </div>
 
           <div *ngIf="cameraOn">
@@ -168,17 +167,19 @@
               </mat-grid-tile>
 
               <mat-grid-tile colspan="1" rowspan="3">
-                <mat-form-field>
-                  <mat-label>Font Style</mat-label>
-                  <mat-select [formControl]="fontFamily" (selectionChange)="fontFamilyChanged($event)">
-                    <mat-option value="Arial">Arial</mat-option>
-                    <mat-option value="Verdana">Verdana</mat-option>
-                    <mat-option value="Times New Roman">Times New Roman</mat-option>
-                    <mat-option value="Courier New">Courier New</mat-option>
-                    <mat-option value="serif">serif</mat-option>
-                    <mat-option value="sans-serif">sans-serif</mat-option>
-                  </mat-select>
-                </mat-form-field>
+                <div [hidden]="this.videoOn">
+                  <mat-form-field>
+                    <mat-label>Font Style</mat-label>
+                    <mat-select [formControl]="fontFamily" (selectionChange)="fontFamilyChanged($event)">
+                      <mat-option value="Arial">Arial</mat-option>
+                      <mat-option value="Verdana">Verdana</mat-option>
+                      <mat-option value="Times New Roman">Times New Roman</mat-option>
+                      <mat-option value="Courier New">Courier New</mat-option>
+                      <mat-option value="serif">serif</mat-option>
+                      <mat-option value="sans-serif">sans-serif</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
               </mat-grid-tile>
 
               <mat-grid-tile colspan="1" rowspan="3">

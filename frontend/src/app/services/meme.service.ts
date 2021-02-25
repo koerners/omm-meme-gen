@@ -58,21 +58,6 @@ export class MemeService {
     return this.http.post(environment.apiUrl + '/addTextToVideo/', textData);
   }
 
-  convertImagesToVideo(videoData: string): any {
-    const httpOptions = {
-      headers: new HttpHeaders({
-        'Content-Type':  'application/json',
-      })
-    };
-
-    console.log('convertImagesToVideo');
-    return this.http.post(environment.apiUrl + '/convertImagesToVideo/', {
-      video_data: videoData
-    }, httpOptions).subscribe(data => {
-      console.log(data);
-    });
-  }
-
   loadMeme(id: string): any {
     return this.http.get(environment.apiUrl + '/meme/' + String(id) + '/');
   }
