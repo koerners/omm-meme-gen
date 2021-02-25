@@ -12,7 +12,7 @@ import {MatButtonToggleChange, MatButtonToggleModule} from '@angular/material/bu
 import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
-import {MatDialog} from '@angular/material/dialog
+import {MatDialog} from '@angular/material/dialog';
 import {environment} from '../../environments/environment';
 import {SpeechService} from '../services/speech.service';
 import {VoiceRecognitionService} from '../services/voice-recognition.service';
@@ -100,7 +100,7 @@ export class GeneratorComponent implements AfterViewInit {
   /**
    * The Color of the Text
    */
-  
+
   colorText: string;
   /**
    * The Color of the Pen
