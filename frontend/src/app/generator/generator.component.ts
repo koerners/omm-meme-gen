@@ -509,6 +509,8 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   clearCanvas(): void {
+    this.emptyVideoContainer();
+
     this.addingText = false;
     this.resizeCanvasHeight(this.height, this.width);
 
