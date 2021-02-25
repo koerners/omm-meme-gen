@@ -6,7 +6,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
-from rest_framework import permissions
+from rest_framework import permissions, filters
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -59,13 +59,8 @@ class MemeList(viewsets.ModelViewSet):
     def own(self, request):
         own_memes = Meme.objects.filter(owner=request.user).order_by('-created').values()
 
-        page = self.paginate_queryset(own_memes)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+        return JsonResponse(list(own_memes), safe=False)
 
-        serializer = self.get_serializer(own_memes, many=True)
-        return Response(serializer.data)
 
     @action(detail=False)
     def availableMemes(self, request):
@@ -75,25 +70,19 @@ class MemeList(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    def list(self, request):
-        queryset = Meme.objects.filter(private=False)
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-
-        return Response(serializer.data)
-
     def retrieve(self, request, *args, **kwargs):
         obj = self.get_object()
         obj.views = obj.views + 1
         obj.save(update_fields=("views",))
         return super().retrieve(request, *args, **kwargs)
 
-    queryset = Meme.objects.all()
+    queryset = Meme.objects.filter(private=False)
+
     serializer_class = MemeSerializer
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['text_concated', 'title']
+    ordering_fields = ['created', 'views', 'pos_votes', 'n_comments']
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
@@ -112,9 +101,13 @@ class CommentList(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def perform_create(self, serializer):
+
+        m = Meme.objects.filter(id=int(self.request.POST.get("meme")))[0]
+        m.n_comments += 1
+        m.save()
+
         serializer.save(owner=self.request.user)
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
 class VoteList(viewsets.ModelViewSet):
@@ -139,9 +132,15 @@ class VoteList(viewsets.ModelViewSet):
     serializer_class = VoteSerializer
 
     def perform_create(self, serializer):
+
+        if self.request.POST.get("upvote") == "true":
+            m = Meme.objects.filter(id=int(self.request.POST.get("meme")))[0]
+            m.pos_votes += 1
+            m.save()
+
         serializer.save(owner=self.request.user)
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
 class MemeTemplate:
@@ -392,7 +391,6 @@ class TemplateStats:
         pass
 
 
-
 class ScreenshotFromUrl:
     @action(detail=False)
     def get_screenshot(request):
@@ -439,11 +437,11 @@ class MemesToVideo:
         print(val)
         if val == 1:
             top_five_memes = Meme.objects.values().order_by('-views')[0]
-            #top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[0]
+            # top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[0]
             x = [top_five_memes['id']]
         else:
             top_five_memes = Meme.objects.values().order_by('-views')[:val]
-            #top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[:val]
+            # top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[:val]
             x = list(top_five_memes.values_list('id', flat=True))
         if val == 1:
             top_five = [0]

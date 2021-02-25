@@ -572,6 +572,8 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.width = 80;
       newImg.height = 80;
       newImg.addEventListener('click', () => {
+        this.currentMeme = template[0];
+
         this.isTemplate = true;
         this.memeService.postTemplateStat(template[0]);
         this.videoOn = false;
@@ -776,9 +778,8 @@ export class GeneratorComponent implements AfterViewInit {
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
     this.currentMeme = meme.id;
     this.isTemplate = true;
-    if (this.isTemplate){
-      this.memeService.postTemplateStat(meme.id);
-    }
+    this.memeService.postTemplateStat(meme.id);
+    this.isTemplate = true;
     this.memeTemplateChosen(meme);
   }
 
@@ -790,9 +791,7 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex++;
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
-    if (this.isTemplate){
-      this.memeService.postTemplateStat(meme.id);
-    }
+    this.memeService.postTemplateStat(meme.id);
     this.currentMeme = meme.id;
     this.isTemplate = true;
     this.memeTemplateChosen(meme);
