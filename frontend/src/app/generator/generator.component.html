@@ -1,5 +1,29 @@
 <div class="grid-container">
-  <h1 class="mat-h1">Dashboard</h1>
+  <h1 class="mat-h1">Create your Meme</h1>
+
+  <button (click)="screenReader()">Speak</button>
+  <button (click)="stopScreenReader()">Stop</button>
+
+  <div *ngIf="vRS.voiceFeedbackEnabled" style="background-color: darkslateblue">
+    Voice Recognition: <br />
+    {{vRS.voiceStatusMsg}} {{vRS.voiceActionFeedback}}
+    <ng-container *ngIf="vRS.voiceFeedbackShowHelp">
+      <div class="grid-container">
+        Available commands... <br />
+        Navigation: 'navigate dashboard', 'navigate memes' <br />
+        Webcam: 'open webcam', 'close webcam', 'take picture' <br />
+        Text Fields: 'title *text', 'text top *text', 'text bottom *text' <br />
+        Fonts: 'font size :fsize', 'font style :style', 'alter bold', 'alter italic', 'alter underline' <br />
+        Color: 'text colour :colour', 'pen colour :colour', 'background colour :color' (colour = 'black', 'white', 'red', 'yellow', 'green', 'blue') <br />
+        Memes: 'save public', 'save private', 'save draft', 'download meme' <br />
+        Help: 'help me', 'close help'
+      </div>
+    </ng-container>
+    <div class="grid-container">
+      <br /><button (click)="vRS.closeVoiceFeedback()">Close</button>
+    </div>
+  </div>
+
   <mat-grid-list [rowHeight]="100" cols="10">
     <mat-grid-tile colspan="6" rowspan="3">
       <mat-card class="dashboard-card">
@@ -21,8 +45,6 @@
             <button mat-raised-button class="butn" id="videoSelect" (click)="video.click()">Upload a Video</button>
 
             <button mat-raised-button class="butn" id="URLSelect" (click)="openDialog()">Load an image from an URL</button>
-
-            <button mat-raised-button class="butn" id="ScreenshotSelect" (click)="loadScreenshotOfURL()">Upload Screenshot from URL</button>
 
             <button mat-raised-button class="butn" id="LoadFromAPI" (click)="loadFromAPI()">Load Random Image from IMGFlip</button>
           </div>

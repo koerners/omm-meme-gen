@@ -1,5 +1,6 @@
-import {AfterViewInit, Component, Input, ViewChild, ElementRef} from '@angular/core';
+import {AfterViewInit, Component, Input, ViewChild, ElementRef, NgZone} from '@angular/core';
 import {FormControl, Validators} from '@angular/forms';
+import {Router} from '@angular/router';
 import {fromEvent, Subject, Observable, pipe} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
 import {ColorEvent} from 'ngx-color';
@@ -11,13 +12,17 @@ import {MatButtonToggleChange, MatButtonToggleModule} from '@angular/material/bu
 import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
-import {MatDialog} from '@angular/material/dialog';
+import {MatDialog} from '@angular/material/dialog
 import {environment} from '../../environments/environment';
+import {SpeechService} from '../services/speech.service';
+import {VoiceRecognitionService} from '../services/voice-recognition.service';
 
+/**
+ * The interface for the InputDialogData
+ */
 export interface DialogData {
   url: string;
 }
-
 
 @Component({
   selector: 'app-generator',
@@ -25,33 +30,95 @@ export interface DialogData {
   styleUrls: ['./generator.component.css']
 })
 export class GeneratorComponent implements AfterViewInit {
-
+  /**
+   * The form for the text on the top
+   */
   textTop = new FormControl('');
+  /**
+   * The form for the name of the meme
+   */
   name = new FormControl('');
+  /**
+   * The form for the text on the bottom
+   */
   textBottom = new FormControl('');
+  /**
+   * The form for the font size
+   */
   fontSize = new FormControl('30');
+  /**
+   * The form for the font style
+   */
   fontFamily = new FormControl('Arial');
+  /**
+   * The form for bold text
+   */
   bold = new FormControl(false);
+  /**
+   * The form for italic text
+   */
   italic = new FormControl(false);
+  /**
+   * The form for underlinde text
+   */
   underline = new FormControl(false);
+  /**
+   * Allows drawing on canvas
+   */
   drawingMode = false;
+  /**
+   * The array for storing the textboxes
+   */
   textboxes: Textbox[] = [];
+  /**
+   * The input form for the new textbox
+   * @see newTextbox
+   */
   yourText = new FormControl('Your text');
+  /**
+   * a new Textbox
+   */
   newTextbox: Textbox;
+  /**
+   * The previous drawing position
+   */
   previousDrawPosition = null;
+  /**
+   * The row height of MaterialGridTile
+   */
   rowHeight = 95;
 
-  memeTemplates: { name, base64_string }[] = [];
-
-  colorOptions: string[] = ['#000000', '#808080', '#C0C0C0', '#FFFFFF', '#800000', '#FF0000', '#808000', '#FFFF00', '#008000', '#00FF00', '#008080', '#00FFFF', '#000080', '#0000FF', '#800080', '#FF00FF', '#795548', '#607d8b'];
+  memeTemplates: {
+    id: number;
+    name, base64_string}[] = [];
+  /**
+   * The Color options available
+   */
+  colorOptions: string[] = ['black', '#808080', '#C0C0C0', 'white', '#800000', 'red', '#808000',
+    'yellow', 'green', '#00FF00', '#008080', '#00FFFF', '#000080', 'blue', '#800080', '#FF00FF',
+    '#795548', '#607d8b'];
+  /**
+   * The Color of the Text
+   */
+  
   colorText: string;
+  /**
+   * The Color of the Pen
+   */
   colorPen: string;
+  /**
+   * The Color of the Pen
+   */
   colorBackground: string;
 
+  /**
+   * The camera value wheter it is active or not
+   */
   cameraOn = false;
   videoOn = false;
   videoEl: HTMLVideoElement = null;
   sourceEl = null;
+  res = '';
 
   currentWidth: number;
   currentHeight: number;
@@ -84,7 +151,6 @@ export class GeneratorComponent implements AfterViewInit {
     height: {ideal: 576}
   };
   // latest snapshot
-  public webcamImageArray: WebcamImage[];
   public webcamImage: WebcamImage = null;
 
   // webcam snapshot trigger
@@ -95,7 +161,15 @@ export class GeneratorComponent implements AfterViewInit {
   private randomImageIndex: number;
   processor = null;
 
-  constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog) {
+  // Map for ScreenReader Output
+  private screenReaderText: Map<string, string>;
+  private isTemplate: boolean;
+  private currentMeme: any;
+
+
+  constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog,
+              private ngZone: NgZone, private router: Router,
+              private speechService: SpeechService, public vRS: VoiceRecognitionService) {
     this.colorBackground = '#FFFFFF';
     this.colorText = '#000000';
     this.colorPen = '#000000';
@@ -110,6 +184,11 @@ export class GeneratorComponent implements AfterViewInit {
 
       this.showMemeTemplates();
     });
+
+    // ScreenReader & VoiceRecognition
+    this.screenReaderText = new Map<string, string>();
+    this.screenReaderText.set('Welcome', 'This page is Meme Life Generate Meme.');
+    this.configureVoiceRecognition();
   }
 
   public ngAfterViewInit(): void {
@@ -584,15 +663,19 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.width = 80;
       newImg.height = 80;
       newImg.addEventListener('click', () => {
-        this.emptyVideoContainer();
-        this.currentlyShownMemeTemplateIndex = this.memeTemplates.indexOf(template);
+        this.currentMeme = template[0];
 
+        this.isTemplate = true;
+        this.memeService.postTemplateStat(template[0]);
+        this.videoOn = false;
+        this.emptyVideoContainer();
+        this.currentlyShownMemeTemplateIndex = (template[0] - 1);
         const canvas = this.fileCanvas.nativeElement;
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
         const memeTemplate = new Image();
-        memeTemplate.src = 'data:image/png;base64,' + template.base64_string;
+        memeTemplate.src = 'data:image/png;base64,' + template[2];
         memeTemplate.onload = () => {
           const scaleFactor = memeTemplate.width / this.width;
           this.resizeCanvasHeight(memeTemplate.height / scaleFactor, memeTemplate.width / scaleFactor);
@@ -601,7 +684,7 @@ export class GeneratorComponent implements AfterViewInit {
           this.textChanged();
         };
       });
-      newImg.src = 'data:image/jpg;base64,' + template.base64_string;
+      newImg.src = 'data:image/jpg;base64,' + template[2];
       newImg.alt = 'Loading';
       memeTemplateContainer.append(newImg);
     });
@@ -615,14 +698,17 @@ export class GeneratorComponent implements AfterViewInit {
     }
   }
 
+  /**
+   * load image from a given url
+   */
   loadFromURL(): void {
-    this.clearCanvas();
-    console.log('pressed url');
-    const ctx = this.fileCanvas.nativeElement.getContext('2d');
-    const img = new Image();
-    img.src = this.url;
-    img.onload = () => ctx.drawImage(img, 0, 100, 600, 500);
-
+    this.memeService.getImageFrom(encodeURIComponent(this.url)).subscribe(res => {
+      console.log(res);
+      const ctx = this.fileCanvas.nativeElement.getContext('2d');
+      const img = new Image();
+      img.src =  'data:image/jpg;base64,' + res.img;
+      img.onload = () => ctx.drawImage(img, 0, 100, 600, 500);
+    });
   }
 
   loadScreenshotOfURL(): void {
@@ -630,23 +716,22 @@ export class GeneratorComponent implements AfterViewInit {
     this.emptyVideoContainer();
   }
 
+  /**
+   * loads Images from the backend;
+   * @see getMemesFromImgFlip
+   */
   loadFromAPI(): void {
     this.clearCanvas();
     console.log('pressed api');
     this.emptyVideoContainer();
     this.memeService.getMemesFromImgFlip().subscribe(data => {
-      console.log(data);
-      this.imagesRecieved = JSON.parse(JSON.stringify(data));
-    }, null, () => {
-      this.imagesRecieved = this.imagesRecieved.data.memes;
-      this.randomImageIndex = Math.floor(Math.random() * this.imagesRecieved.length);
-      const randomImage = this.imagesRecieved[this.randomImageIndex];
+      const imgSrc = 'data:image/png;base64,' + data.img;
       const ctx = this.fileCanvas.nativeElement.getContext('2d');
       const img = new Image();
-      img.src = randomImage.url;
+      img.src = imgSrc;
       img.onload = () => {
-        const scaleFactor = randomImage.width / this.width;
-        this.resizeCanvasHeight(randomImage.height / scaleFactor, randomImage.width / scaleFactor);
+        const scaleFactor = data.width / this.width;
+        this.resizeCanvasHeight(data.height / scaleFactor, data.width / scaleFactor);
         this.getCanvasRowspan();
 
         ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, this.width, this.currentHeight);
@@ -696,7 +781,14 @@ export class GeneratorComponent implements AfterViewInit {
     }
     meme.private = false;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme);
+    this.memeService.saveMeme(meme).subscribe(data => {
+      if (this.isTemplate){
+        console.log(data.id);
+        this.memeService.setMemeServiceCurrentMeme(data.id);
+        console.log(this.memeService.currentMemeId);
+        this.memeService.postTemplateStat(this.currentMeme);
+      }
+    });
   }
 
   saveCanvasAsDraft(): void {
@@ -715,7 +807,12 @@ export class GeneratorComponent implements AfterViewInit {
     }
     meme.private = true;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme);
+    this.memeService.saveMeme(meme) .subscribe(data => {
+      if (this.isTemplate){
+        this.memeService.setMemeServiceCurrentMeme(data.id);
+        this.memeService.postTemplateStat(this.currentMeme);
+      }
+    });
 
   }
 
@@ -776,8 +873,12 @@ export class GeneratorComponent implements AfterViewInit {
     } else {
       this.currentlyShownMemeTemplateIndex--;
     }
-
-    this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
+    const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
+    this.currentMeme = meme.id;
+    this.isTemplate = true;
+    this.memeService.postTemplateStat(meme.id);
+    this.isTemplate = true;
+    this.memeTemplateChosen(meme);
   }
 
   nextTemplateButtonClicked(): void {
@@ -787,23 +888,225 @@ export class GeneratorComponent implements AfterViewInit {
     } else {
       this.currentlyShownMemeTemplateIndex++;
     }
-
-    this.memeTemplateChosen(this.memeTemplates[this.currentlyShownMemeTemplateIndex]);
+    const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
+    this.memeService.postTemplateStat(meme.id);
+    this.currentMeme = meme.id;
+    this.isTemplate = true;
+    this.memeTemplateChosen(meme);
   }
 
+  /**
+   * Opens the URL input dialog
+   * @see InputUrlDialogComponent
+   */
   openDialog(): void {
+    this.videoOn = false;
+    let toggle = '';
     this.emptyVideoContainer();
+
     const dialogRef = this.dialog.open(InputUrlDialogComponent, {
-      width: '300px',
+      width: '600px',
       data: {name: this.url}
     });
-
     dialogRef.afterClosed().subscribe(result => {
       console.log('The dialog was closed');
-      this.url = result;
-    }, null, () => {
-      this.loadFromURL();
+      toggle = result.split(' ')[0];
+      this.url = result.split(' ')[1];
+    }, null , () => {
+      // Switch toggle between image from url and screenshot from url
+      if (toggle === 'url') {
+        this.loadFromURL();
+      } else {
+        this.videoOn = false;
+        this.emptyVideoContainer();
+        this.clearCanvas();
+        const ctx = this.fileCanvas.nativeElement.getContext('2d');
+        const img = new Image();
+        // Send request with endoded URL as paramter to backend
+        this.memeService.getScreenshotFromUrl(encodeURIComponent(this.url)).subscribe(response => {
+          this.res = response;
+          // add missing data info to base64 response string
+          img.src = 'data:image/png;base64, ' + this.res;
+          console.log(img.src);
+          this.width = img.width;
+          img.onload = () => ctx.drawImage(img, 0, 100, img.width, img.height);
+        });
+      }
     });
   }
-}
 
+  // ScreenReader and its functions //
+  public screenReader(): void {
+    this.speechService.speak(this.screenReaderBuilder());
+  }
+
+  public stopScreenReader(): void {
+    this.speechService.stop();
+  }
+
+  private screenReaderBuilder(): string {
+    let text = '';
+    text += this.screenReaderText.get('Welcome') + ' ';
+    return text;
+  }
+
+  // VoiceRecognition and its functions //
+  private configureVoiceRecognition(): void {
+    const commands = {
+      'open webcam': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Open Webcam');
+        this.loadFromWebcam();
+      },
+      'close webcam': () => {
+        if (this.cameraOn === true) {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Close Webcam');
+          this.showOnCanvas();
+        }
+        else {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Webcam is not open');
+        }
+      },
+      'take picture': () => {
+        if (this.cameraOn === true) {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Take Picture');
+          this.triggerSnapshot();
+        }
+        else {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Webcam is not open');
+        }
+      },
+      'title *text': (text: string) => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set title to "' + text + '"');
+        this.name.setValue(text);
+        this.textChanged();
+      },
+      'text top *text': (text: string) => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Text Top to "' + text + '"');
+        this.textTop.setValue(text);
+        this.textChanged();
+      },
+      'text bottom *text': (text: string) => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Text Bottom to "' + text + '"');
+        this.textBottom.setValue(text);
+        this.textChanged();
+      },
+      'font size :fsize': (fsize: string) => {
+        if (/^\d+$/.test(fsize)) {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Size to "' + fsize + '"');
+          this.fontSize.setValue(fsize);
+          this.textChanged();
+        }
+        else {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Size to "' + fsize + '" not possible.');
+        }
+      },
+      'font style arial': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Style to Arial');
+        this.fontFamily.setValue('Arial');
+        this.textChanged();
+      },
+      'font style verdana': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Style to Verdana');
+        this.fontFamily.setValue('Verdana');
+        this.textChanged();
+      },
+      'font style times new roman': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Style to Times New Roman');
+        this.fontFamily.setValue('Times New Roman');
+        this.textChanged();
+      },
+      'font style courier new': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Style to Courier New');
+        this.fontFamily.setValue('Courier New');
+        this.textChanged();
+      },
+      'font style serif': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Style to serif');
+        this.fontFamily.setValue('serif');
+        this.textChanged();
+      },
+      'font style sans-serif': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Font Style to sans-serif');
+        this.fontFamily.setValue('sans-serif');
+        this.textChanged();
+      },
+      'random font style': () => {
+        const fonts = ['Arial', 'Verdana', 'Times New Roman', 'Courier New', 'serif', 'sans-serif'];
+        const item = fonts[Math.floor(Math.random() * fonts.length)];
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Choose random Font Style: ' + item);
+        this.fontFamily.setValue(item);
+        this.textChanged();
+      },
+      'alter bold': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Change Font bold');
+        this.bold.setValue(!this.bold.value);
+        this.textChanged();
+      },
+      'alter underline': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Change Font underline');
+        this.underline.setValue(!this.underline.value);
+        this.textChanged();
+      },
+      'alter italic': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Change Font italic');
+        this.italic.setValue(!this.italic.value);
+        this.textChanged();
+      },
+      'text colour :color': (color: string) => {
+        const colorOptions = ['black', 'white', 'red', 'yellow', 'green', 'blue'];
+        if (colorOptions.includes(color)) {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Text Color = ' + color);
+          this.colorText = color;
+          this.textChanged();
+        }
+        else {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Text Color = ' + color + ' not possible');
+        }
+      },
+      'pen colour :color': (color: string) => {
+        const colorOptions = ['black', 'white', 'red', 'yellow', 'green', 'blue'];
+        if (colorOptions.includes(color)) {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Pen Color = ' + color);
+          this.colorPen = color;
+          const canvas = this.drawCanvas.nativeElement;
+          const ctx = canvas.getContext('2d');
+          ctx.strokeStyle = this.colorPen;
+        }
+        else {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Pen Color = ' + color + ' not possible');
+        }
+      },
+      'background colour :color': (color: string) => {
+        const colorOptions = ['black', 'white', 'red', 'yellow', 'green', 'blue'];
+        if (colorOptions.includes(color)) {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Background Color = ' + color);
+          this.colorBackground = color;
+          const canvas = this.backgroundCanvas.nativeElement;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = this.colorBackground;
+          ctx.fillRect(0, 0, this.currentWidth, this.currentHeight);
+        }
+        else {
+          this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Set Background Color = ' + color + ' not possible');
+        }
+      },
+      'save public': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Save Meme (public)');
+        this.saveCanvas();
+      },
+      'save private': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Save Meme (private)');
+        this.saveCanvasPrivate();
+      },
+      'save draft': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Save Draft');
+        this.saveCanvasAsDraft();
+      },
+      'download meme': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Download Meme');
+        this.downloadCanvas();
+      },
+    };
+    this.vRS.setUp(commands);
+  }
+}

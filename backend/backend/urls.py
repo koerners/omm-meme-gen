@@ -34,7 +34,13 @@ urlpatterns = [
     path('memeTemplate/', views.MemeTemplate.get_meme_template),
     path('createMeme/', views.MemeCreation.create_meme),
     path('createMemes/', views.MemeCreation.create_memes),
-    path('imgFlip/', views.IMGFlip.get_imgflip_memes),
     path('convertVideoToImages/', csrf_exempt(views.VideoTemplates.upload_video_to_server)),
     path('addTextToVideo/', csrf_exempt(views.VideoTemplates.add_text_to_video)),
+    path('templateStats/', views.TemplateStats.update_stats),
+    path('imgFlip/', views.IMGFlip.get_imgflip_memes, name='img_flip'),
+    path('screenshotFromUrl/', views.ScreenshotFromUrl.get_screenshot, name='url_screenshot'),
+    path('statistics/', views.SendStatistics.send_statisticis),
+    path('userStats/', views.SendUserStatistics.send_userStatistics),
+    path('memeVideo/', views.MemesToVideo.send_video),
+    path('loadImg/', views.LoadImage.load_img)
 ] + static('/media/videoMedia', document_root=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/videoMedia'))

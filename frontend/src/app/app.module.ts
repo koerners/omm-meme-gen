@@ -47,6 +47,7 @@ import {MatPaginatorModule} from '@angular/material/paginator';
 import {ShareButtonsModule} from 'ngx-sharebuttons/buttons';
 import {ShareIconsModule} from 'ngx-sharebuttons/icons';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { ChartsModule } from 'ng2-charts';
 
 @NgModule({
   declarations: [
@@ -96,6 +97,7 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
     ShareIconsModule,
     MatDialogModule,
     MatProgressSpinnerModule
+    ChartsModule
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS, useClass: HttpConfigInterceptor, multi: true},

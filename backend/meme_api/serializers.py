@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
-from meme_api.models import Meme, Comment, Vote
+from meme_api.models import Meme, Comment, Vote, Template
 from random_username.generate import generate_username
 
 
@@ -23,12 +23,16 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class MemeSerializer(serializers.ModelSerializer):
+    pos_votes = serializers.SerializerMethodField('how_many_pos')
+
+    def how_many_pos(self, meme):
+        return len(Vote.objects.filter(meme=meme, upvote=True))
+
     class Meta:
         model = Meme
-        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private', 'type']
+        fields = ['id', 'title', 'owner', 'image_string', 'views', 'private', 'pos_votes', 'type']
 
     owner = serializers.ReadOnlyField(source='owner.username')
-
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -45,3 +49,11 @@ class VoteSerializer(serializers.ModelSerializer):
         fields = ['meme', 'upvote', 'owner']
 
     owner = serializers.ReadOnlyField(source='owner.username')
+
+
+class TemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Template
+        fields = ['id', 'title', 'image_string', ]
+
+

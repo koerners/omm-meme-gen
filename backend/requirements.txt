@@ -5,4 +5,7 @@ django-cors-headers
 random-username
 requests
 Pillow
+selenium
+moviepy
+scikit-image
 opencv-python

@@ -1,22 +1,69 @@
+<button (click)="screenReader()">Speak</button>
+<button (click)="stopScreenReader()">Stop</button>
+
+<div *ngIf="voiceRecognitionService.voiceFeedbackEnabled" style="background-color: darkslateblue">
+  Voice Recognition: <br />
+  {{voiceRecognitionService.voiceStatusMsg}} {{voiceRecognitionService.voiceActionFeedback}}
+  <ng-container *ngIf="voiceRecognitionService.voiceFeedbackShowHelp">
+    <div class="grid-container">
+      Available commands... <br />
+      Help: 'help me', 'close help'
+    </div>
+  </ng-container>
+  <div class="grid-container">
+    <br /><button (click)="voiceRecognitionService.closeVoiceFeedback()">Close</button>
+  </div>
+</div>
+
 <div class="grid-container">
   <h1 class="mat-h1">Dashboard</h1>
-  <mat-grid-list cols="2" rowHeight="350px">
+  <mat-grid-list cols="2" rowHeight={{rowHeight}}>
     <mat-grid-tile *ngFor="let card of cards | async" [colspan]="card.cols" [rowspan]="card.rows">
       <mat-card class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
             {{card.title}}
-            <button [matMenuTriggerFor]="menu" aria-label="Toggle menu" class="more-button" mat-icon-button>
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #menu="matMenu" xPosition="before">
-              <button mat-menu-item>Expand</button>
-              <button mat-menu-item>Remove</button>
-            </mat-menu>
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
-          <div>Card Content Here</div>
+          <div *ngIf="card.title == 'Top 5 Viewed Memes'">
+          <div class="chart-wrapper" *ngIf="chartReady">
+            <canvas baseChart height="{{chartRowHeight}}"
+                    [datasets]="topMemeChartData"
+                    [labels]="topMemeChartLabels"
+                    [options]="topMemeChartOptions"
+                    [colors]="topMemeChartColors"
+                    [legend]="topMemeChartLegend"
+                    [chartType]="topMemeChartType"
+                    [plugins]="topMemeChartPlugins">
+            </canvas>
+          </div>
+
+          </div>
+          <div *ngIf="card.title == 'Corresponding Image'">
+            <div id="inner_video" >
+              <div *ngIf="noVid" [innerText]="text"></div>
+              <img [hidden]="!noVid" [src]="poster">
+              <video [hidden]="noVid" #video id="video"  autoplay="autoplay" controls >
+              </video>
+
+            </div>
+          </div>
+          <div *ngIf="card.title == 'Users Last Login'">
+            <div class="chart-wrapper" *ngIf="loginChartReady">
+              <canvas baseChart height="{{chartRowHeight}}"
+                      [datasets]="loginChartData"
+                      [labels]="loginChartLabels"
+                      [options]="loginChartOptions"
+                      [colors]="loginChartColors"
+                      [legend]="loginChartLegend"
+                      [chartType]="loginChartType"
+                      [plugins]="topMemeChartPlugins">
+              </canvas>
+            </div>
+
+          </div>
+
         </mat-card-content>
       </mat-card>
     </mat-grid-tile>
