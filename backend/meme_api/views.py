@@ -5,6 +5,7 @@ from random import Random, randint
 
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
+from rest_framework import generics
 from django.views.decorators.csrf import csrf_exempt
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
@@ -12,6 +13,15 @@ from rest_framework import permissions
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
+import cv2
+import sys
+from django.core.files.base import ContentFile
+import uuid
+import numpy as np
+from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
+
+from backend.settings import BASE_DIR, MEDIA_URL
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -30,6 +40,13 @@ import urllib.parse
 import numpy as np
 from skimage.transform import resize
 import cv2
+
+DEFAULT_FONT_SIZE = 30
+FONT_DEFAULT = 'Ubuntu-M.ttf'
+FONT_BOLD = 'Ubuntu-B.ttf'
+FONT_ITALIC = 'Ubuntu-MI.ttf'
+FONT_BOLD_ITALIC = 'Ubuntu-BI.ttf'
+FONT_STYLE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/fonts')
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -156,7 +173,6 @@ class MemeTemplate:
             t = list(Template.objects.all().values_list())
             for elem in t:
                 cls.available_meme_templates.append(elem)
-
 
         return cls.available_meme_templates
 
@@ -298,25 +314,25 @@ class MemeCreation:
     @classmethod
     def get_query_parameters(cls, request):
         def get_font_style_path(font_style):
-            return os.path.join(cls.font_style_path, font_style)
+            return os.path.join(FONT_STYLE_PATH, font_style)
 
         try:
             font_size = int(request.GET.get('fontSize'))
         except (ValueError, TypeError):
-            font_size = cls.default_font_size
+            font_size = DEFAULT_FONT_SIZE
 
         bold = request.GET.get('bold')
         italic = request.GET.get('italic')
         underline = request.GET.get('underline')
 
         if bold in ["True", "true"] and italic in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(cls.font_bold_italic), font_size)
+            font = ImageFont.truetype(get_font_style_path(FONT_BOLD_ITALIC), font_size)
         elif bold in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(cls.font_bold), font_size)
+            font = ImageFont.truetype(get_font_style_path(FONT_BOLD), font_size)
         elif italic in ["True", "true"]:
-            font = ImageFont.truetype(get_font_style_path(cls.font_italic), font_size)
+            font = ImageFont.truetype(get_font_style_path(FONT_ITALIC), font_size)
         else:
-            font = ImageFont.truetype(get_font_style_path(cls.font_default), font_size)
+            font = ImageFont.truetype(get_font_style_path(FONT_DEFAULT), font_size)
 
         try:
             fill_color = tuple(int(request.GET.get('colorHex')[i:i + 2], 16) for i in (0, 2, 4))
@@ -574,3 +590,136 @@ def do_create(v, top_five_memes, val):
     images_to_video(top_five_memes, val)
     v.is_video_creation_running = False
     v.save()
+
+class VideoTemplates(viewsets.ModelViewSet):
+    video_folder = 'media/videoMedia/'
+
+    @classmethod
+    def upload_video_to_server(cls, request):
+        body = json.loads(request.body)
+        video_string = body['video_string'].split(';base64,')[-1]
+
+        bytes_io = io.BytesIO()
+        bytes_io.write(base64.b64decode(video_string))
+        bytes_io.seek(0)
+        video_bytes = bytes_io.read()
+
+        random_name = uuid.uuid4().hex
+        video_file_path = os.path.join(cls.video_folder, random_name + '.webm')
+
+        # video needs to be stored locally, because cv2.VideoCapture does not work with buffer
+        with open(video_file_path, 'wb') as f:
+            f.write(video_bytes)
+
+        images = []
+
+        vidcap = cv2.VideoCapture(video_file_path)
+        fps = vidcap.get(cv2.CAP_PROP_FPS)
+
+        frame_counter = 0
+        success, image_as_np_array = vidcap.read()
+        while success:
+            frame_counter += 1
+            image = Image.fromarray(image_as_np_array)
+            images.append(cv2.cvtColor(np.array(image, dtype='uint8'), cv2.COLOR_BGR2RGB))
+            success, image_as_np_array = vidcap.read()
+
+        clips = ImageSequenceClip(images, fps=fps)
+        clips.write_videofile(video_file_path, fps=fps)
+
+        return JsonResponse({'video_url': video_file_path, 'frames': frame_counter}, safe=False, status=200)
+
+    @classmethod
+    def add_text_to_video(cls, request):
+        body = json.loads(request.body)
+
+        video_file_url = body['video_url']
+        text_to_add = body['text']
+        x_center_in_percent = body['x_center_in_percent']
+        y_center_in_percent = body['y_center_in_percent']
+        from_frame = body['from_frame']
+        to_frame = body['to_frame']
+
+        vidcap = cv2.VideoCapture(video_file_url)
+        fps = vidcap.get(cv2.CAP_PROP_FPS)
+
+        os.remove(video_file_url)
+
+        images = []
+
+        frame_counter = 0
+
+        success, image_as_np_array = vidcap.read()
+
+        image_height, image_width, _ = image_as_np_array.shape
+        image_draw = ImageDraw.Draw(Image.fromarray(image_as_np_array))
+        font_data = cls.get_font_data_from_body(body, image_width, image_draw)
+
+        x_pos_center = image_width * x_center_in_percent
+        y_pos_center = image_height * y_center_in_percent
+
+        while success:
+            image_as_np_array = cv2.cvtColor(image_as_np_array, cv2.COLOR_BGR2RGB)
+            image = Image.fromarray(image_as_np_array)
+
+            if (from_frame <= frame_counter) and (frame_counter <= to_frame):
+                image_draw = ImageDraw.Draw(image)
+                cls.draw_text(image_draw, text_to_add, x_pos_center, y_pos_center, font_data)
+
+            images.append(np.array(image, dtype='uint8'))
+
+            success, image_as_np_array = vidcap.read()
+
+            frame_counter += 1
+
+        clips = ImageSequenceClip(images, fps=fps)
+        clips.write_videofile(video_file_url, fps=fps)
+
+        return JsonResponse({'video_url': video_file_url, 'frames': frame_counter}, safe=False, status=200)
+
+    @classmethod
+    def draw_text(cls, image_draw, text, x_pos_center, y_pos_center, qp):
+        text_width, text_height = ImageDraw.ImageDraw.textsize(image_draw, text, qp.get('font'))
+        ascent, descent = qp.get('font').getmetrics()
+        image_draw.text((x_pos_center - text_width / 2, y_pos_center - text_height / 2), text,
+                        fill=qp.get('fill_color'), font=qp.get('font'))
+        if qp.get('underline') in ["True", "true", True]:
+            image_draw.line(((x_pos_center - text_width / 2, y_pos_center + ascent - text_height / 2),
+                             (x_pos_center + text_width / 2, y_pos_center + ascent - text_height / 2)),
+                            fill=qp.get('fill_color'),
+                            width=int(qp.get('font_size') / 10))
+
+    @classmethod
+    def get_font_data_from_body(cls, body, image_width, image_draw):
+        expected_text_width = image_width * body['width_in_percent']
+
+        def get_font_style_path(font_style):
+            return os.path.join(FONT_STYLE_PATH, font_style)
+
+        bold = body['bold']
+        italic = body['italic']
+        underline = body['underline']
+
+        if bold in ["True", "true", True] and italic in ["True", "true", True]:
+            font_style = get_font_style_path(FONT_BOLD_ITALIC)
+        elif bold in ["True", "true", True]:
+            font_style = get_font_style_path(FONT_BOLD)
+        elif italic in ["True", "true", True]:
+            font_style = get_font_style_path(FONT_ITALIC)
+        else:
+            font_style = get_font_style_path(FONT_DEFAULT)
+
+        font_size = 0
+        font = ImageFont.truetype(font_style, font_size)
+        text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, body['text'], font)
+        while text_width < expected_text_width:
+            font_size += 1
+            font = ImageFont.truetype(font_style, font_size)
+            text_width, _ = ImageDraw.ImageDraw.textsize(image_draw, body['text'], font)
+
+        try:
+            fill_color = tuple(int(body['text_color'][i:i + 2], 16) for i in (1, 3, 5))
+        except (ValueError, TypeError):
+            fill_color = (0, 0, 0)
+
+        return {'font_size': font_size, 'font': font, 'fill_color': fill_color, 'underline': underline}

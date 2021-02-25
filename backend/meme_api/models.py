@@ -36,6 +36,14 @@ class Vote(models.Model):
     class Meta:
         ordering = ['created']
 
+class Video(models.Model):
+    video = models.FileField()
+
+    class Meta:
+        verbose_name_plural = "Videos"
+
+    def __str__(self):
+        return self.video.name
 
 class VideoCreation(models.Model):
     is_video_creation_running = models.BooleanField(default=False)
@@ -57,5 +65,3 @@ class TemplatesOvertime(models.Model):
     used = models.BooleanField(default=False)
     template = models.ForeignKey('Template', on_delete=models.CASCADE)
     meme = models.ForeignKey('Meme', on_delete=models.CASCADE, blank=True, null=True)
-
-
