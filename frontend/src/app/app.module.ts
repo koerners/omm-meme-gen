@@ -96,7 +96,7 @@ import { ChartsModule } from 'ng2-charts';
     ShareButtonsModule,
     ShareIconsModule,
     MatDialogModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
     ChartsModule
   ],
   providers: [
