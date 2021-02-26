@@ -807,7 +807,7 @@ export class GeneratorComponent implements AfterViewInit {
     }
     meme.private = true;
     meme.title = this.name.value;
-    this.memeService.saveMeme(meme) .subscribe(data => {
+    this.memeService.saveMeme(meme).subscribe(data => {
       if (this.isTemplate){
         this.memeService.setMemeServiceCurrentMeme(data.id);
         this.memeService.postTemplateStat(this.currentMeme);
