@@ -189,7 +189,7 @@ export class DashboardComponent implements  AfterViewInit{
     const chartData = Array.from(this.loginData.data, ({count}) => count);
     this.loginChartData = [
       { data: chartData, label: 'Last Login of Users', backgroundColor: 'white'},
-    ]
+    ];
 
     this.loginChartOptions = {
       responsive: true,

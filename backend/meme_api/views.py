@@ -28,7 +28,7 @@ from selenium.webdriver.chrome.options import Options
 from meme_api.models import Meme, Comment, Vote, VideoCreation, TopFiveMemes, Template, TemplatesOvertime
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer, TemplateSerializer
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Sum
 from django.db.models.functions import ExtractMonth as Month, ExtractYear as Year, ExtractDay as Day, TruncDay
 import os
 import re
@@ -411,8 +411,6 @@ class SendStatistics:
                                                   , 'views').order_by('-views')[:5])
         return JsonResponse(top_five_memes, safe=False)
 
-
-class SendUserStatistics:
     def send_userStatistics(self):
         user_database = list(User.objects
                              .annotate(date=TruncDay('last_login'), )
@@ -423,6 +421,19 @@ class SendUserStatistics:
                                        year=Year('last_login'))
                              .values('day', 'month', 'year', 'date', 'count'))
         return JsonResponse(user_database, safe=False)
+
+    @action(detail=False)
+    def send_viewStatistics(request):
+        meme_id = int(request.GET.get("meme", ""))
+        votes = Vote.objects.filter(meme=meme_id).count()
+        views = list(Meme.objects.filter(id=meme_id).values('views'))[0]
+
+        all_views = Meme.objects.aggregate(Sum('views'))
+        all_votes= Vote.objects.count()
+        print(all_votes)
+        return JsonResponse({'votes': votes,'votes_all': all_votes, 'views': views,'views_all': all_views})
+
+
 
 
 class TemplateStats:
@@ -476,7 +487,7 @@ class MemesToVideo:
         turn top five memes into video
         '''
 
-        file = Path('media/videoMedia/my_video.ogv')
+        file = Path('media/videoMedia/my_video.webm')
 
         v = list(VideoCreation.objects.all())
         if v == []:
@@ -528,19 +539,19 @@ class MemesToVideo:
         if not file.is_file():
             if not v.is_video_creation_running and (x == y):
                 do_create(v, top_five_memes, val)
-                return JsonResponse({'type':0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
+                return JsonResponse({'type':0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
             elif not v.is_video_creation_running and (x != y):
                 do_create(v, top_five_memes, val)
-                return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
+                return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
             else:
                 return JsonResponse({'type': 2, 'res': 'Error'}, safe=False)
         elif not v.is_video_creation_running and (x != y):
             do_create(v, top_five_memes, val)
-            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
+            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
 
         else:
             print('lol')
-            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
+            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
 
 
 def load_images(top_five_memes, val):
@@ -571,7 +582,7 @@ def images_to_video(top_five_memes, val):
         print('yes')
         clips = [ImageClip(v).set_duration(5) for k, v in image_dict.items()]
         concat_clip = concatenate_videoclips(clips, method="compose")
-        concat_clip.write_videofile('media/videoMedia/my_video.ogv', fps=framerate)
+        concat_clip.write_videofile('media/videoMedia/my_video.webm', fps=framerate)
     else:
         b, g, r, a = np.dsplit(img, img.shape[-1])
         retval, buffer = cv2.imencode('.png', np.dstack((r, g, b, a)))
