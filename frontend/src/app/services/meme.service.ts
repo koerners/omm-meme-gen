@@ -92,6 +92,7 @@ export class MemeService {
   saveMeme(meme: Meme): any {
     return this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,
+      text_concated: meme.textConcated,
       image_string: meme.imageString,
       private: meme.private,
       type: meme.type
