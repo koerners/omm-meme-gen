@@ -66,6 +66,7 @@ export class MyMemesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMemes();
+
   }
 
   getData($event: PageEvent): any {
@@ -233,5 +234,18 @@ export class MyMemesComponent implements OnInit {
       },
     };
     this.voiceRecognitionService.setUp(commands);
+  }
+  download(): void {
+    console.log(this.selectedFilter);
+
+    if (this.selectedFilter){
+      const type = this.selectedFilter;
+      console.log(this.filterValue);
+      this.memeService.getFilteredMemesAsZip('search', 10, this.filterValue)
+        .subscribe(
+          res => {
+            console.log(this.filterValue);
+          });
+    }
   }
 }

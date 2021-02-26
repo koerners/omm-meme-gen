@@ -5,7 +5,7 @@ from random import Random, randint
 
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
-from rest_framework import generics
+from rest_framework import generics, pagination
 from django.views.decorators.csrf import csrf_exempt
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
@@ -79,7 +79,8 @@ class Zip:
     def split2(self, string):
         if not "," in string:
             return None, None
-
+        if "null" in string:
+            return None, None
         s = string.split(",")
 
         return s[0], s[1]
@@ -88,30 +89,63 @@ class Zip:
     @csrf_exempt
     def get_as_zip(cls, request):
 
+
+        print(request.POST)
+        start_date = None
+        end_date = None
+        start_votes = None
+        end_votes = None
+        start_views = None
+        end_views = None
+        # start_date = None
+        # end_date = None
+        # start_date = None
+        # end_date = None
+        # start_date = None
+        # end_date = None
+
         q = Meme.objects.all()
-        start_date, end_date = cls.split2(cls, string=request.POST.get("creation"))
-        start_votes, end_votes = cls.split2(cls, string=request.POST.get("votes"))
-        start_viewes, end_viewes = cls.split2(cls, string=request.POST.get("views"))
+        if 'create' in request.POST :
+            start_date, end_date = cls.split2(cls, string=request.POST.get("creation"))
+        if "votes" in request.POST:
+            start_votes, end_votes = cls.split2(cls, string=request.POST.get("votes"))
+        if 'views' in request.POST:
+            start_views, end_views = cls.split2(cls, string=request.POST.get("views"))
+        if 'search' in request.POST:
+            search = request.POST.get("search")
+        print(start_views, end_views)
         text = request.POST.get("text")
-        max = request.POST.get("max")
+        max = int(request.POST.get("max"))
+
 
         if start_date is not None:
             q = q.filter(created__range=(start_date, end_date))
-        if start_viewes is not None:
-            q = q.filter(views__range=(start_viewes, end_viewes))
+        if start_views is not None:
+            q = q.filter(views__range=(start_views, end_views))
+        if search is not None:
+            q = q.filter(text_concated__contains=(search))
 
         # TODO: Die neuen Felder vom order / filter branch
-
+        #
         zip_archive = io.BytesIO()
         with zipfile.ZipFile(zip_archive, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            print(list(enumerate(q)))
             for index, meme in enumerate(q):
+                print(index, meme)
                 if index > max:
-                    return
+                    break
                 base64_decoded = base64.b64decode(meme.image_string[22:])
                 zf.writestr('meme_' + str(index) + "_" + meme.title + '.png', base64_decoded)
+        #
+        # # zip_archive.seek(0)
+        # print(zip_archive.getvalue())
 
-        response = HttpResponse(zip_archive.getvalue(), content_type='application/zip')
+        response = HttpResponse(zip_archive.getvalue())
+        response['Content-Type'] = 'application/x-zip-compressed'
         response['Content-Disposition'] = 'attachment; filename="%s"' % 'memes.zip'
+
+        print(response)
+        print(response)
         return response
 
 
