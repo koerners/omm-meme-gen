@@ -3,7 +3,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 import {Meme} from '../Meme';
 import { map } from 'rxjs/operators';
-import {env} from "@tensorflow/tfjs-core";
+import {env} from '@tensorflow/tfjs-core';
 
 /**
  * MemeService Class
@@ -76,8 +76,6 @@ export class MemeService {
       image_string: meme.imageString,
       private: meme.private,
       type: meme.type
-    }).subscribe(data => {
-      console.log(data);
     });
   }
 
@@ -169,10 +167,10 @@ export class MemeService {
     console.log('Doing >>>>' + templateID);
     if (this.currentMemeId == null){
       const data = new FormData();
-      data.append("t_id", templateID.toString());
-      data.append("isCreated", "false");
+      data.append('t_id', templateID.toString());
+      data.append('isCreated', 'false');
 
-      let xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest();
       xhr.withCredentials = false;
 
       xhr.addEventListener('readystatechange', function() {
@@ -181,17 +179,17 @@ export class MemeService {
         }
       });
 
-      xhr.open('POST', environment.apiUrl +'/templateStats/');
+      xhr.open('POST', environment.apiUrl + '/templateStats/');
 
       xhr.send(data);
     }
     else{
-      let data = new FormData();
-      data.append("t_id", templateID.toString());
-      data.append("m_id", this.currentMemeId.toString());
-      data.append("isCreated", "true");
+      const data = new FormData();
+      data.append('t_id', templateID.toString());
+      data.append('m_id', this.currentMemeId.toString());
+      data.append('isCreated', 'true');
 
-      let xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest();
       xhr.withCredentials = false;
 
       xhr.addEventListener('readystatechange', function() {
@@ -200,7 +198,7 @@ export class MemeService {
         }
       });
 
-      xhr.open('POST', environment.apiUrl +'/templateStats/');
+      xhr.open('POST', environment.apiUrl + '/templateStats/');
 
       xhr.send(data);
       this.setMemeServiceCurrentMeme(null);
