@@ -27,7 +27,6 @@ export class ObjectRecognitionService {
     if (this.model == null) {
       this.model = await mobilenet.load();
     }
-
     const im = new Image();
     im.src = element;
     im.width = 1000;

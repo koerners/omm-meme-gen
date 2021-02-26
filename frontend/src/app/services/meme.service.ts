@@ -30,6 +30,25 @@ export class MemeService {
   }
 
   /**
+   * maps Filter & Sort Options
+   */
+  getAllSortFilter(sort: string, order: string, filter: string, value: string): any {
+    let params = '';
+    if (filter === 'search' && value) {
+      params += 'search=' + value;
+    }
+    else if (filter && value) {
+      // console.log(filter, value);
+      params += 'filter=' + filter + '&value=' + value;
+    }
+    if (sort) {
+      // console.log(sort, order);
+      params += (params ? '&' : '') + 'ordering=' + order + sort;
+    }
+    return this.http.get(environment.apiUrl + '/meme/' + (params ? '?' + params : ''));
+  }
+
+  /**
    * Retrieves any given URL
    * @param url the url to retrieve
    */
