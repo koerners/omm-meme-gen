@@ -153,6 +153,10 @@ export class MemeService {
   loadUserStats(): any{
     return this.http.get(environment.apiUrl + '/userStats/');
   }
+  loadMemeStats(id: string): any{
+    console.log(">>>>>>>>" + id);
+    return this.http.get(environment.apiUrl + '/memeStats/?meme=' + id);
+  }
 
   loadTopMemeVideo(): any{
     return this.http.get(environment.apiUrl + '/memeVideo/');

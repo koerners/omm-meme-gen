@@ -40,7 +40,8 @@ urlpatterns = [
     path('imgFlip/', views.IMGFlip.get_imgflip_memes, name='img_flip'),
     path('screenshotFromUrl/', views.ScreenshotFromUrl.get_screenshot, name='url_screenshot'),
     path('statistics/', views.SendStatistics.send_statisticis),
-    path('userStats/', views.SendUserStatistics.send_userStatistics),
+    path('userStats/', views.SendStatistics.send_userStatistics),
+    path('memeStats/', views.SendStatistics.send_viewStatistics),
     path('memeVideo/', views.MemesToVideo.send_video),
     path('loadImg/', views.LoadImage.load_img)
 ] + static('/media/videoMedia', document_root=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/videoMedia'))
