@@ -64,6 +64,8 @@
           <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
         </mat-form-field>
       </span>
+
+      <button (click)="download()">DOWNLOAD</button>
     </form>
 
     <mat-paginator

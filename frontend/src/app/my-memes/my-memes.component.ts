@@ -6,6 +6,7 @@ import {Meme} from '../Meme';
 import {MemeService} from '../services/meme.service';
 import {SpeechService} from '../services/speech.service';
 import {VoiceRecognitionService} from '../services/voice-recognition.service';
+import {saveAs} from 'file-saver';
 
 interface TextType {
   text: string;
@@ -243,9 +244,10 @@ export class MyMemesComponent implements OnInit {
       console.log(this.filterValue);
       this.memeService.getFilteredMemesAsZip('search', 10, this.filterValue)
         .subscribe(
-          res => {
-            console.log(this.filterValue);
-          });
+            blob => {
+              saveAs(blob, 'meme.zip');
+            });
     }
   }
+
 }

@@ -192,7 +192,7 @@ export class MemeService {
     }
 
 
-    return this.http.post(environment.apiUrl + '/zip/', data);
+    return this.http.post(environment.apiUrl + '/zip/', data, { responseType: 'blob'});
   }
 
 

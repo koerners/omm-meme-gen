@@ -90,7 +90,7 @@ class Zip:
     def get_as_zip(cls, request):
 
 
-        print(request.POST)
+        print(request.POST.get('search'))
         start_date = None
         end_date = None
         start_votes = None
@@ -124,6 +124,7 @@ class Zip:
             q = q.filter(views__range=(start_views, end_views))
         if search is not None:
             q = q.filter(text_concated__contains=(search))
+            print(q)
 
         # TODO: Die neuen Felder vom order / filter branch
         #
@@ -143,9 +144,6 @@ class Zip:
         response = HttpResponse(zip_archive.getvalue())
         response['Content-Type'] = 'application/x-zip-compressed'
         response['Content-Disposition'] = 'attachment; filename="%s"' % 'memes.zip'
-
-        print(response)
-        print(response)
         return response
 
 
