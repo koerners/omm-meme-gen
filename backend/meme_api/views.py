@@ -119,6 +119,7 @@ class Zip:
 class MemeList(viewsets.ModelViewSet):
     queryset = Meme.objects.filter(private=False)
     serializer_class = MemeSerializer
+
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['text_concated', 'title']
     ordering_fields = ['created', 'views', 'pos_votes', 'n_comments', 'title', 'owner']
@@ -525,7 +526,7 @@ class MemesToVideo:
         v = list(VideoCreation.objects.all())
         if v == []:
             VideoCreation.objects.create(is_video_creation_running=False)
-            v = VideoCreation.objects.all()[0]
+            v = list(VideoCreation.objects.all())
         v = v[0]
         val = Meme.objects.values().count()
         if val > 5:

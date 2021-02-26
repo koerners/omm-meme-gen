@@ -62,7 +62,7 @@
               </canvas>
             </div>
           </div>
-          <div *ngIf="card.title == '1'">
+          <div *ngIf="card.title == 'TopUsedTemplatesOverTime'">
             <div class="chart-wrapper" *ngIf="chartReady">
               <canvas baseChart height="{{chartRowHeight}}"
                       [datasets]="topMemeChartData"
@@ -76,7 +76,7 @@
             </div>
 
           </div>
-          <div *ngIf="card.title == '2'">
+          <div *ngIf="card.title == 'TemplatesViewedCreated'">
             <div class="chart-wrapper" *ngIf="chartReady">
               <canvas baseChart height="{{chartRowHeight}}"
                       [datasets]="topMemeChartData"

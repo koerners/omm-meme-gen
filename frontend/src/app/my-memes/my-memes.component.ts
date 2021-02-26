@@ -2,7 +2,6 @@ import {Component, NgZone, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
 import {PageEvent} from '@angular/material/paginator';
 import {MatTabChangeEvent} from '@angular/material/tabs';
-import {BreakpointObserver} from '@angular/cdk/layout';
 import {Meme} from '../Meme';
 import {MemeService} from '../services/meme.service';
 import {SpeechService} from '../services/speech.service';
