@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 import {Meme} from '../Meme';
 import { map } from 'rxjs/operators';
@@ -92,14 +92,24 @@ export class MemeService {
   saveMeme(meme: Meme): any {
     return this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,
-      image_string: meme.imageString, private: meme.private
+      image_string: meme.imageString,
+      private: meme.private,
+      type: meme.type
+    }).subscribe(data => {
+      console.log(data);
     });
   }
 
-  /**
-   * load a meme by its ID
-   * @param id the ID used to identify the generated meme
-   */
+  convertVideoToImages(videoString: string): any {
+    return this.http.post(environment.apiUrl + '/convertVideoToImages/', {
+      video_string: videoString
+    });
+  }
+
+  addTextToVideo(textData: {}): any {
+    return this.http.post(environment.apiUrl + '/addTextToVideo/', textData);
+  }
+
   loadMeme(id: string): any {
     return this.http.get(environment.apiUrl + '/meme/' + String(id) + '/');
   }

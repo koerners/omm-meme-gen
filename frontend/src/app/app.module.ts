@@ -46,6 +46,7 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {MatPaginatorModule} from '@angular/material/paginator';
 import {ShareButtonsModule} from 'ngx-sharebuttons/buttons';
 import {ShareIconsModule} from 'ngx-sharebuttons/icons';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import { ChartsModule } from 'ng2-charts';
 
 @NgModule({
@@ -95,6 +96,7 @@ import { ChartsModule } from 'ng2-charts';
     ShareButtonsModule,
     ShareIconsModule,
     MatDialogModule,
+    MatProgressSpinnerModule,
     ChartsModule
   ],
   providers: [
