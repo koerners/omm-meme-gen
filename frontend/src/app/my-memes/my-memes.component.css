@@ -19,3 +19,7 @@
 .dashboard-card-content {
   text-align: center;
 }
+
+.mat-radio-button {
+  margin: 0 12px;
+}
