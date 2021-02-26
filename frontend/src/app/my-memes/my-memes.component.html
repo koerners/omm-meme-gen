@@ -15,57 +15,57 @@
   </div>
 </div>
 
+<form>
+  <mat-form-field appearance="fill">
+    <mat-label>Sort by</mat-label>
+    <mat-select [(ngModel)]="selectedSort" name="sort" (selectionChange)="submitChanged()">
+      <mat-option>None</mat-option>
+      <mat-option *ngFor="let sortOption of sortOptions | keyvalue: asIsOrder" [value]="sortOption.key">
+        {{sortOption.value}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-radio-group name="order" [(ngModel)]="selectedOrder" (change)="submitChanged()" [disabled]="!selectedSort">
+    <mat-radio-button value="">Up</mat-radio-button>
+    <mat-radio-button value="-">Down</mat-radio-button>
+  </mat-radio-group>
+  <mat-form-field appearance="fill">
+    <mat-label>Filter</mat-label>
+    <mat-select [(ngModel)]="selectedFilter" name="filter" (selectionChange)="onFilterChanged()">
+      <mat-option>None</mat-option>
+      <mat-option *ngFor="let filterOption of filterOptions | keyvalue: asIsOrder" [value]="filterOption.key">
+        {{filterOption.value.text}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <span *ngIf="filterType=='text'">
+    <mat-form-field appearance="fill">
+      <mat-label>Value</mat-label>
+      <input matInput name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
+    </mat-form-field>
+  </span>
+  <span *ngIf="filterType=='date'">
+    <mat-form-field appearance="fill">
+      <mat-label>Value</mat-label>
+      <input matInput type="date" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
+    </mat-form-field>
+  </span>
+  <span *ngIf="filterType=='number'">
+    <mat-form-field appearance="fill">
+      <mat-label>Value</mat-label>
+      <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
+    </mat-form-field>
+  </span>
+  <span *ngIf="filterType=='user'">
+    <mat-form-field appearance="fill">
+      <mat-label>User ID (TODO dropdown)</mat-label>
+      <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
+    </mat-form-field>
+  </span>
+</form>
+
 <mat-tab-group mat-align-tabs="center" (selectedTabChange)="onTabChanged($event);">
   <mat-tab label="Other's Memes">
-    <form>
-      <mat-form-field appearance="fill">
-        <mat-label>Sort by</mat-label>
-        <mat-select [(ngModel)]="selectedSort" name="sort" (selectionChange)="submitChanged()">
-          <mat-option>None</mat-option>
-          <mat-option *ngFor="let sortOption of sortOptions | keyvalue: asIsOrder" [value]="sortOption.key">
-            {{sortOption.value}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-radio-group name="order" [(ngModel)]="selectedOrder" (change)="submitChanged()" [disabled]="!selectedSort">
-        <mat-radio-button value="">Up</mat-radio-button>
-        <mat-radio-button value="-">Down</mat-radio-button>
-      </mat-radio-group>
-      <mat-form-field appearance="fill">
-        <mat-label>Filter</mat-label>
-        <mat-select [(ngModel)]="selectedFilter" name="filter" (selectionChange)="onFilterChanged()">
-          <mat-option>None</mat-option>
-          <mat-option *ngFor="let filterOption of filterOptions | keyvalue: asIsOrder" [value]="filterOption.key">
-            {{filterOption.value.text}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <span *ngIf="filterType=='text'">
-        <mat-form-field appearance="fill">
-          <mat-label>Value</mat-label>
-          <input matInput name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
-        </mat-form-field>
-      </span>
-      <span *ngIf="filterType=='date'">
-        <mat-form-field appearance="fill">
-          <mat-label>Value</mat-label>
-          <input matInput type="date" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
-        </mat-form-field>
-      </span>
-      <span *ngIf="filterType=='number'">
-        <mat-form-field appearance="fill">
-          <mat-label>Value</mat-label>
-          <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
-        </mat-form-field>
-      </span>
-      <span *ngIf="filterType=='user'">
-        <mat-form-field appearance="fill">
-          <mat-label>User ID (TODO dropdown)</mat-label>
-          <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
-        </mat-form-field>
-      </span>
-    </form>
-
     <mat-paginator
       [length]=memeLength
       [pageSize]=6
@@ -106,7 +106,7 @@
               <mat-card-title>
                 {{meme.title}}
               </mat-card-title>
-            </mat-card-header>>
+            </mat-card-header>
             <mat-card-content *ngIf="meme.type==0" class="dashboard-card-content">
               <img [src]="meme.image_string" alt="Loading">
             </mat-card-content>
