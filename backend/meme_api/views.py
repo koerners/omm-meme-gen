@@ -591,7 +591,6 @@ class MemesToVideo:
             return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
 
         else:
-            print('lol')
             return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
 
 

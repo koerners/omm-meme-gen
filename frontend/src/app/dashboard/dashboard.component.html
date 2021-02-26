@@ -61,6 +61,33 @@
                       [plugins]="topMemeChartPlugins">
               </canvas>
             </div>
+          </div>
+          <div *ngIf="card.title == '1'">
+            <div class="chart-wrapper" *ngIf="chartReady">
+              <canvas baseChart height="{{chartRowHeight}}"
+                      [datasets]="topMemeChartData"
+                      [labels]="topMemeChartLabels"
+                      [options]="topMemeChartOptions"
+                      [colors]="topMemeChartColors"
+                      [legend]="topMemeChartLegend"
+                      [chartType]="topMemeChartType"
+                      [plugins]="topMemeChartPlugins">
+              </canvas>
+            </div>
+
+          </div>
+          <div *ngIf="card.title == '2'">
+            <div class="chart-wrapper" *ngIf="chartReady">
+              <canvas baseChart height="{{chartRowHeight}}"
+                      [datasets]="topMemeChartData"
+                      [labels]="topMemeChartLabels"
+                      [options]="topMemeChartOptions"
+                      [colors]="topMemeChartColors"
+                      [legend]="topMemeChartLegend"
+                      [chartType]="topMemeChartType"
+                      [plugins]="topMemeChartPlugins">
+              </canvas>
+            </div>
 
           </div>
 
