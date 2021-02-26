@@ -76,8 +76,6 @@ export class MemeService {
       image_string: meme.imageString,
       private: meme.private,
       type: meme.type
-    }).subscribe(data => {
-      console.log(data);
     });
   }
 
@@ -154,6 +152,10 @@ export class MemeService {
   }
   loadUserStats(): any{
     return this.http.get(environment.apiUrl + '/userStats/');
+  }
+  loadMemeStats(id: string): any{
+    console.log(">>>>>>>>" + id);
+    return this.http.get(environment.apiUrl + '/memeStats/?meme=' + id);
   }
 
   loadTopMemeVideo(): any{

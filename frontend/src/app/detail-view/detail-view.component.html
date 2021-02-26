@@ -119,6 +119,7 @@
           <p>Downvotes: {{meme.downvotes}}</p>
           <p>Views: {{meme.views}}</p>
           <p>Created by: {{meme.owner}}</p>
+          <mat-slide-toggle [(ngModel)]="statsOn">Show Stats</mat-slide-toggle>
 
 
           <share-buttons [theme]="'circles-dark'"
@@ -184,9 +185,50 @@
       </mat-card>
 
     </mat-grid-tile>
+    <div [hidden]="!statsOn" >
+    <mat-grid-tile colspan="5" rowspan="1">
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+        </mat-card-header>
+        <mat-card-content class="dashboard-card-content">
+        <div style="display: table;">
+          <div style="display: table-row">
+            <div style="display: table-cell">
+              <div style="height:280px; width: 700px; display: flex; justify-content: center; align-items: center;">
+                <div class="chart-wrapper" *ngIf="viewedChartReady">
+                  <canvas  baseChart height="270" width="300"
+                          [datasets]="viewedChartData"
+                          [labels]="viewedChartLabels"
+                          [chartType]="viewedChartType"
+                          [options]="viewedChartOptions"
+                          [legend]="viewedChartLegend">
+                  </canvas>
+                </div>
+              </div>
+            </div>
+            <div style="display: table-cell">
+              <div style="height:280px; width: 700px; display: flex; justify-content: center; align-items: center;">
+                <div class="chart-wrapper" *ngIf="vChartReady"  >
+                  <canvas  baseChart height="270" width="300"
+                          [datasets]="vChartData"
+                          [labels]="vChartLabels"
+                          [options]="vChartOptions"
+                          [chartType]="vChartType">
+                  </canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </mat-card-content>
 
+      </mat-card>
+
+    </mat-grid-tile>
+    <mat-grid-tile colspan="3" rowspan="1">
+
+    </mat-grid-tile>
+    </div>
 
   </mat-grid-list>
 </div>
-
-
