@@ -145,7 +145,7 @@ class MemeList(viewsets.ModelViewSet):
 
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['text_concated', 'title']
-    ordering_fields = ['created', 'views', 'pos_votes', 'n_comments']
+    ordering_fields = ['created', 'views', 'pos_votes', 'n_comments', 'title', 'owner']
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
