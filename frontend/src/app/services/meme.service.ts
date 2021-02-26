@@ -1,8 +1,9 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 import {Meme} from '../Meme';
-import {env} from "@tensorflow/tfjs-core";
+import { map } from 'rxjs/operators';
+import {env} from '@tensorflow/tfjs-core';
 
 /**
  * MemeService Class
@@ -72,14 +73,22 @@ export class MemeService {
   saveMeme(meme: Meme): any {
     return this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,
-      image_string: meme.imageString, private: meme.private
+      image_string: meme.imageString,
+      private: meme.private,
+      type: meme.type
     });
   }
 
-  /**
-   * load a meme by its ID
-   * @param id the ID used to identify the generated meme
-   */
+  convertVideoToImages(videoString: string): any {
+    return this.http.post(environment.apiUrl + '/convertVideoToImages/', {
+      video_string: videoString
+    });
+  }
+
+  addTextToVideo(textData: {}): any {
+    return this.http.post(environment.apiUrl + '/addTextToVideo/', textData);
+  }
+
   loadMeme(id: string): any {
     return this.http.get(environment.apiUrl + '/meme/' + String(id) + '/');
   }
@@ -134,6 +143,9 @@ export class MemeService {
   getScreenshotFromUrl(url: string): any{
     return this.http.get(environment.apiUrl + '/screenshotFromUrl/?url=' + url, {responseType: 'text'});
   }
+  getImageFrom(url: string): any{
+    return this.http.get(environment.apiUrl + '/loadImg/?url=' + url, {responseType: 'json'});
+  }
 
   loadStatistics(): any{
     return this.http.get(environment.apiUrl + '/statistics/');
@@ -155,10 +167,10 @@ export class MemeService {
     console.log('Doing >>>>' + templateID);
     if (this.currentMemeId == null){
       const data = new FormData();
-      data.append("t_id", templateID.toString());
-      data.append("isCreated", "false");
+      data.append('t_id', templateID.toString());
+      data.append('isCreated', 'false');
 
-      let xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest();
       xhr.withCredentials = false;
 
       xhr.addEventListener('readystatechange', function() {
@@ -167,17 +179,17 @@ export class MemeService {
         }
       });
 
-      xhr.open('POST', environment.apiUrl +'/templateStats/');
+      xhr.open('POST', environment.apiUrl + '/templateStats/');
 
       xhr.send(data);
     }
     else{
-      let data = new FormData();
-      data.append("t_id", templateID.toString());
-      data.append("m_id", this.currentMemeId.toString());
-      data.append("isCreated", "true");
+      const data = new FormData();
+      data.append('t_id', templateID.toString());
+      data.append('m_id', this.currentMemeId.toString());
+      data.append('isCreated', 'true');
 
-      let xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest();
       xhr.withCredentials = false;
 
       xhr.addEventListener('readystatechange', function() {
@@ -186,7 +198,7 @@ export class MemeService {
         }
       });
 
-      xhr.open('POST', environment.apiUrl +'/templateStats/');
+      xhr.open('POST', environment.apiUrl + '/templateStats/');
 
       xhr.send(data);
       this.setMemeServiceCurrentMeme(null);
@@ -200,5 +212,4 @@ export class MemeService {
   setMemeServiceCurrentMeme(id): void{
     this.currentMemeId = id;
   }
-
 }

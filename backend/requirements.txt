@@ -9,3 +9,4 @@ selenium
 moviepy
 scikit-image
 zipfile
+opencv-python

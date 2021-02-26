@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, Input, ViewChild, ElementRef, NgZone} from '@angular/core';
-import {FormControl} from '@angular/forms';
+import {FormControl, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {fromEvent, Subject, Observable, pipe} from 'rxjs';
 import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
@@ -13,6 +13,7 @@ import {Textbox} from '../Textbox';
 import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
+import {environment} from '../../environments/environment';
 import {SpeechService} from '../services/speech.service';
 import {VoiceRecognitionService} from '../services/voice-recognition.service';
 
@@ -99,6 +100,7 @@ export class GeneratorComponent implements AfterViewInit {
   /**
    * The Color of the Text
    */
+
   colorText: string;
   /**
    * The Color of the Pen
@@ -114,11 +116,18 @@ export class GeneratorComponent implements AfterViewInit {
    */
   cameraOn = false;
   videoOn = false;
+  videoEl: HTMLVideoElement = null;
+  sourceEl = null;
   res = '';
 
   currentWidth: number;
   currentHeight: number;
   currentlyShownMemeTemplateIndex = -1;
+  currentVideoData = null;
+  fromFrame = new FormControl('');
+  toFrame = new FormControl('');
+  addingText = false;
+  maxFileSize = 5242880;
 
   @ViewChild('preview', {static: false}) previewCanvas: ElementRef<HTMLCanvasElement>;
   @ViewChild('previewBackground', {static: false}) backgroundCanvas;
@@ -126,6 +135,9 @@ export class GeneratorComponent implements AfterViewInit {
   @ViewChild('previewText', {static: false}) textCanvas;
   @ViewChild('previewTextbox', {static: false}) textboxCanvas;
   @ViewChild('previewDraw', {static: false}) drawCanvas;
+  @ViewChild('videoCanvas', {static: false}) videoCanvas;
+  // @ViewChild('videoElement', {static: false}) videoElement: HTMLVideoElement;
+  // @ViewChild('videoSource', {static: false}) videoSource;
   @Input() public width = 500;
   @Input() public height = 700;
 
@@ -135,8 +147,8 @@ export class GeneratorComponent implements AfterViewInit {
 
   public errors: WebcamInitError[] = [];
   public videoOptions: MediaTrackConstraints = {
-     width: {ideal: 1024},
-     height: {ideal: 576}
+    width: {ideal: 1024},
+    height: {ideal: 576}
   };
   // latest snapshot
   public webcamImage: WebcamImage = null;
@@ -147,6 +159,7 @@ export class GeneratorComponent implements AfterViewInit {
   posts: any;
   private imagesRecieved: any;
   private randomImageIndex: number;
+  processor = null;
 
   // Map for ScreenReader Output
   private screenReaderText: Map<string, string>;
@@ -209,7 +222,6 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   selectFile(event: any): void {
-    this.videoOn = false;
     this.emptyVideoContainer();
     // An image is uploaded from the users desktop
     if (!event.target.files[0] || event.target.files[0].length === 0) {
@@ -238,52 +250,87 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   selectVideo(event: any): void {
+    this.clearCanvas();
+    // empty videoContainer if another video showing
+    this.emptyVideoContainer();
+    // hide html elements when video is playing
+    this.videoOn = true;
+
+    const self = this;
+
     // A video is uploaded from the users desktop
     if (!event.target.files[0] || event.target.files[0].length === 0) {
       // if no video
+      this.emptyVideoContainer();
       return;
     }
+
+    console.log('target', event.target);
+    console.log('files', event.target.files[0]);
+    console.log('size', event.target.files[0].size);
+
     const mimeType = event.target.files[0].type;
     if (mimeType.match(/video\/*/) == null) {
       // Check if video
+      this.emptyVideoContainer();
       return;
     }
+
+    if (event.target.files[0].size > this.maxFileSize) {
+      alert('File to big, maximum of ' + this.maxFileSize + ' bytes.');
+      this.emptyVideoContainer();
+      return;
+    }
+
     const reader = new FileReader();
     // Read in video
     reader.readAsDataURL(event.target.files[0]);
     reader.onload = event1 => {
-      // hide html elements when video is playing
-      this.videoOn = true;
-      // base64 video string
+      // extract images from video
       const videoString = event1.target.result as string;
-      const videoContainer = document.getElementById('videoContainer');
-      // empty videoContainer if another video showing
-      this.emptyVideoContainer();
-      // create video element
-      const videoEl: HTMLVideoElement = document.createElement('video');
-      videoEl.loop = true;
-      videoEl.controls = true;
-      videoContainer.appendChild(videoEl);
-      // create source element
-      const source = document.createElement('source');
-      source.setAttribute('src', videoString);
-      videoEl.appendChild(source);
-      const containerWidth = this.width;
-      const containerHeight = this.height;
-      videoEl.addEventListener( 'loadedmetadata', function(e): void {
-        // wait till loadedmetadata to have video element's videoWidth and videoHeight
-        // calculate scaleFactor to properly show in meme container
-        const scaleFactor = Math.min(containerWidth / this.videoWidth, containerHeight / this.videoHeight);
-        videoEl.width = this.videoWidth * scaleFactor;
-        videoEl.height = this.videoHeight * scaleFactor;
-        // play video after scaling
-        this.play().then(r => {} );
-      }, false );
+
+      this.memeService.convertVideoToImages(videoString).subscribe(data => {
+        console.log(data);
+        this.currentVideoData = data;
+        this.fromFrame.setValue(0);
+        this.toFrame.setValue(data.frames - 1);
+
+        // base64 video string
+        const videoContainer = document.getElementById('videoContainer');
+        // create video element
+        this.videoEl = document.createElement('video');
+        this.videoEl.id = 'videoElement';
+        this.videoEl.loop = true;
+        this.videoEl.controls = true;
+        videoContainer.appendChild(this.videoEl);
+        // create source element
+        this.sourceEl = document.createElement('source');
+        this.sourceEl.setAttribute('src', environment.apiUrl + '/' + data.video_url);
+        this.videoEl.appendChild(this.sourceEl);
+        const containerWidth = this.width;
+        const containerHeight = this.height;
+        this.videoEl.addEventListener('loadedmetadata', function(e): void {
+          // wait till loadedmetadata to have video element's videoWidth and videoHeight
+          // calculate scaleFactor to properly show in meme container
+          self.currentVideoData.videoScaleFactor = Math.min(containerWidth / this.videoWidth, containerHeight / this.videoHeight);
+          console.log(containerWidth, this.videoWidth, containerHeight, this.videoHeight, self.currentVideoData.videoScaleFactor);
+          // self.resizeCanvasHeight(videoEl.height * scaleFactor);
+          self.videoEl.width = this.videoWidth * self.currentVideoData.videoScaleFactor;
+          self.videoEl.height = this.videoHeight * self.currentVideoData.videoScaleFactor;
+          self.resizeCanvasHeight(this.videoHeight * self.currentVideoData.videoScaleFactor,
+            this.videoWidth * self.currentVideoData.videoScaleFactor);
+          // play video after scaling
+          this.play().then(r => {
+          });
+        });
+      }, false);
     };
   }
 
   emptyVideoContainer(): void {
     // empty the videoContainer
+    this.videoOn = false;
+    this.currentVideoData = null;
     const videoContainer = document.getElementById('videoContainer');
     videoContainer.innerHTML = '';
   }
@@ -352,6 +399,7 @@ export class GeneratorComponent implements AfterViewInit {
 
   createNewTextbox(): void {
     this.drawingMode = false;
+    this.addingText = true;
 
     const canvas = this.textboxCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
@@ -373,52 +421,95 @@ export class GeneratorComponent implements AfterViewInit {
 
   deleteTextbox(textbox: Textbox): void {
     this.newTextbox = null;
+    this.addingText = false;
 
     const textboxCanvasCtx = this.textboxCanvas.nativeElement.getContext('2d');
     textboxCanvasCtx.clearRect(0, 0, this.currentWidth, this.currentHeight);
   }
 
   saveTextbox(textbox: Textbox): void {
-    this.textboxes.push(textbox);
+    this.addingText = false;
+
+    const ctx = this.textboxCanvas.nativeElement.getContext('2d');
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+    ctx.fillStyle = this.colorText;
+    ctx.font = this.getFontStyle();
+    ctx.textAlign = 'center';
+
+    const textMetrics = ctx.measureText(this.newTextbox.formControl.value);
+    const textWidth = textMetrics.width;
+    const widthInPercent = textWidth / this.currentWidth;
+
     this.newTextbox = null;
 
-    const textboxCanvasCtx = this.textboxCanvas.nativeElement.getContext('2d');
-    textboxCanvasCtx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+    if (this.videoOn) {
+      const textData = {
+        video_url: this.currentVideoData.video_url,
+        text: textbox.formControl.value,
+        x_center_in_percent: textbox.xPos / this.currentWidth,
+        y_center_in_percent: textbox.yPos / this.currentHeight,
+        width_in_percent: widthInPercent,
+        font_size: this.fontSize.value,
+        text_color: this.colorText,
+        from_frame: this.fromFrame.value,
+        to_frame: this.toFrame.value,
+        underline: this.underline.value,
+        bold: this.bold.value,
+        italic: this.italic.value
+      };
 
-    this.textChanged();
+      console.log(textData);
+
+      this.currentVideoData = null;
+
+      this.memeService.addTextToVideo(textData).subscribe(data => {
+        this.currentVideoData = data;
+        this.videoEl.pause();
+        this.sourceEl.setAttribute('src', environment.apiUrl + '/' + data.video_url);
+        this.videoEl.load();
+        this.videoEl.play();
+      });
+    } else {
+      this.textboxes.push(textbox);
+
+      const textboxCanvasCtx = this.textboxCanvas.nativeElement.getContext('2d');
+      textboxCanvasCtx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+
+      this.textChanged();
+    }
   }
 
   getFontStyle(): string {
-    // font string for bold and italic cause they have to go in ctx.font and dont have an own attribute
     let fontStyle = '';
     fontStyle += this.bold.value ? 'bold ' : '';
     fontStyle += this.italic.value ? 'italic ' : '';
-    fontStyle += this.fontSize.value + 'px ';
+    fontStyle += parseInt(this.fontSize.value, 10) + 'px ';
     fontStyle += this.fontFamily.value;
     return fontStyle;
   }
 
-    fontFamilyChanged(e: MatSelectChange): void {
-      this.textChanged();
-    }
+  fontFamilyChanged(e: MatSelectChange): void {
+    this.textChanged();
+  }
 
-    boldButtonClicked(e: MatButtonToggleChange): void {
-      this.bold.setValue(!this.bold.value);
-      this.textChanged();
-    }
+  boldButtonClicked(e: MatButtonToggleChange): void {
+    this.bold.setValue(!this.bold.value);
+    this.textChanged();
+  }
 
-    italicButtonClicked(e: MatButtonToggleChange): void {
-      this.italic.setValue(!this.italic.value);
-      this.textChanged();
-    }
+  italicButtonClicked(e: MatButtonToggleChange): void {
+    this.italic.setValue(!this.italic.value);
+    this.textChanged();
+  }
 
-    underlineButtonClicked(e: MatButtonToggleChange): void {
-      this.underline.setValue(!this.underline.value);
-      this.textChanged();
-    }
+  underlineButtonClicked(e: MatButtonToggleChange): void {
+    this.underline.setValue(!this.underline.value);
+    this.textChanged();
+  }
 
   clearCanvas(): void {
-    this.resizeCanvasHeight(this.height);
+    this.addingText = false;
+    this.resizeCanvasHeight(this.height, this.width);
 
     this.colorBackground = '#FFFFFF';
     let canvas = this.backgroundCanvas.nativeElement;
@@ -484,7 +575,7 @@ export class GeneratorComponent implements AfterViewInit {
         y: res.clientY - rect.top
       };
 
-      if (this.drawingMode) {
+      if (this.drawingMode && !this.videoOn) {
         this.drawOnCanvas(this.previousDrawPosition, currentPos);
 
         this.previousDrawPosition = currentPos;
@@ -587,7 +678,7 @@ export class GeneratorComponent implements AfterViewInit {
         memeTemplate.src = 'data:image/png;base64,' + template[2];
         memeTemplate.onload = () => {
           const scaleFactor = memeTemplate.width / this.width;
-          this.resizeCanvasHeight(memeTemplate.height / scaleFactor);
+          this.resizeCanvasHeight(memeTemplate.height / scaleFactor, memeTemplate.width / scaleFactor);
           ctx.drawImage(memeTemplate, 0, 0, memeTemplate.width, memeTemplate.height, 0, 0, this.width, this.currentHeight);
 
           this.textChanged();
@@ -601,9 +692,8 @@ export class GeneratorComponent implements AfterViewInit {
 
   loadFromWebcam(): void {
     console.log('opening webcam');
-    this.videoOn = false;
     this.emptyVideoContainer();
-    if (this.cameraOn === false){
+    if (this.cameraOn === false) {
       this.cameraOn = true;
     }
   }
@@ -612,19 +702,18 @@ export class GeneratorComponent implements AfterViewInit {
    * load image from a given url
    */
   loadFromURL(): void {
-    this.clearCanvas();
-    console.log('pressed url');
-    const ctx = this.fileCanvas.nativeElement.getContext('2d');
-    const img = new Image();
-    img.src = this.url;
-    img.onload = () => ctx.drawImage(img, 0, 100, 600, 500);
-
+    this.memeService.getImageFrom(encodeURIComponent(this.url)).subscribe(res => {
+      console.log(res);
+      const ctx = this.fileCanvas.nativeElement.getContext('2d');
+      const img = new Image();
+      img.src =  'data:image/jpg;base64,' + res.img;
+      img.onload = () => ctx.drawImage(img, 0, 100, 600, 500);
+    });
   }
-
 
   loadScreenshotOfURL(): void {
     console.log('pressed screenshot');
-
+    this.emptyVideoContainer();
   }
 
   /**
@@ -634,21 +723,15 @@ export class GeneratorComponent implements AfterViewInit {
   loadFromAPI(): void {
     this.clearCanvas();
     console.log('pressed api');
-    this.videoOn = false;
     this.emptyVideoContainer();
     this.memeService.getMemesFromImgFlip().subscribe(data => {
-      console.log(data);
-      this.imagesRecieved = JSON.parse(JSON.stringify(data));
-    }, null, () => {
-      this.imagesRecieved = this.imagesRecieved.data.memes;
-      this.randomImageIndex = Math.floor(Math.random() * this.imagesRecieved.length);
-      const randomImage = this.imagesRecieved[this.randomImageIndex];
+      const imgSrc = 'data:image/png;base64,' + data.img;
       const ctx = this.fileCanvas.nativeElement.getContext('2d');
       const img = new Image();
-      img.src = randomImage.url;
+      img.src = imgSrc;
       img.onload = () => {
-        const scaleFactor = randomImage.width / this.width;
-        this.resizeCanvasHeight(randomImage.height / scaleFactor);
+        const scaleFactor = data.width / this.width;
+        this.resizeCanvasHeight(data.height / scaleFactor, data.width / scaleFactor);
         this.getCanvasRowspan();
 
         ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, this.width, this.currentHeight);
@@ -659,6 +742,7 @@ export class GeneratorComponent implements AfterViewInit {
   public get triggerObservable(): Observable<void> {
     return this.trigger.asObservable();
   }
+
   public handleImage(webcamImage: WebcamImage): void {
     console.log('received webcam image', webcamImage);
     this.webcamImage = webcamImage;
@@ -667,6 +751,7 @@ export class GeneratorComponent implements AfterViewInit {
   public triggerSnapshot(): void {
     this.trigger.next();
   }
+
   public handleInitError(error: WebcamInitError): void {
     if (error.mediaStreamError && error.mediaStreamError.name === 'NotAllowedError') {
       console.warn('Camera access was not allowed by user!');
@@ -685,9 +770,15 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   saveCanvas(): void {
-    const image = this.createImageStringFromCanvas();
     const meme = new Meme();
-    meme.imageString = image;
+    if (this.videoOn) {
+      meme.imageString = environment.apiUrl + '/' + this.currentVideoData.video_url;
+      meme.type = 1;
+    } else {
+      const image = this.createImageStringFromCanvas();
+      meme.imageString = image;
+      meme.type = 0;
+    }
     meme.private = false;
     meme.title = this.name.value;
     this.memeService.saveMeme(meme).subscribe(data => {
@@ -698,7 +789,6 @@ export class GeneratorComponent implements AfterViewInit {
         this.memeService.postTemplateStat(this.currentMeme);
       }
     });
-
   }
 
   saveCanvasAsDraft(): void {
@@ -706,9 +796,15 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   saveCanvasPrivate(): void {
-    const image = this.createImageStringFromCanvas();
     const meme = new Meme();
-    meme.imageString = image;
+    if (this.videoOn) {
+      meme.imageString = environment.apiUrl + '/' + this.currentVideoData.video_url;
+      meme.type = 1;
+    } else {
+      const image = this.createImageStringFromCanvas();
+      meme.imageString = image;
+      meme.type = 0;
+    }
     meme.private = true;
     meme.title = this.name.value;
     this.memeService.saveMeme(meme) .subscribe(data => {
@@ -724,8 +820,9 @@ export class GeneratorComponent implements AfterViewInit {
     return this.sanitizer.bypassSecurityTrustResourceUrl('data:image/jpg;base64,' + base64String);
   }
 
-  resizeCanvasHeight(height: number): void {
+  resizeCanvasHeight(height: number, width: number): void {
     this.currentHeight = height;
+    this.currentWidth = width;
 
     const canvasBackgroundEl: HTMLCanvasElement = this.backgroundCanvas.nativeElement;
     canvasBackgroundEl.width = this.currentWidth;
@@ -754,6 +851,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   memeTemplateChosen(template: { name: string, base64_string: string }): void {
+    // this.emptyVideoContainer();
     const canvas = this.fileCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
@@ -762,7 +860,7 @@ export class GeneratorComponent implements AfterViewInit {
     memeTemplate.src = 'data:image/png;base64,' + template.base64_string;
     memeTemplate.onload = () => {
       const scaleFactor = memeTemplate.width / this.width;
-      this.resizeCanvasHeight(memeTemplate.height / scaleFactor);
+      this.resizeCanvasHeight(memeTemplate.height / scaleFactor, memeTemplate.width / scaleFactor);
       ctx.drawImage(memeTemplate, 0, 0, memeTemplate.width, memeTemplate.height, 0, 0, this.width, this.currentHeight);
 
       this.textChanged();
