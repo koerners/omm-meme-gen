@@ -68,6 +68,8 @@
       <button (click)="download()">DOWNLOAD</button>
     </form>
 
+<mat-tab-group mat-align-tabs="center" (selectedTabChange)="onTabChanged($event);">
+  <mat-tab label="Other's Memes">
     <mat-paginator
       [length]=memeLength
       [pageSize]=6
@@ -88,6 +90,9 @@
             <mat-card-content *ngIf="meme.type==1" class="dashboard-card-content">
               <video [src]="meme.image_string" controls="controls" alt="Loading"></video>
             </mat-card-content>
+            <mat-card-footer>
+              by {{meme.owner}} (Views: {{meme.views}} / vote {{meme.upvotes}}+ {{meme.downvotes}}- / comments: {{meme.comments}} / created: {{meme.created | date:'dd.MM.yy HH:mm:ss'}})
+            </mat-card-footer>
           </mat-card>
         </mat-grid-tile>
       </mat-grid-list>
@@ -108,7 +113,7 @@
               <mat-card-title>
                 {{meme.title}}
               </mat-card-title>
-            </mat-card-header>>
+            </mat-card-header>
             <mat-card-content *ngIf="meme.type==0" class="dashboard-card-content">
               <img [src]="meme.image_string" alt="Loading">
             </mat-card-content>

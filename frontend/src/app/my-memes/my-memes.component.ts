@@ -31,7 +31,7 @@ export class MyMemesComponent implements OnInit {
   // using | keyvalue: asIsOrder for iteration keeps the order
   filterOptions: Map<string, TextType> = new Map([
     ['search', {text: 'Text', type: 'text'}],
-    ['owner_id', {text: 'Username', type: 'user'}],
+    // ['owner_id', {text: 'Username', type: 'user'}],
     ['-views', {text: 'View Count lte', type: 'number'}],
     ['views', {text: 'View Count gte', type: 'number'}],
     ['-created', {text: 'Memes created before', type: 'date'}],
@@ -100,7 +100,8 @@ export class MyMemesComponent implements OnInit {
   private loadMemes(): any {
     if (this.currentTab === 0) {
       this.screenReaderText.set('WhatPage', 'You are watching public memes from all users.');
-      this.memeService.getAllSortFilter(this.selectedSort, this.selectedOrder, this.selectedFilter, this.filterValue).subscribe(data => {
+      this.memeService.getMemesSortFilter(false, this.selectedSort, this.selectedOrder, this.selectedFilter, this.filterValue)
+        .subscribe(data => {
           this.allMemes = data.results;
           this.memeLength = data.count;
           this.nextUrl = data.next;
@@ -115,7 +116,8 @@ export class MyMemesComponent implements OnInit {
     }
     else {
       this.screenReaderText.set('WhatPage', 'You are watching your own memes.');
-      this.memeService.getOwn().subscribe(data => {
+      this.memeService.getMemesSortFilter(true, this.selectedSort, this.selectedOrder, this.selectedFilter, this.filterValue)
+        .subscribe(data => {
           this.allMemes = data.results;
           this.memeLength = data.count;
           this.nextUrl = data.next;
