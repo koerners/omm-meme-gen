@@ -4,7 +4,6 @@ export class Meme {
   id: number;
   owner: User;
   imageString: string;
-  creation: string;   // FIXME necessary?
   created: string;
   private: boolean;
   title: string;
@@ -15,4 +14,6 @@ export class Meme {
   voted: boolean;
   views: number;
   type: number;
+  comments: number;
+  posVotes: number;
 }

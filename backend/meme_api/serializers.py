@@ -27,7 +27,7 @@ class MemeSerializer(serializers.ModelSerializer):
         source='meme_comment.count',
         read_only=True
     )
-    pos_votes = serializers.SerializerMethodField('how_many_pos')
+    upvotes = serializers.SerializerMethodField('how_many_pos')
 
     def how_many_pos(self, meme):
         try:
@@ -40,7 +40,7 @@ class MemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meme
         fields = ['id', 'title', 'owner', 'image_string', 'views', 'private',
-                  'pos_votes', 'type', 'text_concated', 'comments']
+                  'upvotes', 'type', 'text_concated', 'comments', 'created']
 
     owner = serializers.ReadOnlyField(source='owner.username')
 
