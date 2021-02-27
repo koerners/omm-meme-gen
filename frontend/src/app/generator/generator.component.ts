@@ -295,8 +295,9 @@ export class GeneratorComponent implements AfterViewInit {
         this.fromFrame.setValue(0);
         this.toFrame.setValue(data.frames - 1);
 
-        // base64 video string
+
         const videoContainer = document.getElementById('videoContainer');
+        videoContainer.innerHTML = '';
         // create video element
         this.videoEl = document.createElement('video');
         this.videoEl.id = 'videoElement';
@@ -508,6 +509,8 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   clearCanvas(): void {
+    this.emptyVideoContainer();
+
     this.addingText = false;
     this.resizeCanvasHeight(this.height, this.width);
 

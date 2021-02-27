@@ -76,7 +76,8 @@
           </mat-card-title>
         </mat-card-header>
         <mat-card-content class="dashboard-card-content">
-          <div [hidden]="!videoOn" id="videoContainer" class="meme-canvas">
+          <div>
+            <div [hidden]="!videoOn" id="videoContainer" class="meme-canvas"></div>
           </div>
           <mat-spinner *ngIf="this.videoOn && !this.currentVideoData" class="spinner"></mat-spinner>
           <div [hidden]="videoOn">
