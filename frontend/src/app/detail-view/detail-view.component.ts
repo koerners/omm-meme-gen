@@ -196,7 +196,7 @@ export class DetailViewComponent implements OnInit {
 
 
   nextImage(): void {
-
+    // TODO jump to beginning at end
     this.router.navigate(['/meme/' + String(this.getNextMemeId(true).id)]);
   }
 

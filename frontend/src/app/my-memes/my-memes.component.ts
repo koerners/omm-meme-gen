@@ -244,7 +244,7 @@ export class MyMemesComponent implements OnInit {
     if (this.selectedFilter){
       const type = this.selectedFilter;
       console.log(this.filterValue);
-      this.memeService.getFilteredMemesAsZip('search', 10, this.filterValue)
+      this.memeService.getFilteredMemesAsZip(type, 10, this.filterValue)
         .subscribe(
             blob => {
               saveAs(blob, 'meme.zip');

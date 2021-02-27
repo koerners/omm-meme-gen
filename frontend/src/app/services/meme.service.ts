@@ -189,13 +189,7 @@ export class MemeService {
   getFilteredMemesAsZip(type: string, maxImgs: number, start: any, end?: any ): any {
     const data = new FormData();
     data.append('max', String(maxImgs));
-    if (type === 'search'){
-      data.append(String(type), String(start));
-    }
-    if (type !== 'search'){
-    data.append(String(type), start + ',' + end);
-    }
-
+    data.append(String(type), String(start));
 
     return this.http.post(environment.apiUrl + '/zip/', data, { responseType: 'blob'});
   }

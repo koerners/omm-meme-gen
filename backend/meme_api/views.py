@@ -42,6 +42,7 @@ from skimage.transform import resize
 from zipfile import ZipFile
 import cv2
 
+
 DEFAULT_FONT_SIZE = 30
 FONT_DEFAULT = 'Ubuntu-M.ttf'
 FONT_BOLD = 'Ubuntu-B.ttf'
@@ -76,55 +77,57 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class Zip:
-    def split2(self, string):
-        if not "," in string:
-            return None, None
-        if "null" in string:
-            return None, None
-        s = string.split(",")
-
-        return s[0], s[1]
-
     @classmethod
     @csrf_exempt
     def get_as_zip(cls, request):
 
 
-        print(request.POST.get('search'))
+        print(request.POST)
         start_date = None
         end_date = None
         start_votes = None
         end_votes = None
         start_views = None
         end_views = None
-        # start_date = None
-        # end_date = None
-        # start_date = None
-        # end_date = None
-        # start_date = None
-        # end_date = None
+        search = None
+
 
         q = Meme.objects.all()
-        if 'create' in request.POST :
-            start_date, end_date = cls.split2(cls, string=request.POST.get("creation"))
+        if 'created' in request.POST :
+            if '-created' in request.POST:
+                end_date = request.POST.get("-created")
+        else:
+            start_date = request.POST.get("created")
         if "votes" in request.POST:
-            start_votes, end_votes = cls.split2(cls, string=request.POST.get("votes"))
+            if '-votes' in request.POST:
+                end_votes = request.POST.get("-votes")
+            else:
+                start_votes = request.POST.get("votes")
         if 'views' in request.POST:
-            start_views, end_views = cls.split2(cls, string=request.POST.get("views"))
+            if '-views' in request.POST:
+                end_views = request.POST.get("-views")
+            else:
+                start_views = request.POST.get("views")
         if 'search' in request.POST:
             search = request.POST.get("search")
-        print(start_views, end_views)
-        text = request.POST.get("text")
+
         max = int(request.POST.get("max"))
 
-
-        if start_date is not None:
-            q = q.filter(created__range=(start_date, end_date))
         if start_views is not None:
-            q = q.filter(views__range=(start_views, end_views))
+            q = q.filter(views__gte = start_views)
+        if end_views is not None:
+            q = q.filter(views__lte = end_views)
+        if start_votes is not None:
+            q = q.filter(votes__gte = start_votes)
+        if end_votes is not None:
+            q = q.filter(votes__lte = end_votes)
+        if start_date is not None:
+            q = q.filter(created__gte = start_date)
+        if end_date is not None:
+            q = q.filter(created__lte = end_date)
         if search is not None:
             q = q.filter(text_concated__contains=(search))
-            print(q)
+        print(q)
 
         # TODO: Die neuen Felder vom order / filter branch
         #
@@ -149,6 +152,35 @@ class Zip:
 
 
 class MemeList(viewsets.ModelViewSet):
+
+    #
+    # @action(detail=False)
+    # def get_filtered_memes(self, request):
+    #     print('HI')
+    # filter_ = MemeSerializer.data.get("filter", "")
+    # filtervalue = MemeSerializer.GET.get("value", "")
+    # #TODO multi-field-Query Builder instead
+    # # queryset = Meme.objects
+    # queryset = Meme.objects.filter(private=False)
+    # if filter_ == "views" and not filtervalue == "":
+    #     print("filter: views>="+filtervalue)
+    #     queryset = queryset.filter(views__gte=int(filtervalue))
+    #     print(queryset)
+    # elif filter_ == "-views" and not filtervalue == "":
+    #     print("filter: views<="+filtervalue)
+    #     queryset = queryset.filter(views__lte=int(filtervalue))
+        # # elif filter_ == "created" and not filtervalue == "":
+        # #     print("filter: created>="+filtervalue)
+        # #     queryset = queryset.filter(Q(createdgte=datetime.strptime(filtervalue, '%Y-%m-%d')) & Q(private=False))
+        # # elif filter_ == "-created" and not filtervalue == "":
+        # #     print("filter: created<="+filtervalue)
+        # #     queryset = queryset.filter(Q(createdlte=datetime.strptime(filtervalue+" 23:59:59", '%Y-%m-%d %H:%M:%S')) & Q(private=False))
+        # # else:
+        # #     queryset = queryset.filter(private=False)
+        #
+        # return JsonResponse(queryset, safe=False)
+
+
     queryset = Meme.objects.filter(private=False)
     serializer_class = MemeSerializer
 
@@ -158,8 +190,11 @@ class MemeList(viewsets.ModelViewSet):
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
+
+
     @action(detail=False)
     def own(self, request):
+        print('TOast')
         self.queryset = Meme.objects.filter(owner=request.user)
         return super().list(request)
 
@@ -176,6 +211,7 @@ class MemeList(viewsets.ModelViewSet):
         obj.views = obj.views + 1
         obj.save(update_fields=("views",))
         return super().retrieve(request, *args, **kwargs)
+
 
 
 class CommentList(viewsets.ModelViewSet):

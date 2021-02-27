@@ -1,5 +1,5 @@
-<button (click)="screenReader()">Speak</button>
-<button (click)="stopScreenReader()">Stop</button>
+<button  mat-raised-button (click)="screenReader()">Speak</button>
+<button  mat-raised-button (click)="stopScreenReader()">Stop</button>
 
 <div *ngIf="voiceRecognitionService.voiceFeedbackEnabled" style="background-color: darkslateblue">
   Voice Recognition: <br />
