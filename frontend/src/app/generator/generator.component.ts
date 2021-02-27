@@ -936,6 +936,10 @@ export class GeneratorComponent implements AfterViewInit {
   private screenReaderBuilder(): string {
     let text = '';
     text += this.screenReaderText.get('Welcome') + ' ';
+    if (this.textTop) {
+      text += 'Text top is set to ' + this.textTop.value + ' ';
+    }
+
     return text;
   }
 
@@ -945,6 +949,10 @@ export class GeneratorComponent implements AfterViewInit {
       'open webcam': () => {
         this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Open Webcam');
         this.loadFromWebcam();
+      },
+      'load random image': () => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'load random image');
+        this.loadFromAPI();
       },
       'close webcam': () => {
         if (this.cameraOn === true) {
