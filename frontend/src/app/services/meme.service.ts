@@ -3,7 +3,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 import {Meme} from '../Meme';
 import { map } from 'rxjs/operators';
-import {env} from "@tensorflow/tfjs-core";
+import {env} from '@tensorflow/tfjs-core';
 
 /**
  * MemeService Class
@@ -23,10 +23,41 @@ export class MemeService {
   }
 
   /**
-   * retrieves all memes stored in the database
+   * retrieves all memes (paginated)
    */
   getAll(): any {
     return this.http.get(environment.apiUrl + '/meme/');
+  }
+
+  /**
+   * retrieve the memes generated owned by the active account (paginated)
+   */
+  getOwn(): any {
+    return this.http.get(environment.apiUrl + '/meme/own/');
+  }
+
+  /**
+   * retrieves memes (paginated) with Filter & Sort options
+   */
+  getMemesSortFilter(own: boolean, sort: string, order: string, filter: string, value: string): any {
+    let params = '';
+    if (filter === 'search' && value) {
+      params += 'search=' + value;
+    }
+    else if (filter && value) {
+      // console.log(filter, value);
+      params += 'filter=' + filter + '&value=' + value;
+    }
+    if (sort) {
+      // console.log(sort, order);
+      params += (params ? '&' : '') + 'ordering=' + order + sort;
+    }
+    if (own) {
+      return this.http.get(environment.apiUrl + '/meme/own/' + (params ? '?' + params : ''));
+    }
+    else {
+      return this.http.get(environment.apiUrl + '/meme/all/' + (params ? '?' + params : ''));
+    }
   }
 
   /**
@@ -35,13 +66,6 @@ export class MemeService {
    */
   paginator(url: string): any {
     return this.http.get(url + '');
-  }
-
-  /**
-   * retrieve the memes generated owned by the active account
-   */
-  getOwn(): any {
-    return this.http.get(environment.apiUrl + '/meme/own/');
   }
 
   /**
@@ -73,11 +97,10 @@ export class MemeService {
   saveMeme(meme: Meme): any {
     return this.http.post(environment.apiUrl + '/meme/', {
       title: meme.title,
+      text_concated: meme.textConcated,
       image_string: meme.imageString,
       private: meme.private,
       type: meme.type
-    }).subscribe(data => {
-      console.log(data);
     });
   }
 
@@ -155,9 +178,20 @@ export class MemeService {
   loadUserStats(): any{
     return this.http.get(environment.apiUrl + '/userStats/');
   }
+  loadMemeStats(id: string): any{
+    return this.http.get(environment.apiUrl + '/memeStats/?meme=' + id);
+  }
 
   loadTopMemeVideo(): any{
     return this.http.get(environment.apiUrl + '/memeVideo/');
+  }
+
+  getFilteredMemesAsZip(type: string, maxImgs: number, start: any, end?: any ): any {
+    const data = new FormData();
+    data.append('max', String(maxImgs));
+    data.append(String(type), String(start));
+
+    return this.http.post(environment.apiUrl + '/zip/', data, { responseType: 'blob'});
   }
 
 
@@ -169,38 +203,38 @@ export class MemeService {
     console.log('Doing >>>>' + templateID);
     if (this.currentMemeId == null){
       const data = new FormData();
-      data.append("t_id", templateID.toString());
-      data.append("isCreated", "false");
+      data.append('t_id', templateID.toString());
+      data.append('isCreated', 'false');
 
-      let xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest();
       xhr.withCredentials = false;
 
-      xhr.addEventListener('readystatechange', function() {
+      xhr.addEventListener('readystatechange', function(): void {
         if (this.readyState === 4) {
           console.log(this.responseText);
         }
       });
 
-      xhr.open('POST', environment.apiUrl +'/templateStats/');
+      xhr.open('POST', environment.apiUrl + '/templateStats/');
 
       xhr.send(data);
     }
     else{
-      let data = new FormData();
-      data.append("t_id", templateID.toString());
-      data.append("m_id", this.currentMemeId.toString());
-      data.append("isCreated", "true");
+      const data = new FormData();
+      data.append('t_id', templateID.toString());
+      data.append('m_id', this.currentMemeId.toString());
+      data.append('isCreated', 'true');
 
-      let xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest();
       xhr.withCredentials = false;
 
-      xhr.addEventListener('readystatechange', function() {
+      xhr.addEventListener('readystatechange', function(): void {
         if (this.readyState === 4) {
           console.log(this.responseText);
         }
       });
 
-      xhr.open('POST', environment.apiUrl +'/templateStats/');
+      xhr.open('POST', environment.apiUrl + '/templateStats/');
 
       xhr.send(data);
       this.setMemeServiceCurrentMeme(null);
@@ -209,7 +243,7 @@ export class MemeService {
 
   /**
    * set the meme id if generate, else set null
-   * @param id
+   * @param id the id of the meme
    */
   setMemeServiceCurrentMeme(id): void{
     this.currentMemeId = id;

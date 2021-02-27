@@ -1,8 +1,8 @@
 <div class="grid-container">
   <h1 class="mat-h1">Create your Meme</h1>
 
-  <button (click)="screenReader()">Speak</button>
-  <button (click)="stopScreenReader()">Stop</button>
+  <button mat-raised-button (click)="screenReader()">Speak</button>
+  <button mat-raised-button (click)="stopScreenReader()">Stop</button>
 
   <div *ngIf="vRS.voiceFeedbackEnabled" style="background-color: darkslateblue">
     Voice Recognition: <br />

@@ -14,13 +14,17 @@ import '@tensorflow/tfjs-backend-webgl';
 import {ObjectRecognitionService, Prediction} from '../services/object-recognition-service';
 import {Comment} from '../Comment';
 import {FormControl} from '@angular/forms';
+import {map} from 'rxjs/operators';
 import {interval, Subscription} from 'rxjs';
+import {ChartDataSets} from 'chart.js';
+
 
 @Component({
   selector: 'app-detail-view',
   templateUrl: './detail-view.component.html',
   styleUrls: ['./detail-view.component.css']
 })
+
 export class DetailViewComponent implements OnInit {
   public meme: Meme;
   selectedId: number;
@@ -29,14 +33,38 @@ export class DetailViewComponent implements OnInit {
   availableMemes: Meme[];
   slideShowRunning: boolean;
   public predictions: Prediction[];
-
-  // tslint:disable-next-line:max-line-length
   slideshowspeed = 4;
   slideshowRandom: boolean;
   private subscription: Subscription;
+  rowHeight = 330;
+  chartRowHeight = this.rowHeight - 80;
+  viewsAndVotes;
+  viewedChartReady: any;
+  viewedRowHeight: any;
+  viewedChartData: ChartDataSets[];
+  viewedChartLabels: any;
+  viewedChartOptions: any;
+  viewedChartColors: any;
+  viewedChartLegend: {fullWidth: false};
+  viewedChartType = 'pie';
+  viewedChartPlugins: any;
+  // Vote Chart  below, views chart above
+  vChartReady: any;
+  vRowHeight: any;
+  vChartData: ChartDataSets[];
+  vChartLabels: any;
+  vChartOptions: any;
+  vChartColors: any;
+  vChartLegend: any;
+  vChartType = 'pie';
+  vChartPlugins: any;
+  statsOn: false;
 
-  // tslint:disable-next-line:max-line-length
-  constructor(private memeService: MemeService, private route: ActivatedRoute, private snackBar: MatSnackBar, private predictionService: ObjectRecognitionService, private router: Router) {
+  constructor(private memeService: MemeService,
+              private route: ActivatedRoute,
+              private snackBar: MatSnackBar,
+              private predictionService: ObjectRecognitionService,
+              private router: Router) {
     this.meme = new Meme();
   }
 
@@ -67,6 +95,7 @@ export class DetailViewComponent implements OnInit {
       this.getImageContent(data.image_string);
       this.loadComments();
       this.loadVotes();
+      this.loadStats();
     });
 
   }
@@ -168,7 +197,7 @@ export class DetailViewComponent implements OnInit {
 
 
   nextImage(): void {
-
+    // TODO jump to beginning at end
     this.router.navigate(['/meme/' + String(this.getNextMemeId(true).id)]);
   }
 
@@ -219,5 +248,62 @@ export class DetailViewComponent implements OnInit {
   randomImage(): void {
     this.meme.id = this.availableMemes[Math.floor(Math.random() * this.availableMemes.length)].id;
     this.nextImage();
+  }
+
+  loadStats(): void{
+    this.memeService.loadMemeStats(String(this.meme.id)).subscribe(response => {
+        console.log("_______>_>_>" + response);
+        this.viewsAndVotes = {
+          vote: response.votes, all_vote: response.votes_all, view: response.views, all_view: response.views_all};
+        console.log(this.viewsAndVotes.view);
+        this.drawViewedMemeChart();
+        this.drawVotesMemeChart();
+    });
+  }
+
+  drawViewedMemeChart(): void {
+    const chartData = [this.viewsAndVotes.view.views, this.viewsAndVotes.all_view.views__sum - this.viewsAndVotes.view.views];
+    this.viewedChartData = [
+      { data: chartData, label: 'View Proportion', backgroundColor: [
+        "red", "green"]},
+    ];
+    this.viewedChartOptions = {
+      responsive: false,
+       maintainAspectRatio: false,
+      legend: {
+        labels: {
+          fontColor: "white",
+          fontSize: 18
+        }
+      },
+
+    };
+    console.log(this.viewedChartData);
+    this.viewedChartLabels = ['views', 'total Views excluding this meme'];
+    this.viewedChartColors = ['black', 'white'];
+
+    this.viewedChartReady = true;
+  }
+  drawVotesMemeChart(): void {
+    const chartData =  [this.viewsAndVotes.vote, this.viewsAndVotes.all_vote - this.viewsAndVotes.vote];
+    this.vChartData = [
+      { data: chartData, label: 'View Proportion',backgroundColor: [
+          "red", "green"] },
+    ];
+    this.vChartOptions = {
+      responsive: false,
+      maintainAspectRatio: false,
+      legend: {
+        labels: {
+          fontColor: "white",
+          fontSize: 18
+        }
+      },
+    };
+    console.log(this.vChartData);
+    this.vChartLabels = ['votes', 'total votes excluding this meme'];
+    this.vChartColors = ['black', 'white'];
+
+    this.vChartReady = true;
   }
 }

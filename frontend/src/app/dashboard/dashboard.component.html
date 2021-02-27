@@ -1,5 +1,5 @@
-<button (click)="screenReader()">Speak</button>
-<button (click)="stopScreenReader()">Stop</button>
+<button  mat-raised-button (click)="screenReader()">Speak</button>
+<button  mat-raised-button (click)="stopScreenReader()">Stop</button>
 
 <div *ngIf="voiceRecognitionService.voiceFeedbackEnabled" style="background-color: darkslateblue">
   Voice Recognition: <br />
@@ -58,6 +58,33 @@
                       [colors]="loginChartColors"
                       [legend]="loginChartLegend"
                       [chartType]="loginChartType"
+                      [plugins]="topMemeChartPlugins">
+              </canvas>
+            </div>
+          </div>
+          <div *ngIf="card.title == 'TopUsedTemplatesOverTime'">
+            <div class="chart-wrapper" *ngIf="chartReady">
+              <canvas baseChart height="{{chartRowHeight}}"
+                      [datasets]="topMemeChartData"
+                      [labels]="topMemeChartLabels"
+                      [options]="topMemeChartOptions"
+                      [colors]="topMemeChartColors"
+                      [legend]="topMemeChartLegend"
+                      [chartType]="topMemeChartType"
+                      [plugins]="topMemeChartPlugins">
+              </canvas>
+            </div>
+
+          </div>
+          <div *ngIf="card.title == 'TemplatesViewedCreated'">
+            <div class="chart-wrapper" *ngIf="chartReady">
+              <canvas baseChart height="{{chartRowHeight}}"
+                      [datasets]="topMemeChartData"
+                      [labels]="topMemeChartLabels"
+                      [options]="topMemeChartOptions"
+                      [colors]="topMemeChartColors"
+                      [legend]="topMemeChartLegend"
+                      [chartType]="topMemeChartType"
                       [plugins]="topMemeChartPlugins">
               </canvas>
             </div>

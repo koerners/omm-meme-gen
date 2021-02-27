@@ -696,6 +696,7 @@ export class GeneratorComponent implements AfterViewInit {
   loadFromWebcam(): void {
     console.log('opening webcam');
     this.emptyVideoContainer();
+    this.clearCanvas();
     if (this.cameraOn === false) {
       this.cameraOn = true;
     }
@@ -763,16 +764,18 @@ export class GeneratorComponent implements AfterViewInit {
 
 
   showOnCanvas(): void {
-    const ctx = this.fileCanvas.nativeElement.getContext('2d');
-    const img = new Image();
-    if (this.webcamImage) {
-      img.src = this.webcamImage.imageAsDataUrl;
-      ctx.drawImage(img, 0, 100, 600, 500);
-    }
     this.cameraOn = false;
+    const ctx = this.fileCanvas.nativeElement.getContext('2d');
+
+    const img = new Image();
+    console.log(this.webcamImage);
+    img.src = this.webcamImage.imageAsDataUrl;
+    img.onload = () => {
+      ctx.drawImage(img, 0, 100, 600, 500);
+    };
   }
 
-  saveCanvas(): void {
+  saveCanvas(privateMeme = false): void {
     const meme = new Meme();
     if (this.videoOn) {
       meme.imageString = environment.apiUrl + '/' + this.currentVideoData.video_url;
@@ -782,14 +785,20 @@ export class GeneratorComponent implements AfterViewInit {
       meme.imageString = image;
       meme.type = 0;
     }
-    meme.private = false;
+    meme.private = privateMeme;
     meme.title = this.name.value;
+    meme.textConcated = this.textTop.value + ' ' + this.textBottom.value;
+    if (this.textboxes) {
+      this.textboxes.forEach(element => {
+        meme.textConcated += ' ' + element.formControl.value;
+      });
+    }
+
     this.memeService.saveMeme(meme).subscribe(data => {
       if (this.isTemplate){
-        console.log(data.id);
         this.memeService.setMemeServiceCurrentMeme(data.id);
-        console.log(this.memeService.currentMemeId);
         this.memeService.postTemplateStat(this.currentMeme);
+        console.log(this.memeService.currentMemeId);
       }
     });
   }
@@ -799,24 +808,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   saveCanvasPrivate(): void {
-    const meme = new Meme();
-    if (this.videoOn) {
-      meme.imageString = environment.apiUrl + '/' + this.currentVideoData.video_url;
-      meme.type = 1;
-    } else {
-      const image = this.createImageStringFromCanvas();
-      meme.imageString = image;
-      meme.type = 0;
-    }
-    meme.private = true;
-    meme.title = this.name.value;
-    this.memeService.saveMeme(meme) .subscribe(data => {
-      if (this.isTemplate){
-        this.memeService.setMemeServiceCurrentMeme(data.id);
-        this.memeService.postTemplateStat(this.currentMeme);
-      }
-    });
-
+    this.saveCanvas(true);
   }
 
   getSafeUrl(base64String: string): SafeResourceUrl {

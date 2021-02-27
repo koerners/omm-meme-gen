@@ -89,7 +89,7 @@ export class VoiceRecognitionService {
 
     annyang.addCallback('error', (err) => {
       this.ngZone.run(() => this.voiceActionSuccess = false);
-      this.voiceStatusMsg = 'Speech recognition did not work. ';
+      // this.voiceStatusMsg = 'Speech recognition did not work. ';
       if (err.error === 'network'){
         this.ngZone.run(() => this.voiceStatusMsg += 'Can\'t connect annyang voice service');
         annyang.abort();

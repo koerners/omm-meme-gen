@@ -1,15 +1,15 @@
+import datetime
 import urllib
 from pathlib import Path
 from random import Random, randint
 
-
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
-from rest_framework import generics
+from rest_framework import generics, pagination
 from django.views.decorators.csrf import csrf_exempt
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
-from rest_framework import permissions
+from rest_framework import permissions, filters
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -28,18 +28,21 @@ from selenium.webdriver.chrome.options import Options
 from meme_api.models import Meme, Comment, Vote, VideoCreation, TopFiveMemes, Template, TemplatesOvertime
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer, TemplateSerializer
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Sum
 from django.db.models.functions import ExtractMonth as Month, ExtractYear as Year, ExtractDay as Day, TruncDay
 import os
 import re
 import base64
 import requests
+from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import json, io, zipfile
 import urllib.parse
 import numpy as np
 from skimage.transform import resize
+from zipfile import ZipFile
 import cv2
+
 
 DEFAULT_FONT_SIZE = 30
 FONT_DEFAULT = 'Ubuntu-M.ttf'
@@ -74,18 +77,160 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrCreateOnly]
 
 
+class Zip:
+    @classmethod
+    @csrf_exempt
+    def get_as_zip(cls, request):
+
+
+        print(request.POST)
+        start_date = None
+        end_date = None
+        start_votes = None
+        end_votes = None
+        start_views = None
+        end_views = None
+        search = None
+
+
+        q = Meme.objects.all()
+        if 'created' in request.POST :
+            if '-created' in request.POST:
+                end_date = request.POST.get("-created")
+        else:
+            start_date = request.POST.get("created")
+        if "votes" in request.POST:
+            if '-votes' in request.POST:
+                end_votes = request.POST.get("-votes")
+            else:
+                start_votes = request.POST.get("votes")
+        if 'views' in request.POST:
+            if '-views' in request.POST:
+                end_views = request.POST.get("-views")
+            else:
+                start_views = request.POST.get("views")
+        if 'search' in request.POST:
+            search = request.POST.get("search")
+
+        max = int(request.POST.get("max"))
+
+        if start_views is not None:
+            q = q.filter(views__gte = start_views)
+        if end_views is not None:
+            q = q.filter(views__lte = end_views)
+        if start_votes is not None:
+            q = q.filter(votes__gte = start_votes)
+        if end_votes is not None:
+            q = q.filter(votes__lte = end_votes)
+        if start_date is not None:
+            q = q.filter(created__gte = start_date)
+        if end_date is not None:
+            q = q.filter(created__lte = end_date)
+        if search is not None:
+            q = q.filter(text_concated__contains=(search))
+        print(q)
+
+        zip_archive = io.BytesIO()
+        with zipfile.ZipFile(zip_archive, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            print(list(enumerate(q)))
+            for index, meme in enumerate(q):
+                print(index, meme)
+                if index > max:
+                    break
+                base64_decoded = base64.b64decode(meme.image_string[22:])
+                zf.writestr('meme_' + str(index) + "_" + meme.title + '.png', base64_decoded)
+        #
+        # # zip_archive.seek(0)
+        # print(zip_archive.getvalue())
+
+        response = HttpResponse(zip_archive.getvalue())
+        response['Content-Type'] = 'application/x-zip-compressed'
+        response['Content-Disposition'] = 'attachment; filename="%s"' % 'memes.zip'
+        return response
+
+
+
 class MemeList(viewsets.ModelViewSet):
+    queryset = Meme.objects.filter(private=False)
+    serializer_class = MemeSerializer
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['text_concated', 'title']
+    ordering_fields = ['created', 'views', 'pos_votes', 'n_comments', 'title', 'owner']
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+
+
     @action(detail=False)
     def own(self, request):
-        own_memes = Meme.objects.filter(owner=request.user).order_by('-created').values()
+        print("own")
+        filterfield = request.GET.get("filter", "")
+        filtervalue = request.GET.get("value", "")
+        self.queryset = Meme.objects.filter(owner=request.user)
 
-        page = self.paginate_queryset(own_memes)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+        if filterfield == "views" and not filtervalue == "":
+            print("filter: views>=" + filtervalue)
+            self.queryset = self.queryset.filter(views__gte=int(filtervalue))
+        elif filterfield == "-views" and not filtervalue == "":
+            print("filter: views<=" + filtervalue)
+            self.queryset = self.queryset.filter(views__lte=int(filtervalue))
+        elif filterfield == "pos_votes" and not filtervalue == "":
+            print("filter: pos_votes>=" + filtervalue)
+            self.queryset = self.queryset.filter(pos_votes__gte=int(filtervalue))
+        elif filterfield == "-pos_votes" and not filtervalue == "":
+            print("filter: pos_votes<=" + filtervalue)
+            self.queryset = self.queryset.filter(pos_votes__lte=int(filtervalue))
+        elif filterfield == "n_comments" and not filtervalue == "":
+            print("filter: n_comments>=" + filtervalue)
+            self.queryset = self.queryset.filter(n_comments__gte=int(filtervalue))
+        elif filterfield == "-n_comments" and not filtervalue == "":
+            print("filter: n_comments<=" + filtervalue)
+            self.queryset = self.queryset.filter(n_comments__lte=int(filtervalue))
+        elif filterfield == "created" and not filtervalue == "":
+            print("filter: created>="+filtervalue)
+            self.queryset = self.queryset.filter(created__gte=datetime.strptime(filtervalue, '%Y-%m-%d'))
+        elif filterfield == "-created" and not filtervalue == "":
+            print("filter: created<="+filtervalue)
+            self.queryset = self.queryset.filter(
+                created__lte=datetime.strptime(filtervalue+" 23:59:59", '%Y-%m-%d %H:%M:%S'))
 
-        serializer = self.get_serializer(own_memes, many=True)
-        return Response(serializer.data)
+        return super().list(request)
+
+    @action(detail=False)
+    def all(self, request):
+        print("all")
+        filterfield = request.GET.get("filter", "")
+        filtervalue = request.GET.get("value", "")
+        self.queryset = Meme.objects.filter(private=False)
+
+        if filterfield == "views" and not filtervalue == "":
+            print("filter: views>=" + filtervalue)
+            self.queryset = self.queryset.filter(views__gte=int(filtervalue))
+        elif filterfield == "-views" and not filtervalue == "":
+            print("filter: views<=" + filtervalue)
+            self.queryset = self.queryset.filter(views__lte=int(filtervalue))
+        elif filterfield == "pos_votes" and not filtervalue == "":
+            print("filter: pos_votes>=" + filtervalue)
+            self.queryset = self.queryset.filter(pos_votes__gte=int(filtervalue))
+        elif filterfield == "-pos_votes" and not filtervalue == "":
+            print("filter: pos_votes<=" + filtervalue)
+            self.queryset = self.queryset.filter(pos_votes__lte=int(filtervalue))
+        elif filterfield == "n_comments" and not filtervalue == "":
+            print("filter: n_comments>=" + filtervalue)
+            self.queryset = self.queryset.filter(n_comments__gte=int(filtervalue))
+        elif filterfield == "-n_comments" and not filtervalue == "":
+            print("filter: n_comments<=" + filtervalue)
+            self.queryset = self.queryset.filter(n_comments__lte=int(filtervalue))
+        elif filterfield == "created" and not filtervalue == "":
+            print("filter: created>="+filtervalue)
+            self.queryset = self.queryset.filter(created__gte=datetime.strptime(filtervalue, '%Y-%m-%d'))
+        elif filterfield == "-created" and not filtervalue == "":
+            print("filter: created<="+filtervalue)
+            self.queryset = self.queryset.filter(
+                created__lte=datetime.strptime(filtervalue+" 23:59:59", '%Y-%m-%d %H:%M:%S'))
+
+        return super().list(request)
 
     @action(detail=False)
     def availableMemes(self, request):
@@ -95,27 +240,11 @@ class MemeList(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    def list(self, request):
-        queryset = Meme.objects.filter(private=False)
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-
-        return Response(serializer.data)
-
     def retrieve(self, request, *args, **kwargs):
         obj = self.get_object()
         obj.views = obj.views + 1
         obj.save(update_fields=("views",))
         return super().retrieve(request, *args, **kwargs)
-
-    queryset = Meme.objects.all()
-    serializer_class = MemeSerializer
-
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
 class CommentList(viewsets.ModelViewSet):
@@ -132,9 +261,11 @@ class CommentList(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        m = Meme.objects.filter(id=int(self.request.data.get("meme")))[0]
+        m.n_comments += 1
+        m.save()
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+        serializer.save(owner=self.request.user)
 
 
 class VoteList(viewsets.ModelViewSet):
@@ -159,9 +290,14 @@ class VoteList(viewsets.ModelViewSet):
     serializer_class = VoteSerializer
 
     def perform_create(self, serializer):
+        if self.request.data.get("upvote"):
+            m = Meme.objects.filter(id=int(self.request.data.get("meme")))[0]
+            m.pos_votes += 1
+            m.save()
+
         serializer.save(owner=self.request.user)
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
 
 class MemeTemplate:
@@ -355,10 +491,10 @@ class IMGFlip:
     @action(detail=False)
     def get_imgflip_memes(self):
         imgflip_response = requests.get('https://api.imgflip.com/get_memes')
-        random = randint(0,100)
+        random = randint(0, 100)
 
         x = imgflip_response.json()['data']['memes'][random]
-        width, height = x['width'],x['height']
+        width, height = x['width'], x['height']
         image_to_load = requests.get(x['url'])
         string_image = str(base64.b64encode(image_to_load.content).decode("utf-8"))
         # uri = ("data:" +
@@ -368,41 +504,40 @@ class IMGFlip:
         png_bytes_io = io.BytesIO(base64.b64decode(string_image))
         img = Image.open(png_bytes_io)
         bytes_io_open = io.BytesIO()
-        img.save(bytes_io_open,'PNG')
+        img.save(bytes_io_open, 'PNG')
         res = str(base64.b64encode(bytes_io_open.getvalue()))
 
         if image_to_load.status_code == 200:
-
-            return JsonResponse({'img': res[2:-1], 'width': width, 'height':height}, safe=False)
+            return JsonResponse({'img': res[2:-1], 'width': width, 'height': height}, safe=False)
 
 
 class LoadImage:
-        '''
-        CORS is annoying
-        '''
-        @action(detail=False)
-        def load_img(request):
-            encoded_url = request.GET.get('url')
-            if encoded_url is not None and encoded_url != '':
-                url = urllib.parse.unquote(encoded_url)
-                response = requests.get(url)
-                print(response)
-                if response.status_code == 200:
-                    x = response.content
-                    print(x)
+    '''
+    CORS is annoying
+    '''
 
+    @action(detail=False)
+    def load_img(request):
+        encoded_url = request.GET.get('url')
+        if encoded_url is not None and encoded_url != '':
+            url = urllib.parse.unquote(encoded_url)
+            response = requests.get(url)
+            print(response)
+            if response.status_code == 200:
+                x = response.content
+                print(x)
 
-                    string_image = str(base64.b64encode(x).decode("utf-8"))
-                    print(string_image)
-                    png_bytes_io = io.BytesIO(base64.b64decode(string_image))
-                    img = Image.open(png_bytes_io)
-                    bytes_io_open = io.BytesIO()
-                    img.save(bytes_io_open,'PNG')
-                    res = str(base64.b64encode(bytes_io_open.getvalue()))
-                    print(res)
+                string_image = str(base64.b64encode(x).decode("utf-8"))
+                print(string_image)
+                png_bytes_io = io.BytesIO(base64.b64decode(string_image))
+                img = Image.open(png_bytes_io)
+                bytes_io_open = io.BytesIO()
+                img.save(bytes_io_open, 'PNG')
+                res = str(base64.b64encode(bytes_io_open.getvalue()))
+                print(res)
 
-                return JsonResponse({'img': res[2:-1]}, safe=False)
-                #return HttpResponse('OK')
+            return JsonResponse({'img': res[2:-1]}, safe=False)
+            # return HttpResponse('OK')
 
 
 class SendStatistics:
@@ -412,8 +547,6 @@ class SendStatistics:
                                                   , 'views').order_by('-views')[:5])
         return JsonResponse(top_five_memes, safe=False)
 
-
-class SendUserStatistics:
     def send_userStatistics(self):
         user_database = list(User.objects
                              .annotate(date=TruncDay('last_login'), )
@@ -424,6 +557,17 @@ class SendUserStatistics:
                                        year=Year('last_login'))
                              .values('day', 'month', 'year', 'date', 'count'))
         return JsonResponse(user_database, safe=False)
+
+    @action(detail=False)
+    def send_viewStatistics(request):
+        meme_id = int(request.GET.get("meme", ""))
+        votes = Vote.objects.filter(meme=meme_id).count()
+        views = list(Meme.objects.filter(id=meme_id).values('views'))[0]
+
+        all_views = Meme.objects.aggregate(Sum('views'))
+        all_votes = Vote.objects.count()
+        print(all_votes)
+        return JsonResponse({'votes': votes, 'votes_all': all_votes, 'views': views, 'views_all': all_views})
 
 
 class TemplateStats:
@@ -445,7 +589,6 @@ class TemplateStats:
 
     def get_stats(request):
         pass
-
 
 
 class ScreenshotFromUrl:
@@ -478,12 +621,12 @@ class MemesToVideo:
         turn top five memes into video
         '''
 
-        file = Path('media/videoMedia/my_video.ogv')
+        file = Path('media/videoMedia/my_video.webm')
 
         v = list(VideoCreation.objects.all())
         if v == []:
             VideoCreation.objects.create(is_video_creation_running=False)
-            v = VideoCreation.objects.all()[0]
+            v = list(VideoCreation.objects.all())
         v = v[0]
         val = Meme.objects.values().count()
         if val > 5:
@@ -493,11 +636,11 @@ class MemesToVideo:
 
         if val == 1:
             top_five_memes = Meme.objects.values().order_by('-views')[0]
-            #top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[0]
+            # top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[0]
             x = [top_five_memes['id']]
         else:
             top_five_memes = Meme.objects.values().order_by('-views')[:val]
-            #top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[:val]
+            # top_five_memes = Meme.objects.filter(type=0).values().order_by('-views')[:val]
             x = list(top_five_memes.values_list('id', flat=True))
         if val == 1:
             top_five = [0]
@@ -523,26 +666,26 @@ class MemesToVideo:
 
         if (len(x) or len(y)) == 0:
             return JsonResponse({'type': 1, 'res': 'There are no Memes to show yet;\n'
-                                               'Later there will be a video made up of the top most viewed Memes'}, safe=False)
-        if(len(x) or len(y)) == 1:
+                                                   'Later there will be a video made up of the top most viewed Memes'},
+                                safe=False)
+        if (len(x) or len(y)) == 1:
             do_create(v, top_five_memes, val)
-            return JsonResponse({'type': 3, 'res':'/media/videoMedia/post.png'})
+            return JsonResponse({'type': 3, 'res': '/media/videoMedia/post.png'})
         if not file.is_file():
             if not v.is_video_creation_running and (x == y):
                 do_create(v, top_five_memes, val)
-                return JsonResponse({'type':0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
+                return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
             elif not v.is_video_creation_running and (x != y):
                 do_create(v, top_five_memes, val)
-                return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
+                return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
             else:
                 return JsonResponse({'type': 2, 'res': 'Error'}, safe=False)
         elif not v.is_video_creation_running and (x != y):
             do_create(v, top_five_memes, val)
-            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
+            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
 
         else:
-            print('lol')
-            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.ogv'}, safe=False)
+            return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
 
 
 def load_images(top_five_memes, val):
@@ -573,7 +716,7 @@ def images_to_video(top_five_memes, val):
         print('yes')
         clips = [ImageClip(v).set_duration(5) for k, v in image_dict.items()]
         concat_clip = concatenate_videoclips(clips, method="compose")
-        concat_clip.write_videofile('media/videoMedia/my_video.ogv', fps=framerate)
+        concat_clip.write_videofile('media/videoMedia/my_video.webm', fps=framerate)
     else:
         b, g, r, a = np.dsplit(img, img.shape[-1])
         retval, buffer = cv2.imencode('.png', np.dstack((r, g, b, a)))
@@ -583,13 +726,13 @@ def images_to_video(top_five_memes, val):
             f_output.write(buffer)
 
 
-
 def do_create(v, top_five_memes, val):
     v.is_video_creation_running = True
     v.save()
     images_to_video(top_five_memes, val)
     v.is_video_creation_running = False
     v.save()
+
 
 class VideoTemplates(viewsets.ModelViewSet):
     video_folder = 'media/videoMedia/'
