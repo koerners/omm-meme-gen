@@ -24,6 +24,7 @@ import {ChartDataSets} from 'chart.js';
   templateUrl: './detail-view.component.html',
   styleUrls: ['./detail-view.component.css']
 })
+
 export class DetailViewComponent implements OnInit {
   public meme: Meme;
   selectedId: number;
@@ -196,7 +197,7 @@ export class DetailViewComponent implements OnInit {
 
 
   nextImage(): void {
-
+    // TODO jump to beginning at end
     this.router.navigate(['/meme/' + String(this.getNextMemeId(true).id)]);
   }
 

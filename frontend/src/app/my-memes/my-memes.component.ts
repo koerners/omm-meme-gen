@@ -3,11 +3,11 @@ import { DatePipe } from '@angular/common';
 import {Router} from '@angular/router';
 import {PageEvent} from '@angular/material/paginator';
 import {MatTabChangeEvent} from '@angular/material/tabs';
-import {BreakpointObserver} from '@angular/cdk/layout';
 import {Meme} from '../Meme';
 import {MemeService} from '../services/meme.service';
 import {SpeechService} from '../services/speech.service';
 import {VoiceRecognitionService} from '../services/voice-recognition.service';
+import {saveAs} from 'file-saver';
 
 interface TextType {
   text: string;
@@ -69,6 +69,7 @@ export class MyMemesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMemes();
+
   }
 
   getData($event: PageEvent): any {
@@ -311,4 +312,18 @@ export class MyMemesComponent implements OnInit {
     };
     this.voiceRecognitionService.setUp(commands);
   }
+  download(): void {
+    console.log(this.selectedFilter);
+
+    if (this.selectedFilter){
+      const type = this.selectedFilter;
+      console.log(this.filterValue);
+      this.memeService.getFilteredMemesAsZip(type, 10, this.filterValue)
+        .subscribe(
+            blob => {
+              saveAs(blob, 'meme.zip');
+            });
+    }
+  }
+
 }

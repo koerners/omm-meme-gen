@@ -1,20 +1,20 @@
-<button (click)="screenReader()">Speak</button>
-<button (click)="stopScreenReader()">Stop</button>
+<button mat-raised-button (click)="screenReader()">Speak</button>
+<button mat-raised-button (click)="stopScreenReader()">Stop</button>
 
 <div *ngIf="voiceRecognitionService.voiceFeedbackEnabled" style="background-color: darkslateblue">
-  Voice Recognition: <br />
+  Voice Recognition: <br/>
   {{voiceRecognitionService.voiceStatusMsg}} {{voiceRecognitionService.voiceActionFeedback}}
   <ng-container *ngIf="voiceRecognitionService.voiceFeedbackShowHelp">
     <div class="grid-container">
-      Available commands... <br />
+      Available commands... <br/>
       Help: 'help me', 'close help'
     </div>
   </ng-container>
   <div class="grid-container">
-    <br /><button (click)="voiceRecognitionService.closeVoiceFeedback()">Close</button>
+    <br/>
+    <button mat-raised-button (click)="voiceRecognitionService.closeVoiceFeedback()">Close</button>
   </div>
 </div>
-
 <form>
   <mat-form-field appearance="fill">
     <mat-label>Sort by</mat-label>
@@ -39,29 +39,34 @@
     </mat-select>
   </mat-form-field>
   <span *ngIf="filterType=='text'">
-    <mat-form-field appearance="fill">
-      <mat-label>Value</mat-label>
-      <input matInput name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
-    </mat-form-field>
-  </span>
+        <mat-form-field appearance="fill">
+          <mat-label>Value</mat-label>
+          <input matInput name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
+        </mat-form-field>
+      </span>
   <span *ngIf="filterType=='date'">
-    <mat-form-field appearance="fill">
-      <mat-label>Value</mat-label>
-      <input matInput type="date" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
-    </mat-form-field>
-  </span>
+        <mat-form-field appearance="fill">
+          <mat-label>Value</mat-label>
+          <input matInput type="date" name="value" placeholder="type here" [(ngModel)]="filterValue"
+                 (change)="submitChanged()">
+        </mat-form-field>
+      </span>
   <span *ngIf="filterType=='number'">
-    <mat-form-field appearance="fill">
-      <mat-label>Value</mat-label>
-      <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
-    </mat-form-field>
-  </span>
+        <mat-form-field appearance="fill">
+          <mat-label>Value</mat-label>
+          <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="filterValue"
+                 (change)="submitChanged()">
+        </mat-form-field>
+      </span>
   <span *ngIf="filterType=='user'">
-    <mat-form-field appearance="fill">
-      <mat-label>User ID (TODO dropdown)</mat-label>
-      <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="filterValue" (change)="submitChanged()">
-    </mat-form-field>
-  </span>
+        <mat-form-field appearance="fill">
+          <mat-label>User ID (TODO dropdown)</mat-label>
+          <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="filterValue"
+                 (change)="submitChanged()">
+        </mat-form-field>
+      </span>
+
+  <button mat-raised-button (click)="download()">DOWNLOAD</button>
 </form>
 
 <mat-tab-group mat-align-tabs="center" (selectedTabChange)="onTabChanged($event);">
@@ -74,7 +79,7 @@
     <div class="grid-container">
       <mat-grid-list cols="2" rowHeight="350px">
         <mat-grid-tile *ngFor="let meme of this.allMemes" [colspan]="1" [rowspan]="3">
-          <mat-card class="dashboard-card" routerLink = "/meme/{{meme.id}}" style="cursor: pointer;">
+          <mat-card class="dashboard-card" routerLink="/meme/{{meme.id}}" style="cursor: pointer;">
             <mat-card-header>
               <mat-card-title>
                 {{meme.title}}
@@ -104,7 +109,7 @@
     <div class="grid-container">
       <mat-grid-list cols="2" rowHeight="350px">
         <mat-grid-tile *ngFor="let meme of allMemes" [colspan]="1" [rowspan]="3">
-          <mat-card class="dashboard-card" routerLink = "/meme/{{meme.id}}" style="cursor: pointer;">
+          <mat-card class="dashboard-card" routerLink="/meme/{{meme.id}}" style="cursor: pointer;">
             <mat-card-header>
               <mat-card-title>
                 {{meme.title}}

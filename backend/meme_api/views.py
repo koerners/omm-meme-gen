@@ -1,10 +1,11 @@
+import datetime
 import urllib
 from pathlib import Path
 from random import Random, randint
 
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
-from rest_framework import generics
+from rest_framework import generics, pagination
 from django.views.decorators.csrf import csrf_exempt
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
@@ -39,7 +40,9 @@ import json, io, zipfile
 import urllib.parse
 import numpy as np
 from skimage.transform import resize
+from zipfile import ZipFile
 import cv2
+
 
 DEFAULT_FONT_SIZE = 30
 FONT_DEFAULT = 'Ubuntu-M.ttf'
@@ -74,14 +77,92 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrCreateOnly]
 
 
+class Zip:
+    @classmethod
+    @csrf_exempt
+    def get_as_zip(cls, request):
+
+
+        print(request.POST)
+        start_date = None
+        end_date = None
+        start_votes = None
+        end_votes = None
+        start_views = None
+        end_views = None
+        search = None
+
+
+        q = Meme.objects.all()
+        if 'created' in request.POST :
+            if '-created' in request.POST:
+                end_date = request.POST.get("-created")
+        else:
+            start_date = request.POST.get("created")
+        if "votes" in request.POST:
+            if '-votes' in request.POST:
+                end_votes = request.POST.get("-votes")
+            else:
+                start_votes = request.POST.get("votes")
+        if 'views' in request.POST:
+            if '-views' in request.POST:
+                end_views = request.POST.get("-views")
+            else:
+                start_views = request.POST.get("views")
+        if 'search' in request.POST:
+            search = request.POST.get("search")
+
+        max = int(request.POST.get("max"))
+
+        if start_views is not None:
+            q = q.filter(views__gte = start_views)
+        if end_views is not None:
+            q = q.filter(views__lte = end_views)
+        if start_votes is not None:
+            q = q.filter(votes__gte = start_votes)
+        if end_votes is not None:
+            q = q.filter(votes__lte = end_votes)
+        if start_date is not None:
+            q = q.filter(created__gte = start_date)
+        if end_date is not None:
+            q = q.filter(created__lte = end_date)
+        if search is not None:
+            q = q.filter(text_concated__contains=(search))
+        print(q)
+
+        # TODO: Die neuen Felder vom order / filter branch
+        #
+        zip_archive = io.BytesIO()
+        with zipfile.ZipFile(zip_archive, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            print(list(enumerate(q)))
+            for index, meme in enumerate(q):
+                print(index, meme)
+                if index > max:
+                    break
+                base64_decoded = base64.b64decode(meme.image_string[22:])
+                zf.writestr('meme_' + str(index) + "_" + meme.title + '.png', base64_decoded)
+        #
+        # # zip_archive.seek(0)
+        # print(zip_archive.getvalue())
+
+        response = HttpResponse(zip_archive.getvalue())
+        response['Content-Type'] = 'application/x-zip-compressed'
+        response['Content-Disposition'] = 'attachment; filename="%s"' % 'memes.zip'
+        return response
+
+
+
 class MemeList(viewsets.ModelViewSet):
     queryset = Meme.objects.filter(private=False)
     serializer_class = MemeSerializer
+
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['text_concated', 'title']
     ordering_fields = ['created', 'views', 'pos_votes', 'n_comments', 'title', 'owner']
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+
 
     @action(detail=False)
     def own(self, request):
@@ -547,7 +628,7 @@ class MemesToVideo:
         v = list(VideoCreation.objects.all())
         if v == []:
             VideoCreation.objects.create(is_video_creation_running=False)
-            v = VideoCreation.objects.all()[0]
+            v = list(VideoCreation.objects.all())
         v = v[0]
         val = Meme.objects.values().count()
         if val > 5:
@@ -606,7 +687,6 @@ class MemesToVideo:
             return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
 
         else:
-            print('lol')
             return JsonResponse({'type': 0, 'res': '/media/videoMedia/my_video.webm'}, safe=False)
 
 

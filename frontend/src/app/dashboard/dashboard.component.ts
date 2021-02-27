@@ -21,14 +21,18 @@ export class DashboardComponent implements  AfterViewInit{
         return [
           {title: 'Top 5 Viewed Memes', cols: 2, rows: 1},
           {title: 'Corresponding Image', cols: 2, rows: 1},
-          {title: 'Users Last Login', cols: 2, rows: 1}
+          {title: 'Users Last Login', cols: 2, rows: 1},
+          {title: 'TopUsedTemplatesOverTime', cols: 2, rows: 1},
+          {title: 'TemplatesViewedCreated', cols: 2, rows: 1},
         ];
       }
 
       return [
         {title: 'Top 5 Viewed Memes', cols: 1, rows: 1},
         {title: 'Corresponding Image', cols: 1, rows: 1},
-        {title: 'Users Last Login', cols: 2, rows: 1}
+        {title: 'Users Last Login', cols: 2, rows: 1},
+        {title: 'TopUsedTemplatesOverTime', cols: 1, rows: 1},
+        {title: 'TemplatesViewedCreated', cols: 1, rows: 1},
       ];
     })
   );

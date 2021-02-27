@@ -179,12 +179,19 @@ export class MemeService {
     return this.http.get(environment.apiUrl + '/userStats/');
   }
   loadMemeStats(id: string): any{
-    console.log(">>>>>>>>" + id);
     return this.http.get(environment.apiUrl + '/memeStats/?meme=' + id);
   }
 
   loadTopMemeVideo(): any{
     return this.http.get(environment.apiUrl + '/memeVideo/');
+  }
+
+  getFilteredMemesAsZip(type: string, maxImgs: number, start: any, end?: any ): any {
+    const data = new FormData();
+    data.append('max', String(maxImgs));
+    data.append(String(type), String(start));
+
+    return this.http.post(environment.apiUrl + '/zip/', data, { responseType: 'blob'});
   }
 
 
@@ -202,7 +209,7 @@ export class MemeService {
       const xhr = new XMLHttpRequest();
       xhr.withCredentials = false;
 
-      xhr.addEventListener('readystatechange', function() {
+      xhr.addEventListener('readystatechange', function(): void {
         if (this.readyState === 4) {
           console.log(this.responseText);
         }
@@ -221,7 +228,7 @@ export class MemeService {
       const xhr = new XMLHttpRequest();
       xhr.withCredentials = false;
 
-      xhr.addEventListener('readystatechange', function() {
+      xhr.addEventListener('readystatechange', function(): void {
         if (this.readyState === 4) {
           console.log(this.responseText);
         }
@@ -236,7 +243,7 @@ export class MemeService {
 
   /**
    * set the meme id if generate, else set null
-   * @param id
+   * @param id the id of the meme
    */
   setMemeServiceCurrentMeme(id): void{
     this.currentMemeId = id;
