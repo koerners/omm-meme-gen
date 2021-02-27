@@ -56,7 +56,7 @@ export class MemeService {
       return this.http.get(environment.apiUrl + '/meme/own/' + (params ? '?' + params : ''));
     }
     else {
-      return this.http.get(environment.apiUrl + '/meme/' + (params ? '?' + params : ''));
+      return this.http.get(environment.apiUrl + '/meme/all/' + (params ? '?' + params : ''));
     }
   }
 

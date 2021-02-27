@@ -33,6 +33,7 @@ import os
 import re
 import base64
 import requests
+from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import json, io, zipfile
 import urllib.parse
@@ -84,7 +85,72 @@ class MemeList(viewsets.ModelViewSet):
 
     @action(detail=False)
     def own(self, request):
+        print("own")
+        filterfield = request.GET.get("filter", "")
+        filtervalue = request.GET.get("value", "")
         self.queryset = Meme.objects.filter(owner=request.user)
+
+        if filterfield == "views" and not filtervalue == "":
+            print("filter: views>=" + filtervalue)
+            self.queryset = self.queryset.filter(views__gte=int(filtervalue))
+        elif filterfield == "-views" and not filtervalue == "":
+            print("filter: views<=" + filtervalue)
+            self.queryset = self.queryset.filter(views__lte=int(filtervalue))
+        elif filterfield == "pos_votes" and not filtervalue == "":
+            print("filter: pos_votes>=" + filtervalue)
+            self.queryset = self.queryset.filter(pos_votes__gte=int(filtervalue))
+        elif filterfield == "-pos_votes" and not filtervalue == "":
+            print("filter: pos_votes<=" + filtervalue)
+            self.queryset = self.queryset.filter(pos_votes__lte=int(filtervalue))
+        elif filterfield == "n_comments" and not filtervalue == "":
+            print("filter: n_comments>=" + filtervalue)
+            self.queryset = self.queryset.filter(n_comments__gte=int(filtervalue))
+        elif filterfield == "-n_comments" and not filtervalue == "":
+            print("filter: n_comments<=" + filtervalue)
+            self.queryset = self.queryset.filter(n_comments__lte=int(filtervalue))
+        elif filterfield == "created" and not filtervalue == "":
+            print("filter: created>="+filtervalue)
+            self.queryset = self.queryset.filter(created__gte=datetime.strptime(filtervalue, '%Y-%m-%d'))
+        elif filterfield == "-created" and not filtervalue == "":
+            print("filter: created<="+filtervalue)
+            self.queryset = self.queryset.filter(
+                created__lte=datetime.strptime(filtervalue+" 23:59:59", '%Y-%m-%d %H:%M:%S'))
+
+        return super().list(request)
+
+    @action(detail=False)
+    def all(self, request):
+        print("all")
+        filterfield = request.GET.get("filter", "")
+        filtervalue = request.GET.get("value", "")
+        self.queryset = Meme.objects.filter(private=False)
+
+        if filterfield == "views" and not filtervalue == "":
+            print("filter: views>=" + filtervalue)
+            self.queryset = self.queryset.filter(views__gte=int(filtervalue))
+        elif filterfield == "-views" and not filtervalue == "":
+            print("filter: views<=" + filtervalue)
+            self.queryset = self.queryset.filter(views__lte=int(filtervalue))
+        elif filterfield == "pos_votes" and not filtervalue == "":
+            print("filter: pos_votes>=" + filtervalue)
+            self.queryset = self.queryset.filter(pos_votes__gte=int(filtervalue))
+        elif filterfield == "-pos_votes" and not filtervalue == "":
+            print("filter: pos_votes<=" + filtervalue)
+            self.queryset = self.queryset.filter(pos_votes__lte=int(filtervalue))
+        elif filterfield == "n_comments" and not filtervalue == "":
+            print("filter: n_comments>=" + filtervalue)
+            self.queryset = self.queryset.filter(n_comments__gte=int(filtervalue))
+        elif filterfield == "-n_comments" and not filtervalue == "":
+            print("filter: n_comments<=" + filtervalue)
+            self.queryset = self.queryset.filter(n_comments__lte=int(filtervalue))
+        elif filterfield == "created" and not filtervalue == "":
+            print("filter: created>="+filtervalue)
+            self.queryset = self.queryset.filter(created__gte=datetime.strptime(filtervalue, '%Y-%m-%d'))
+        elif filterfield == "-created" and not filtervalue == "":
+            print("filter: created<="+filtervalue)
+            self.queryset = self.queryset.filter(
+                created__lte=datetime.strptime(filtervalue+" 23:59:59", '%Y-%m-%d %H:%M:%S'))
+
         return super().list(request)
 
     @action(detail=False)
