@@ -130,8 +130,6 @@ class Zip:
             q = q.filter(text_concated__contains=(search))
         print(q)
 
-        # TODO: Die neuen Felder vom order / filter branch
-        #
         zip_archive = io.BytesIO()
         with zipfile.ZipFile(zip_archive, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             print(list(enumerate(q)))
@@ -788,8 +786,6 @@ class VideoTemplates(viewsets.ModelViewSet):
         vidcap = cv2.VideoCapture(video_file_url)
         fps = vidcap.get(cv2.CAP_PROP_FPS)
 
-        os.remove(video_file_url)
-
         images = []
 
         frame_counter = 0
@@ -816,6 +812,8 @@ class VideoTemplates(viewsets.ModelViewSet):
             success, image_as_np_array = vidcap.read()
 
             frame_counter += 1
+
+        vidcap.release()
 
         clips = ImageSequenceClip(images, fps=fps)
         clips.write_videofile(video_file_url, fps=fps)
