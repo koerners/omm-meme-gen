@@ -181,6 +181,9 @@ export class MemeService {
   loadMemeStats(id: string): any{
     return this.http.get(environment.apiUrl + '/memeStats/?meme=' + id);
   }
+  loadTemplateStats(): any{
+    return this.http.get(environment.apiUrl + '/getTemplateStats/');
+  }
 
   loadTopMemeVideo(): any{
     return this.http.get(environment.apiUrl + '/memeVideo/');

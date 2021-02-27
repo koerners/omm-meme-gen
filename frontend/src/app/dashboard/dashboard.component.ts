@@ -22,7 +22,6 @@ export class DashboardComponent implements  AfterViewInit{
           {title: 'Top 5 Viewed Memes', cols: 2, rows: 1},
           {title: 'Corresponding Image', cols: 2, rows: 1},
           {title: 'Users Last Login', cols: 2, rows: 1},
-          {title: 'TopUsedTemplatesOverTime', cols: 2, rows: 1},
           {title: 'TemplatesViewedCreated', cols: 2, rows: 1},
         ];
       }
@@ -30,8 +29,7 @@ export class DashboardComponent implements  AfterViewInit{
       return [
         {title: 'Top 5 Viewed Memes', cols: 1, rows: 1},
         {title: 'Corresponding Image', cols: 1, rows: 1},
-        {title: 'Users Last Login', cols: 2, rows: 1},
-        {title: 'TopUsedTemplatesOverTime', cols: 1, rows: 1},
+        {title: 'Users Last Login', cols: 1, rows: 1},
         {title: 'TemplatesViewedCreated', cols: 1, rows: 1},
       ];
     })
@@ -70,15 +68,24 @@ export class DashboardComponent implements  AfterViewInit{
   screenReaderText: Map<string, string>;
   type: number;
   poster;
+  templateData;
+  drawTemplateStatsViewedCreatedLabels: any[];
+  drawTemplateStatsViewedCreatedReady: boolean;
+  drawTemplateStatsViewedCreatedColors: any;
+  drawTemplateStatsViewedCreatedOptions: any;
+  drawTemplateStatsViewedCreatedData: any;
+  drawTemplateStatsViewedCreatedType = 'bar';
+  drawTemplateStatsViewedCreatedLegend = true;
 
   constructor(private breakpointObserver: BreakpointObserver, private memeService: MemeService, private ngZone: NgZone,
               private speechService: SpeechService, public voiceRecognitionService: VoiceRecognitionService) {
     this.loadStatistics();
     this.loadVideo();
-
     this.screenReaderText = new Map<string, string>();
+
     this.screenReaderText.set('Welcome', 'This page is Meme Life Dashboard.');
     this.initVoiceRecognitionCommands();
+    this.loadTemplateStatistics();
   }
 
   ngAfterViewInit(): void {}
@@ -100,22 +107,31 @@ export class DashboardComponent implements  AfterViewInit{
           return {day: e.day, month: e.month, year: e.year, date: e.date, count: e.count};
         });
         this.loginData = {data};
-        console.log(this.loginData);
       },
       () => console.error('ERROR'),
       () => this.drawUserChart());
   }
 
+  loadTemplateStatistics(): void {
+
+    // Template Statistics
+    this.memeService.loadTemplateStats().subscribe(response => {
+      const data = {created: response.created, viewed: response.viewed};
+      this.templateData = data;
+    },
+      () => console.error('ERROR'),
+      () => {
+        this.drawTemplateStatsViewedCreated();
+      });
+  }
+
   loadVideo(): void {
     this.memeService.loadTopMemeVideo().subscribe(response => {
-      console.log(response.type);
       if (response.type === 1){
-        console.log(response);
         this.type = response.type;
         this.text = response.res;
       }
       else if (response.type === 0) {
-        console.log('TEST');
         this.text = '';
         this.type = response.type;
         this.video = response.res;
@@ -125,16 +141,12 @@ export class DashboardComponent implements  AfterViewInit{
         this.poster = environment.apiUrl + response.res;
       }
       else{
-        console.log(response);
         this.type = response.type;
         this.text = 'ERROR';
       }
-      console.log(this.video);
     }, null, _ => {
-      console.log(this.noVid);
       if (this.type === 0) {
         this.video = environment.apiUrl + this.video;
-        console.log(this.video);
         this.vid.nativeElement.setAttribute('src', this.video);
         this.noVid = false;
       }
@@ -148,7 +160,6 @@ export class DashboardComponent implements  AfterViewInit{
   }
 
   drawTopMemeChart(): void {
-    console.log(this.topMemes);
     const chartData = Array.from(this.topMemes.data, ({view}) => view );
     this.topMemeChartData = [
       { data: chartData, label: 'Top 5 Most viewed Memes' },
@@ -167,7 +178,6 @@ export class DashboardComponent implements  AfterViewInit{
       }
     };
     this.topMemeChartLabels = Array.from(this.topMemes.data, ({title}) => title );
-    console.log(this.topMemeChartLabels);
     this.topMemeChartColors = [
       {
         borderColor: 'black',
@@ -215,16 +225,16 @@ export class DashboardComponent implements  AfterViewInit{
         }],
         plugins: {
           outlabels: {
-            backgroundColor: "white", // Background color of Label
-            borderColor: "none", // Border color of Label
+            backgroundColor: 'white', // Background color of Label
+            borderColor: 'none', // Border color of Label
             borderRadius: 0, // Border radius of Label
             borderWidth: 0, // Thickness of border
-            color: "black", // Font color
+            color: 'black', // Font color
             display: false,
             lineWidth: 1, // Thickness of line between chart arc and Label
             padding: 0,
-            lineColor: "black",
-            textAlign: "center",
+            lineColor: 'black',
+            textAlign: 'center',
             stretch: 45,
           },
           labels: false
@@ -237,7 +247,6 @@ export class DashboardComponent implements  AfterViewInit{
         }],
       }
     };
-    console.log(this.loginData.data);
     this.loginChartLabels = Array.from(this.loginData.data, ({day, month, year}) => day + '.' + month + '.' + year);
     this.loginChartColors = [
       {
@@ -255,6 +264,74 @@ export class DashboardComponent implements  AfterViewInit{
     });
     this.screenReaderText.set('UserStat', text);
   }
+
+
+  private drawTemplateStatsViewedCreated(): void {
+    const chartData = Array.from(this.templateData.created, ({_count}) => _count);
+    const chartData2 = Array.from(this.templateData.viewed, ({_count}) => _count);
+    this.drawTemplateStatsViewedCreatedData = [
+      {data: chartData, label: 'Created', backgroundColor: 'white'},
+      {data: chartData2, label: 'Just viewed', backgroundColor: '#7b1fa2'},
+    ];
+
+    this.drawTemplateStatsViewedCreatedOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+
+      scales: {
+        yAxes: [{
+          stacked: true,
+          ticks: {
+            beginAtZero: true,
+            stepSize: 1,
+            fontColor: 'white'
+          }
+        }],
+        xAxes: [{
+          stacked: true,
+          ticks: {
+            display: true,
+            fontColor: 'white'
+          }
+        }],
+        plugins: {
+          outlabels: {
+            backgroundColor: 'white', // Background color of Label
+            borderColor: 'none', // Border color of Label
+            borderRadius: 0, // Border radius of Label
+            borderWidth: 0, // Thickness of border
+            color: 'black', // Font color
+            display: false,
+            lineWidth: 1, // Thickness of line between chart arc and Label
+            padding: 0,
+            lineColor: 'black',
+            textAlign: 'center',
+            stretch: 45,
+          },
+          labels: false
+        },
+        legend: [{
+          display: true,
+        }],
+        title: [{
+          display: true,
+        }],
+      }
+    };
+    this.drawTemplateStatsViewedCreatedLabels = Array.from(this.templateData.created,
+      // tslint:disable-next-line
+      (eleme) => eleme['template_id__title']);
+    this.drawTemplateStatsViewedCreatedColors = [
+      {
+        borderColor: 'black',
+        backgroundColor: '#47A31F'
+      },
+    ];
+    this.drawTemplateStatsViewedCreatedReady = true;
+  }
+
+
+
 
   // ScreenReader and its functions //
   public screenReader(): void {
