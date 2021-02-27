@@ -116,7 +116,7 @@ class CommentList(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def perform_create(self, serializer):
-        m = Meme.objects.filter(id=int(self.request.POST.get("meme")))[0]
+        m = Meme.objects.filter(id=int(self.request.data.get("meme")))[0]
         m.n_comments += 1
         m.save()
 
@@ -145,9 +145,8 @@ class VoteList(viewsets.ModelViewSet):
     serializer_class = VoteSerializer
 
     def perform_create(self, serializer):
-
-        if self.request.POST.get("upvote") == "true":
-            m = Meme.objects.filter(id=int(self.request.POST.get("meme")))[0]
+        if self.request.data.get("upvote"):
+            m = Meme.objects.filter(id=int(self.request.data.get("meme")))[0]
             m.pos_votes += 1
             m.save()
 
