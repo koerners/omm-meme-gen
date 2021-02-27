@@ -14,6 +14,8 @@ export class Meme {
   voted: boolean;
   views: number;
   type: number;
-  comments: number;
-  posVotes: number;
+  // tslint:disable-next-line:variable-name
+  n_comments: number;
+  // tslint:disable-next-line:variable-name
+  pos_votes: number;
 }

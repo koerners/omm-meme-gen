@@ -87,7 +87,7 @@
               <video [src]="meme.image_string" controls="controls" alt="Loading"></video>
             </mat-card-content>
             <mat-card-footer>
-              by {{meme.owner}} (views: {{meme.views}} / votes: {{meme.upvotes}}+ / comments: {{meme.comments}} / created: {{meme.created | date:'dd.MM.yy HH:mm:ss'}})
+              by {{meme.owner}} (views: {{meme.views}} / votes: {{meme.pos_votes}}+ / comments: {{meme.n_comments}} / created: {{meme.created | date:'dd.MM.yy HH:mm:ss'}})
             </mat-card-footer>
           </mat-card>
         </mat-grid-tile>
@@ -117,7 +117,7 @@
               <video [src]="meme.image_string" autoplay="autoplay" controls="controls" alt="Loading"></video>
             </mat-card-content>
             <mat-card-footer>
-              by {{meme.owner}} (views: {{meme.views}} / votes: {{meme.upvotes}}+ / comments: {{meme.comments}} / created: {{meme.created | date:'dd.MM.yy HH:mm:ss'}})
+              by {{meme.owner}} (views: {{meme.views}} / votes: {{meme.pos_votes}}+ / comments: {{meme.n_comments}} / created: {{meme.created | date:'dd.MM.yy HH:mm:ss'}})
             </mat-card-footer>
           </mat-card>
         </mat-grid-tile>
