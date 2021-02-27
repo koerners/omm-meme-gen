@@ -130,8 +130,6 @@ class Zip:
             q = q.filter(text_concated__contains=(search))
         print(q)
 
-        # TODO: Die neuen Felder vom order / filter branch
-        #
         zip_archive = io.BytesIO()
         with zipfile.ZipFile(zip_archive, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             print(list(enumerate(q)))
