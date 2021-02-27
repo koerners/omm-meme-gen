@@ -23,11 +23,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class MemeSerializer(serializers.ModelSerializer):
-    comments = serializers.IntegerField(
-        source='meme_comment.count',
-        read_only=True
-    )
-    pos_votes = serializers.SerializerMethodField('how_many_pos')
+    """pos_votes = serializers.SerializerMethodField('how_many_pos')
 
     def how_many_pos(self, meme):
         try:
@@ -35,12 +31,12 @@ class MemeSerializer(serializers.ModelSerializer):
         except Exception as e:
             votes = 0
 
-        return votes
+        return votes"""
 
     class Meta:
         model = Meme
         fields = ['id', 'title', 'owner', 'image_string', 'views', 'private',
-                  'pos_votes', 'type', 'text_concated', 'comments']
+                  'pos_votes', 'type', 'text_concated', 'n_comments', 'created']
 
     owner = serializers.ReadOnlyField(source='owner.username')
 
