@@ -23,16 +23,23 @@ export class MemeService {
   }
 
   /**
-   * retrieves all memes stored in the database
+   * retrieves all memes (paginated)
    */
   getAll(): any {
     return this.http.get(environment.apiUrl + '/meme/');
   }
 
   /**
-   * maps Filter & Sort Options
+   * retrieve the memes generated owned by the active account (paginated)
    */
-  getAllSortFilter(sort: string, order: string, filter: string, value: string): any {
+  getOwn(): any {
+    return this.http.get(environment.apiUrl + '/meme/own/');
+  }
+
+  /**
+   * retrieves memes (paginated) with Filter & Sort options
+   */
+  getMemesSortFilter(own: boolean, sort: string, order: string, filter: string, value: string): any {
     let params = '';
     if (filter === 'search' && value) {
       params += 'search=' + value;
@@ -45,7 +52,12 @@ export class MemeService {
       // console.log(sort, order);
       params += (params ? '&' : '') + 'ordering=' + order + sort;
     }
-    return this.http.get(environment.apiUrl + '/meme/' + (params ? '?' + params : ''));
+    if (own) {
+      return this.http.get(environment.apiUrl + '/meme/own/' + (params ? '?' + params : ''));
+    }
+    else {
+      return this.http.get(environment.apiUrl + '/meme/all/' + (params ? '?' + params : ''));
+    }
   }
 
   /**
@@ -54,13 +66,6 @@ export class MemeService {
    */
   paginator(url: string): any {
     return this.http.get(url + '');
-  }
-
-  /**
-   * retrieve the memes generated owned by the active account
-   */
-  getOwn(): any {
-    return this.http.get(environment.apiUrl + '/meme/own/');
   }
 
   /**

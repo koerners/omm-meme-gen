@@ -4,7 +4,6 @@ export class Meme {
   id: number;
   owner: User;
   imageString: string;
-  creation: string;   // FIXME necessary?
   created: string;
   private: boolean;
   title: string;
@@ -15,4 +14,8 @@ export class Meme {
   voted: boolean;
   views: number;
   type: number;
+  // tslint:disable-next-line:variable-name
+  n_comments: number;
+  // tslint:disable-next-line:variable-name
+  pos_votes: number;
 }
