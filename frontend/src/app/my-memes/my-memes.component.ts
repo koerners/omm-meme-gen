@@ -251,56 +251,137 @@ export class MyMemesComponent implements OnInit {
         this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Start Screen Reader');
         this.screenReader();
       },
+      'show other memes': () => {
+        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'show other memes');
+        this.ngZone.run(() => this.currentTab = 0);
+        this.ngZone.run(() => this.currentPage = 0);
+
+        this.loadMemes();
+      },
+      'show my memes': () => {
+        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'show my memes');
+        this.ngZone.run(() => this.currentTab = 1);
+        this.ngZone.run(() => this.currentPage = 0);
+        this.loadMemes();
+      },
+      'next page': () => {
+        if (this.currentPage + 1 >= (Math.floor(this.memeLength / 6))) {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'no more pages');
+          return;
+        }
+        this.ngZone.run(() => {
+          this.voiceRecognitionService.voiceActionFeedback = 'next page';
+          this.currentPage += 1;
+          this.readPaging(this.currentPage);
+          this.memeService.paginator(this.nextUrl).subscribe(data => {
+              this.allMemes = data.results;
+              this.memeLength = data.count;
+              this.nextUrl = data.next;
+              this.prevUrl = data.previous;
+              this.readCurrentMemeSet();
+            }
+          );
+        });
+      },
+      'previous page': () => {
+        if (this.currentPage - 1 < 0) {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'no more pages');
+          return;
+        }
+        this.ngZone.run(() => {
+          this.voiceRecognitionService.voiceActionFeedback = 'previous page';
+          this.currentPage -= 1;
+          this.readPaging(this.currentPage);
+          this.memeService.paginator(this.prevUrl).subscribe(data => {
+              this.allMemes = data.results;
+              this.memeLength = data.count;
+              this.nextUrl = data.next;
+              this.prevUrl = data.previous;
+              this.readCurrentMemeSet();
+            }
+          );
+        });
+      },
       'open first meme': () => {
-        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open first meme (#id: ' + this.allMemes[0].id + ')');
-        this.router.navigate(['./meme/' + this.allMemes[0].id]);
+        if (this.allMemes[0]) {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open first meme (#id: ' + this.allMemes[0].id + ')');
+          this.router.navigate(['./meme/' + this.allMemes[0].id]);
+        }
+        else {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open first meme not possible');
+        }
       },
       'open second meme': () => {
-        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open second meme (#id: ' + this.allMemes[1].id + ')');
-        this.router.navigate(['./meme/' + this.allMemes[1].id]);
+        if (this.allMemes[1]) {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open second meme (#id: ' + this.allMemes[1].id + ')');
+          this.router.navigate(['./meme/' + this.allMemes[1].id]);
+        }
+        else {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open second meme not possible');
+        }
       },
       'open third meme': () => {
-        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open third meme (#id: ' + this.allMemes[2].id + ')');
-        this.router.navigate(['./meme/' + this.allMemes[2].id]);
+        if (this.allMemes[2]) {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open third meme (#id: ' + this.allMemes[2].id + ')');
+          this.router.navigate(['./meme/' + this.allMemes[2].id]);
+        }
+        else {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open third meme not possible');
+        }
       },
       'open fourth meme': () => {
-        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open fourth meme (#id: ' + this.allMemes[3].id + ')');
-        this.router.navigate(['./meme/' + this.allMemes[3].id]);
+        if (this.allMemes[3]) {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open fourth meme (#id: ' + this.allMemes[3].id + ')');
+          this.router.navigate(['./meme/' + this.allMemes[3].id]);
+        }
+        else {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open fourth meme not possible');
+        }
       },
       'open fifth meme': () => {
-        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open fifth meme (#id: ' + this.allMemes[4].id + ')');
-        this.router.navigate(['./meme/' + this.allMemes[4].id]);
+        if (this.allMemes[4]) {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open fifth meme (#id: ' + this.allMemes[4].id + ')');
+          this.router.navigate(['./meme/' + this.allMemes[4].id]);
+        }
+        else {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open fifth meme not possible');
+        }
       },
       'open sixth meme': () => {
-        this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open sixth meme (#id: ' + this.allMemes[5].id + ')');
-        this.router.navigate(['./meme/' + this.allMemes[5].id]);
+        if (this.allMemes[5]) {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open sixth meme (#id: ' + this.allMemes[5].id + ')');
+          this.router.navigate(['./meme/' + this.allMemes[5].id]);
+        }
+        else {
+          this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'Open sixth meme not possible');
+        }
       },
-      'order by title': () => {
+      'sort by title': () => {
         this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'order by title');
         this.selectedSort = 'title';
         this.submitChanged();
       },
-      'order by username': () => {
+      'sort by username': () => {
         this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'order by owner');
         this.selectedSort = 'owner';
         this.submitChanged();
       },
-      'order by view count': () => {
+      'sort by view count': () => {
         this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'order by views');
         this.selectedSort = 'views';
         this.submitChanged();
       },
-      'order by timestamp': () => {
+      'sort by timestamp': () => {
         this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'order by created');
         this.selectedSort = 'created';
         this.submitChanged();
       },
-      'order ascending': () => {
+      'sort ascending': () => {
         this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'order ascending');
         this.selectedOrder = '';
         this.submitChanged();
       },
-      'order descending': () => {
+      'sort descending': () => {
         this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'order descending');
         this.selectedOrder = '-';
         this.submitChanged();
@@ -308,7 +389,6 @@ export class MyMemesComponent implements OnInit {
       'download memes': () => {
         this.ngZone.run(() => this.voiceRecognitionService.voiceActionFeedback = 'download memes');
       },
-
     };
     this.voiceRecognitionService.setUp(commands);
   }
