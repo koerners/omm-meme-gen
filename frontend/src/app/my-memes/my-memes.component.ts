@@ -1,4 +1,5 @@
 import {Component, NgZone, OnInit} from '@angular/core';
+import { DatePipe } from '@angular/common';
 import {Router} from '@angular/router';
 import {PageEvent} from '@angular/material/paginator';
 import {MatTabChangeEvent} from '@angular/material/tabs';
@@ -16,7 +17,8 @@ interface TextType {
 @Component({
   selector: 'app-my-memes',
   templateUrl: './my-memes.component.html',
-  styleUrls: ['./my-memes.component.css']
+  styleUrls: ['./my-memes.component.css'],
+  providers: [DatePipe]
 })
 export class MyMemesComponent implements OnInit {
   allMemes: Meme[];
@@ -50,7 +52,7 @@ export class MyMemesComponent implements OnInit {
   selectedSort: string;
   selectedOrder: string;
 
-  constructor(private memeService: MemeService, private ngZone: NgZone, private router: Router,
+  constructor(private memeService: MemeService, private ngZone: NgZone, private router: Router, private datepipe: DatePipe,
               private speechService: SpeechService, public voiceRecognitionService: VoiceRecognitionService) {
     this.currentTab = 0;
     this.currentPage = 0;
@@ -97,23 +99,7 @@ export class MyMemesComponent implements OnInit {
   }
 
   private loadMemes(): any {
-    if (this.currentTab === 0) {
-      this.screenReaderText.set('WhatPage', 'You are watching public memes from all users.');
-      this.memeService.getMemesSortFilter(false, this.selectedSort, this.selectedOrder, this.selectedFilter, this.filterValue)
-        .subscribe(data => {
-          this.allMemes = data.results;
-          this.memeLength = data.count;
-          this.nextUrl = data.next;
-          this.prevUrl = data.previous;
-          // console.log(this.nextUrl, this.prevUrl);
-
-          this.readPaging(1);
-          this.readCurrentMemeSet();
-          return this.allMemes;
-        }
-      );
-    }
-    else {
+    if (this.currentTab === 1) {
       this.screenReaderText.set('WhatPage', 'You are watching your own memes.');
       this.memeService.getMemesSortFilter(true, this.selectedSort, this.selectedOrder, this.selectedFilter, this.filterValue)
         .subscribe(data => {
@@ -128,6 +114,22 @@ export class MyMemesComponent implements OnInit {
           return this.allMemes;
         }
       );
+    }
+    else {
+      this.screenReaderText.set('WhatPage', 'You are watching public memes from all users.');
+      this.memeService.getMemesSortFilter(false, this.selectedSort, this.selectedOrder, this.selectedFilter, this.filterValue)
+        .subscribe(data => {
+            this.allMemes = data.results;
+            this.memeLength = data.count;
+            this.nextUrl = data.next;
+            this.prevUrl = data.previous;
+            // console.log(this.nextUrl, this.prevUrl);
+
+            this.readPaging(1);
+            this.readCurrentMemeSet();
+            return this.allMemes;
+          }
+        );
     }
   }
 
@@ -176,9 +178,12 @@ export class MyMemesComponent implements OnInit {
     let text = '';
     text += this.screenReaderText.get('Welcome') + ' ';
     text += (this.screenReaderText.get('WhatPage') || '') + ' ';
+    text += (this.screenReaderText.get('Filter') || '') + ' ';
     text += (this.screenReaderText.get('Amount') || '') + ' ';
+    text += (this.screenReaderText.get('Sort') || '') + ' ';
     text += (this.screenReaderText.get('Paging') || '') + ' ';
     text += (this.screenReaderText.get('MemeTitles') || '') + ' ';
+    text += 'Thank you for listening.';
     return text;
   }
 
@@ -189,28 +194,48 @@ export class MyMemesComponent implements OnInit {
       ', showing ' + (this.memeLength >= 6 ? 6 : (this.memeLength % 6)) + ' memes.');
   }
   private readCurrentMemeSet(): void {
+    if (this.selectedSort) {
+      this.screenReaderText.set('Sort', 'Memes are sorted by ' + this.sortOptions.get(this.selectedSort) +
+        ' in ' + (this.selectedOrder === '-' ? 'descending' : 'ascending') + ' order.');
+    }
+
+    if (this.selectedFilter) {
+      this.screenReaderText.set('Filter', 'Memes are filtered by ' + this.filterOptions.get(this.selectedFilter).text +
+        ' with the search value: ' + this.filterValue + '. ');
+    }
+
     if (!this.allMemes) { this.screenReaderText.set('Amount', 'No Memes are available.'); return; }
 
     this.screenReaderText.set('Amount', this.memeLength + ' Memes are available.');
     let memeTitles = '';
-    let countEmpty = 0;
+    let counter = 0;
+    const counterTxt = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
     this.allMemes.forEach(element => {
       if (element.title) {
+        memeTitles += 'The ' + (counterTxt[counter] || 'next')  + ' meme is called: ';
         memeTitles += element.title + '! ';
       }
       else {
-        countEmpty++;
+        memeTitles += 'The ' + (counterTxt[counter] || 'next') + ' meme has no title. ';
       }
+      memeTitles += 'The meme was created on ' + this.datepipe.transform(element.created, 'fullDate') +
+        ' at ' + this.datepipe.transform(element.created, 'HH:mm:ss') +
+        (this.currentTab !== 1 ? ' by the user ' + element.owner : '' ) + '. ';
+      memeTitles += 'It has ' + element.views + ' view' + (element.views !== 1 ? 's' : '') + ', ' +
+        element.pos_votes + ' upvote' + (element.pos_votes !== 1 ? 's' : '') + ' and ' +
+        element.n_comments + ' comment' + (element.n_comments !== 1 ? 's' : '') + '. ';
+
+      counter++;
     });
-    if (memeTitles) {
-      memeTitles = 'The memes are called: ' + memeTitles;
-    }
-    if (countEmpty > 1) {
-      memeTitles += 'There are ' + countEmpty + ' memes with no title.';
-    }
-    else if (countEmpty === 1) {
-      memeTitles += 'There is 1 meme with no title.';
-    }
+    // if (memeTitles) {
+    //   memeTitles = 'The memes are called: ' + memeTitles;
+    // }
+    // if (countEmpty > 1) {
+    //   memeTitles += 'There are ' + countEmpty + ' memes with no title.';
+    // }
+    // else if (countEmpty === 1) {
+    //   memeTitles += 'There is 1 meme with no title.';
+    // }
     this.screenReaderText.set('MemeTitles', memeTitles);
   }
 
