@@ -942,9 +942,34 @@ export class GeneratorComponent implements AfterViewInit {
   private screenReaderBuilder(): string {
     let text = '';
     text += this.screenReaderText.get('Welcome') + ' ';
+
+    if (this.name) {
+      text += 'Meme title is set to ' + this.name.value + ' ';
+    }
+
     if (this.textTop) {
       text += 'Text top is set to ' + this.textTop.value + ' ';
     }
+
+    if (this.textBottom) {
+      text += 'Test bottom is set to ' + this.textBottom.value + ' ';
+    }
+
+    text += 'Font size is set to ' + this.fontSize.value + ' ';
+
+    text += 'Font style is set to ' + this.fontFamily.value + ' ';
+
+    text += 'Bold is set to ' + this.bold.value + ' ';
+
+    text += 'Italic is set to ' + this.italic.value + ' ';
+
+    text += 'Underline is set to ' + this.underline.value + ' ';
+
+    text += 'Text color is set to ' + this.colorText + ' ';
+
+    text += 'Pen color is set to ' + this.colorPen + ' ';
+
+    text += 'Background color is set to ' + this.colorBackground + ' ';
 
     return text;
   }
