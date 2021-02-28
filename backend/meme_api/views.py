@@ -1,5 +1,6 @@
 import datetime
 import urllib
+from collections import defaultdict
 from pathlib import Path
 from random import Random, randint
 
@@ -28,7 +29,7 @@ from selenium.webdriver.chrome.options import Options
 from meme_api.models import Meme, Comment, Vote, VideoCreation, TopFiveMemes, Template, TemplatesOvertime
 from meme_api.permissions import IsOwnerOrReadOnly, IsAdminOrCreateOnly
 from meme_api.serializers import UserSerializer, MemeSerializer, CommentSerializer, VoteSerializer, TemplateSerializer
-from django.db.models import Q, Count, Sum
+from django.db.models import Q, Count, Sum, F
 from django.db.models.functions import ExtractMonth as Month, ExtractYear as Year, ExtractDay as Day, TruncDay
 import os
 import re
@@ -42,7 +43,6 @@ import numpy as np
 from skimage.transform import resize
 from zipfile import ZipFile
 import cv2
-
 
 DEFAULT_FONT_SIZE = 30
 FONT_DEFAULT = 'Ubuntu-M.ttf'
@@ -82,7 +82,6 @@ class Zip:
     @csrf_exempt
     def get_as_zip(cls, request):
 
-
         print(request.POST)
         start_date = None
         end_date = None
@@ -92,9 +91,8 @@ class Zip:
         end_views = None
         search = None
 
-
         q = Meme.objects.all()
-        if 'created' in request.POST :
+        if 'created' in request.POST:
             if '-created' in request.POST:
                 end_date = request.POST.get("-created")
         else:
@@ -115,17 +113,17 @@ class Zip:
         max = int(request.POST.get("max"))
 
         if start_views is not None:
-            q = q.filter(views__gte = start_views)
+            q = q.filter(views__gte=start_views)
         if end_views is not None:
-            q = q.filter(views__lte = end_views)
+            q = q.filter(views__lte=end_views)
         if start_votes is not None:
-            q = q.filter(votes__gte = start_votes)
+            q = q.filter(votes__gte=start_votes)
         if end_votes is not None:
-            q = q.filter(votes__lte = end_votes)
+            q = q.filter(votes__lte=end_votes)
         if start_date is not None:
-            q = q.filter(created__gte = start_date)
+            q = q.filter(created__gte=start_date)
         if end_date is not None:
-            q = q.filter(created__lte = end_date)
+            q = q.filter(created__lte=end_date)
         if search is not None:
             q = q.filter(text_concated__contains=(search))
         print(q)
@@ -149,7 +147,6 @@ class Zip:
         return response
 
 
-
 class MemeList(viewsets.ModelViewSet):
     queryset = Meme.objects.filter(private=False)
     serializer_class = MemeSerializer
@@ -159,8 +156,6 @@ class MemeList(viewsets.ModelViewSet):
     ordering_fields = ['created', 'views', 'pos_votes', 'n_comments', 'title', 'owner']
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-
-
 
     @action(detail=False)
     def own(self, request):
@@ -188,12 +183,12 @@ class MemeList(viewsets.ModelViewSet):
             print("filter: n_comments<=" + filtervalue)
             self.queryset = self.queryset.filter(n_comments__lte=int(filtervalue))
         elif filterfield == "created" and not filtervalue == "":
-            print("filter: created>="+filtervalue)
+            print("filter: created>=" + filtervalue)
             self.queryset = self.queryset.filter(created__gte=datetime.strptime(filtervalue, '%Y-%m-%d'))
         elif filterfield == "-created" and not filtervalue == "":
-            print("filter: created<="+filtervalue)
+            print("filter: created<=" + filtervalue)
             self.queryset = self.queryset.filter(
-                created__lte=datetime.strptime(filtervalue+" 23:59:59", '%Y-%m-%d %H:%M:%S'))
+                created__lte=datetime.strptime(filtervalue + " 23:59:59", '%Y-%m-%d %H:%M:%S'))
 
         return super().list(request)
 
@@ -223,12 +218,12 @@ class MemeList(viewsets.ModelViewSet):
             print("filter: n_comments<=" + filtervalue)
             self.queryset = self.queryset.filter(n_comments__lte=int(filtervalue))
         elif filterfield == "created" and not filtervalue == "":
-            print("filter: created>="+filtervalue)
+            print("filter: created>=" + filtervalue)
             self.queryset = self.queryset.filter(created__gte=datetime.strptime(filtervalue, '%Y-%m-%d'))
         elif filterfield == "-created" and not filtervalue == "":
-            print("filter: created<="+filtervalue)
+            print("filter: created<=" + filtervalue)
             self.queryset = self.queryset.filter(
-                created__lte=datetime.strptime(filtervalue+" 23:59:59", '%Y-%m-%d %H:%M:%S'))
+                created__lte=datetime.strptime(filtervalue + " 23:59:59", '%Y-%m-%d %H:%M:%S'))
 
         return super().list(request)
 
@@ -314,6 +309,7 @@ class MemeTemplate:
 
     @classmethod
     def get_all_meme_templates(cls, request):
+
         return JsonResponse(cls.get_available_meme_templates(), safe=False)
 
     @classmethod
@@ -340,8 +336,9 @@ class MemeCreation:
         if template_name is None:
             return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
 
-        meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
-        if meme_template is None:
+        try:
+            meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
+        except:
             return JsonResponse({'message': 'meme template could not be found'}, status=400)
 
         # rp is short for request parameters
@@ -389,8 +386,10 @@ class MemeCreation:
         template_name = request.GET.get('templateName')
         if template_name is None:
             return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
-        meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
-        if meme_template is None:
+
+        try:
+            meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
+        except:
             return JsonResponse({'message': 'meme template could not be found'}, status=400)
 
         # rp is short for request parameters
@@ -512,10 +511,6 @@ class IMGFlip:
 
 
 class LoadImage:
-    '''
-    CORS is annoying
-    '''
-
     @action(detail=False)
     def load_img(request):
         encoded_url = request.GET.get('url')
@@ -571,24 +566,45 @@ class SendStatistics:
 
 
 class TemplateStats:
+
     @csrf_exempt
     def update_stats(request):
         post_data = request.POST
         template_id = post_data.get("t_id")
         created = post_data.get("isCreated")
-        meme_id = post_data.get("m_id")
         t_entry = TemplatesOvertime()
         t_entry.template = list(Template.objects.filter(id=template_id))[0]
-        m = list(Meme.objects.filter(id=meme_id))
-        if m != []:
-            t_entry.meme = list(Meme.objects.filter(id=meme_id))[0]
-        t_entry.created = created == "true"
+        if ('m_id') in post_data:
+            meme_id = post_data.get("m_id")
+
+            m = list(Meme.objects.filter(id=meme_id))
+            if m != []:
+                t_entry.meme = list(Meme.objects.filter(id=meme_id))[0]
+            t_entry.used = created == "true"
+        print(t_entry.used)
         t_entry.save()
 
         return HttpResponse(200)
 
+    @action(detail=False)
     def get_stats(request):
-        pass
+        filtered_obj = list(TemplatesOvertime.objects
+                            .filter(used=True)
+                            .values('used', 'template_id', 'template_id__title', 'used')
+                            .annotate(_count=Count('used'))
+                            .order_by('template_id'))
+
+        filtered_obj_viewed = list(TemplatesOvertime.objects
+                                   .filter(used=False)
+                                   .values('used', 'template_id', 'template_id__title', 'used')
+                                   .annotate(_count=Count('used'))
+                                   .order_by('template_id'))
+
+
+
+        res = {'created': filtered_obj, 'viewed': filtered_obj_viewed}
+
+        return JsonResponse(res)
 
 
 class ScreenshotFromUrl:

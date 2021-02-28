@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild, NgZone} from '@angular/core';
-import {map} from 'rxjs/operators';
+import {map, zip} from 'rxjs/operators';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {MemeService} from '../services/meme.service';
 import { ChartDataSets } from 'chart.js';
@@ -7,6 +7,7 @@ import { Color, Label } from 'ng2-charts';
 import {environment} from '../../environments/environment';
 import {SpeechService} from '../services/speech.service';
 import {VoiceRecognitionService} from '../services/voice-recognition.service';
+import {range} from "rxjs";
 
 @Component({
   selector: 'app-dashboard',
@@ -22,7 +23,6 @@ export class DashboardComponent implements  AfterViewInit{
           {title: 'Top 5 Viewed Memes', cols: 2, rows: 1},
           {title: 'Corresponding Image', cols: 2, rows: 1},
           {title: 'Users Last Login', cols: 2, rows: 1},
-          {title: 'TopUsedTemplatesOverTime', cols: 2, rows: 1},
           {title: 'TemplatesViewedCreated', cols: 2, rows: 1},
         ];
       }
@@ -30,8 +30,7 @@ export class DashboardComponent implements  AfterViewInit{
       return [
         {title: 'Top 5 Viewed Memes', cols: 1, rows: 1},
         {title: 'Corresponding Image', cols: 1, rows: 1},
-        {title: 'Users Last Login', cols: 2, rows: 1},
-        {title: 'TopUsedTemplatesOverTime', cols: 1, rows: 1},
+        {title: 'Users Last Login', cols: 1, rows: 1},
         {title: 'TemplatesViewedCreated', cols: 1, rows: 1},
       ];
     })
@@ -70,15 +69,24 @@ export class DashboardComponent implements  AfterViewInit{
   screenReaderText: Map<string, string>;
   type: number;
   poster;
+  templateData;
+  drawTemplateStatsViewedCreatedLabels: any[];
+  drawTemplateStatsViewedCreatedReady: boolean;
+  drawTemplateStatsViewedCreatedColors: any;
+  drawTemplateStatsViewedCreatedOptions: any;
+  drawTemplateStatsViewedCreatedData: any;
+  drawTemplateStatsViewedCreatedType = 'bar';
+  drawTemplateStatsViewedCreatedLegend = true;
 
   constructor(private breakpointObserver: BreakpointObserver, private memeService: MemeService, private ngZone: NgZone,
               private speechService: SpeechService, public voiceRecognitionService: VoiceRecognitionService) {
     this.loadStatistics();
     this.loadVideo();
-
     this.screenReaderText = new Map<string, string>();
+
     this.screenReaderText.set('Welcome', 'This page is Meme Life Dashboard.');
     this.initVoiceRecognitionCommands();
+    this.loadTemplateStatistics();
   }
 
   ngAfterViewInit(): void {}
@@ -100,22 +108,31 @@ export class DashboardComponent implements  AfterViewInit{
           return {day: e.day, month: e.month, year: e.year, date: e.date, count: e.count};
         });
         this.loginData = {data};
-        console.log(this.loginData);
       },
       () => console.error('ERROR'),
       () => this.drawUserChart());
   }
 
+  loadTemplateStatistics(): void {
+
+    // Template Statistics
+    this.memeService.loadTemplateStats().subscribe(response => {
+      const data = {created: response.created, viewed: response.viewed};
+      this.templateData = data;
+    },
+      () => console.error('ERROR'),
+      () => {
+        this.drawTemplateStatsViewedCreated();
+      });
+  }
+
   loadVideo(): void {
     this.memeService.loadTopMemeVideo().subscribe(response => {
-      console.log(response.type);
       if (response.type === 1){
-        console.log(response);
         this.type = response.type;
         this.text = response.res;
       }
       else if (response.type === 0) {
-        console.log('TEST');
         this.text = '';
         this.type = response.type;
         this.video = response.res;
@@ -125,16 +142,12 @@ export class DashboardComponent implements  AfterViewInit{
         this.poster = environment.apiUrl + response.res;
       }
       else{
-        console.log(response);
         this.type = response.type;
         this.text = 'ERROR';
       }
-      console.log(this.video);
     }, null, _ => {
-      console.log(this.noVid);
       if (this.type === 0) {
         this.video = environment.apiUrl + this.video;
-        console.log(this.video);
         this.vid.nativeElement.setAttribute('src', this.video);
         this.noVid = false;
       }
@@ -148,7 +161,6 @@ export class DashboardComponent implements  AfterViewInit{
   }
 
   drawTopMemeChart(): void {
-    console.log(this.topMemes);
     const chartData = Array.from(this.topMemes.data, ({view}) => view );
     this.topMemeChartData = [
       { data: chartData, label: 'Top 5 Most viewed Memes' },
@@ -167,7 +179,6 @@ export class DashboardComponent implements  AfterViewInit{
       }
     };
     this.topMemeChartLabels = Array.from(this.topMemes.data, ({title}) => title );
-    console.log(this.topMemeChartLabels);
     this.topMemeChartColors = [
       {
         borderColor: 'black',
@@ -177,7 +188,7 @@ export class DashboardComponent implements  AfterViewInit{
     this.chartReady = true;
 
     // Text for ScreenReader
-    let text = (this.topMemes.data.length > 0 ? 'The Top 5 Most viewed Memes are ' : '');
+    let text = (this.topMemes.data.length > 0 ? 'The table in the top left corner shows the Top 5 Most viewed Memes. These are ' : '');
     this.topMemes.data.forEach(element => {
       if (element.title) {
         text += element.title + ' with ' + element.view + ' view' + (element.view !== 1 ? 's' : '') + '! ';
@@ -215,16 +226,16 @@ export class DashboardComponent implements  AfterViewInit{
         }],
         plugins: {
           outlabels: {
-            backgroundColor: "white", // Background color of Label
-            borderColor: "none", // Border color of Label
+            backgroundColor: 'white', // Background color of Label
+            borderColor: 'none', // Border color of Label
             borderRadius: 0, // Border radius of Label
             borderWidth: 0, // Thickness of border
-            color: "black", // Font color
+            color: 'black', // Font color
             display: false,
             lineWidth: 1, // Thickness of line between chart arc and Label
             padding: 0,
-            lineColor: "black",
-            textAlign: "center",
+            lineColor: 'black',
+            textAlign: 'center',
             stretch: 45,
           },
           labels: false
@@ -237,7 +248,6 @@ export class DashboardComponent implements  AfterViewInit{
         }],
       }
     };
-    console.log(this.loginData.data);
     this.loginChartLabels = Array.from(this.loginData.data, ({day, month, year}) => day + '.' + month + '.' + year);
     this.loginChartColors = [
       {
@@ -248,13 +258,97 @@ export class DashboardComponent implements  AfterViewInit{
     this.loginChartReady = true;
 
     // Text for ScreenReader
-    let text = (this.loginData.data.length > 0 ? 'The last login date ' : '');
+    let text = (this.loginData.data.length > 0 ? 'The table in the bottom left corner shows the last login count per day. The last login date ' : '');
     this.loginData.data.forEach(element => {
       text += 'of ' + element.count + ' user' + (element.count !== 1 ? 's' : '')
         + ' was on ' + element.day + '.' + element.month + '.' + element.year + ', ';
     });
     this.screenReaderText.set('UserStat', text);
   }
+
+
+  private drawTemplateStatsViewedCreated(): void {
+    const chartData = Array.from(this.templateData.created, ({_count}) => _count);
+    const chartData2 = Array.from(this.templateData.viewed, ({_count}) => _count);
+    this.drawTemplateStatsViewedCreatedData = [
+      {data: chartData, label: 'Created', backgroundColor: 'white'},
+      {data: chartData2, label: 'Just viewed', backgroundColor: '#7b1fa2'},
+    ];
+
+    this.drawTemplateStatsViewedCreatedOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+
+      scales: {
+        yAxes: [{
+          stacked: true,
+          ticks: {
+            beginAtZero: true,
+            stepSize: 1,
+            fontColor: 'white'
+          }
+        }],
+        xAxes: [{
+          stacked: true,
+          ticks: {
+            display: true,
+            fontColor: 'white'
+          }
+        }],
+        plugins: {
+          outlabels: {
+            backgroundColor: 'white', // Background color of Label
+            borderColor: 'none', // Border color of Label
+            borderRadius: 0, // Border radius of Label
+            borderWidth: 0, // Thickness of border
+            color: 'black', // Font color
+            display: false,
+            lineWidth: 1, // Thickness of line between chart arc and Label
+            padding: 0,
+            lineColor: 'black',
+            textAlign: 'center',
+            stretch: 45,
+          },
+          labels: false
+        },
+        legend: [{
+          display: true,
+        }],
+        title: [{
+          display: true,
+        }],
+      }
+    };
+    this.drawTemplateStatsViewedCreatedLabels = Array.from(this.templateData.created,
+      // tslint:disable-next-line
+      (eleme) => eleme['template_id__title']);
+    this.drawTemplateStatsViewedCreatedColors = [
+      {
+        borderColor: 'black',
+        backgroundColor: '#47A31F'
+      },
+    ];
+    this.drawTemplateStatsViewedCreatedReady = true;
+
+    // Text for ScreenReader
+    const c = this.drawTemplateStatsViewedCreatedData[1].data.map((e, i) => {
+      return [e, this.drawTemplateStatsViewedCreatedData[0].data[i]];
+    });
+    const d = c.map((e, i) => {
+      return [e, this.drawTemplateStatsViewedCreatedLabels[i]];
+    });
+
+    let text = (this.drawTemplateStatsViewedCreatedData[0].data.length > 0 ? 'The table in the bottom right corner shows the View slash Created Counts per Template. ' : '');
+    d.forEach(elem => [
+      text += ('The template ' + elem[1] + ' got ' + elem[0][0] + ' times viewed and ' + elem[0][1] + ' times used for meme generation.')
+    ]);
+    //   text += (this.drawTemplateStatsViewedCreatedData[1].data[i]);
+    // }
+    this.screenReaderText.set('TemplateStats', text);
+  }
+
+
+
 
   // ScreenReader and its functions //
   public screenReader(): void {
@@ -266,6 +360,7 @@ export class DashboardComponent implements  AfterViewInit{
     text += this.screenReaderText.get('Welcome') + ' ';
     text += (this.screenReaderText.get('Top5') || '') + ' ';
     text += (this.screenReaderText.get('UserStat') || '') + ' ';
+    text += (this.screenReaderText.get('TemplateStats') || '') + ' ';
     return text;
   }
 

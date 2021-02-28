@@ -43,6 +43,7 @@ urlpatterns = [
     path('statistics/', views.SendStatistics.send_statisticis),
     path('userStats/', views.SendStatistics.send_userStatistics),
     path('memeStats/', views.SendStatistics.send_viewStatistics),
+    path('getTemplateStats/', views.TemplateStats.get_stats),
     path('memeVideo/', views.MemesToVideo.send_video),
     path('loadImg/', views.LoadImage.load_img)
 ] + static('/media/videoMedia', document_root=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media/videoMedia'))

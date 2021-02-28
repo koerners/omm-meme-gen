@@ -252,7 +252,7 @@ export class DetailViewComponent implements OnInit {
 
   loadStats(): void{
     this.memeService.loadMemeStats(String(this.meme.id)).subscribe(response => {
-        console.log("_______>_>_>" + response);
+
         this.viewsAndVotes = {
           vote: response.votes, all_vote: response.votes_all, view: response.views, all_view: response.views_all};
         console.log(this.viewsAndVotes.view);

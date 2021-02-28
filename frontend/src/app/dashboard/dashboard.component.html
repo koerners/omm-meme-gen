@@ -62,30 +62,15 @@
               </canvas>
             </div>
           </div>
-          <div *ngIf="card.title == 'TopUsedTemplatesOverTime'">
-            <div class="chart-wrapper" *ngIf="chartReady">
-              <canvas baseChart height="{{chartRowHeight}}"
-                      [datasets]="topMemeChartData"
-                      [labels]="topMemeChartLabels"
-                      [options]="topMemeChartOptions"
-                      [colors]="topMemeChartColors"
-                      [legend]="topMemeChartLegend"
-                      [chartType]="topMemeChartType"
-                      [plugins]="topMemeChartPlugins">
-              </canvas>
-            </div>
-
-          </div>
           <div *ngIf="card.title == 'TemplatesViewedCreated'">
-            <div class="chart-wrapper" *ngIf="chartReady">
+            <div class="chart-wrapper" *ngIf="drawTemplateStatsViewedCreatedReady">
               <canvas baseChart height="{{chartRowHeight}}"
-                      [datasets]="topMemeChartData"
-                      [labels]="topMemeChartLabels"
-                      [options]="topMemeChartOptions"
-                      [colors]="topMemeChartColors"
-                      [legend]="topMemeChartLegend"
-                      [chartType]="topMemeChartType"
-                      [plugins]="topMemeChartPlugins">
+                      [datasets]="drawTemplateStatsViewedCreatedData"
+                      [labels]="drawTemplateStatsViewedCreatedLabels"
+                      [options]="drawTemplateStatsViewedCreatedOptions"
+                      [colors]="drawTemplateStatsViewedCreatedColors"
+                      [legend]="drawTemplateStatsViewedCreatedLegend"
+                      [chartType]="drawTemplateStatsViewedCreatedType">
               </canvas>
             </div>
 
