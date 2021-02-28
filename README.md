@@ -1,5 +1,17 @@
 # omm-meme-gen
 
+
+## Setup
+### Docker
+1. ```$git clone https://github.com/koerners/omm-meme-gen.git```
+
+2. ```$cd omm-meme-gen/```
+
+3. ```$docker-compose up```
+
+4. Navigate to ```localhost:80/```
+
+### Manually
 To start the backend refer to the README in the backend folder.
 
 To start the frontend refer to the README in the frontend folder.

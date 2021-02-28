@@ -4,10 +4,7 @@ WORKDIR /backend
 COPY requirements.txt /backend/
 RUN pip install -r requirements.txt
 COPY . /backend/
-# Benutzen wenn es noch keine DB gibt aber einen data dump (.json)
-RUN python manage.py makemigrations meme_api
-RUN python manage.py migrate
-RUN python manage.py loaddata Database_prefilled.json
+
 RUN apt-get update && \
     apt-get install -y gnupg wget curl unzip --no-install-recommends && \
     wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
@@ -17,6 +14,13 @@ RUN apt-get update && \
     CHROMEVER=$(google-chrome --product-version | grep -o "[^\.]*\.[^\.]*\.[^\.]*") && \
     DRIVERVER=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROMEVER") && \
     wget -q --continue -P /chromedriver "http://chromedriver.storage.googleapis.com/$DRIVERVER/chromedriver_linux64.zip" && \
-    unzip /chromedriver/chromedriver* -d /usr/bin/chromedriver
+    unzip /chromedriver/chromedriver* -d /usr/bin/
 
-RUN chmod -R 777 /usr/bin/chromedriver
+RUN apt-get install libgl1-mesa-glx
+
+# Benutzen wenn es noch keine DB gibt aber einen data dump (.json)
+RUN python manage.py makemigrations
+RUN python manage.py migrate
+RUN python manage.py loaddata Database_prefilled.json
+
+RUN chmod 755 /usr/bin/chromedriver
