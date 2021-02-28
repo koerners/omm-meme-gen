@@ -1,10 +1,11 @@
 <div class="grid-container">
   <mat-grid-list [rowHeight]="330" cols="9">
     <mat-grid-tile colspan="1" rowspan="3">
-
     </mat-grid-tile>
     <mat-grid-tile colspan="5" rowspan="3">
       <mat-card class="dashboard-card">
+        <button mat-raised-button (click)="screenReader()">Speak</button>
+        <button mat-raised-button (click)="stopScreenReader()">Stop</button>
         <mat-card-header>
           <mat-card-title>
             {{meme.title}}
