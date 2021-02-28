@@ -231,7 +231,9 @@ export class GeneratorComponent implements AfterViewInit {
       img.src = event1.target.result as string;
       img.onload = () => {
         // Image to canvas
-        ctx.drawImage(img, 0, 100, 600, 500);
+        const scaleFactor = img.width / this.width;
+        this.resizeCanvasHeight(img.height / scaleFactor, img.width / scaleFactor);
+        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, this.width, this.currentHeight);
       };
     };
   }
@@ -718,10 +720,11 @@ export class GeneratorComponent implements AfterViewInit {
    * load image from a given url
    */
   loadFromURL(): void {
+    this.clearCanvas();
     this.memeService.getImageFrom(encodeURIComponent(this.url)).subscribe(res => {
       const ctx = this.fileCanvas.nativeElement.getContext('2d');
       const img = new Image();
-      img.src =  'data:image/jpg;base64,' + res.img;
+      img.src =  'data:image/png;base64,' + res.img;
       img.onload = () => ctx.drawImage(img, 0, 100, 600, 500);
     });
   }
