@@ -5,7 +5,7 @@ COPY requirements.txt /backend/
 RUN pip install -r requirements.txt
 COPY . /backend/
 # Benutzen wenn es noch keine DB gibt aber einen data dump (.json)
-RUN python manage.py makemigrations
+RUN python manage.py makemigrations meme_api
 RUN python manage.py migrate
 RUN python manage.py loaddata Database_prefilled.json
 RUN apt-get update && \
