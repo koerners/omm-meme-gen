@@ -7,7 +7,7 @@ COPY . /backend/
 # Benutzen wenn es noch keine DB gibt aber einen data dump (.json)
 RUN python manage.py makemigrations
 RUN python manage.py migrate
-RUN python manage.py loaddata
+RUN python manage.py loaddata Database_prefilled.json
 RUN apt-get update && \
     apt-get install -y gnupg wget curl unzip --no-install-recommends && \
     wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
