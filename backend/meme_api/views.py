@@ -569,13 +569,15 @@ class TemplateStats:
         post_data = request.POST
         template_id = post_data.get("t_id")
         created = post_data.get("isCreated")
-        meme_id = post_data.get("m_id")
         t_entry = TemplatesOvertime()
         t_entry.template = list(Template.objects.filter(id=template_id))[0]
-        m = list(Meme.objects.filter(id=meme_id))
-        if m != []:
-            t_entry.meme = list(Meme.objects.filter(id=meme_id))[0]
-        t_entry.used = created == "true"
+        if ('m_id') in post_data:
+            meme_id = post_data.get("m_id")
+
+            m = list(Meme.objects.filter(id=meme_id))
+            if m != []:
+                t_entry.meme = list(Meme.objects.filter(id=meme_id))[0]
+            t_entry.used = created == "true"
         print(t_entry.used)
         t_entry.save()
 
