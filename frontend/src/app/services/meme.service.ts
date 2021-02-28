@@ -203,7 +203,6 @@ export class MemeService {
    * @param templateID the templateID
    */
   postTemplateStat(templateID: number): any{
-    console.log('Doing >>>>' + templateID);
     if (this.currentMemeId == null){
       const data = new FormData();
       data.append('t_id', templateID.toString());

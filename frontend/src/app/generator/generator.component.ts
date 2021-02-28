@@ -239,7 +239,6 @@ export class GeneratorComponent implements AfterViewInit {
     // Read in image
     reader.readAsDataURL(event.target.files[0]);
     reader.onload = event1 => {
-      console.log(event1);
       const img = new Image();
       img.src = event1.target.result as string;
       img.onload = () => {
@@ -265,10 +264,6 @@ export class GeneratorComponent implements AfterViewInit {
       return;
     }
 
-    console.log('target', event.target);
-    console.log('files', event.target.files[0]);
-    console.log('size', event.target.files[0].size);
-
     const mimeType = event.target.files[0].type;
     if (mimeType.match(/video\/*/) == null) {
       // Check if video
@@ -290,7 +285,6 @@ export class GeneratorComponent implements AfterViewInit {
       const videoString = event1.target.result as string;
 
       this.memeService.convertVideoToImages(videoString).subscribe(data => {
-        console.log(data);
         this.currentVideoData = data;
         this.fromFrame.setValue(0);
         this.toFrame.setValue(data.frames - 1);
@@ -313,7 +307,6 @@ export class GeneratorComponent implements AfterViewInit {
           // wait till loadedmetadata to have video element's videoWidth and videoHeight
           // calculate scaleFactor to properly show in meme container
           self.currentVideoData.videoScaleFactor = Math.min(containerWidth / this.videoWidth, containerHeight / this.videoHeight);
-          console.log(containerWidth, this.videoWidth, containerHeight, this.videoHeight, self.currentVideoData.videoScaleFactor);
           // self.resizeCanvasHeight(videoEl.height * scaleFactor);
           self.videoEl.width = this.videoWidth * self.currentVideoData.videoScaleFactor;
           self.videoEl.height = this.videoHeight * self.currentVideoData.videoScaleFactor;
@@ -457,8 +450,6 @@ export class GeneratorComponent implements AfterViewInit {
         bold: this.bold.value,
         italic: this.italic.value
       };
-
-      console.log(textData);
 
       this.currentVideoData = null;
 
@@ -648,7 +639,6 @@ export class GeneratorComponent implements AfterViewInit {
 
     this.memeService.getAllMemeTemplates().subscribe(memeTemplates => {
       memeTemplateContainer.innerHTML = '';
-      console.log(memeTemplates);
       this.memeTemplates = memeTemplates;
 
       this.showMemeTemplates();
@@ -704,7 +694,6 @@ export class GeneratorComponent implements AfterViewInit {
    */
   loadFromURL(): void {
     this.memeService.getImageFrom(encodeURIComponent(this.url)).subscribe(res => {
-      console.log(res);
       const ctx = this.fileCanvas.nativeElement.getContext('2d');
       const img = new Image();
       img.src =  'data:image/jpg;base64,' + res.img;
@@ -712,10 +701,6 @@ export class GeneratorComponent implements AfterViewInit {
     });
   }
 
-  loadScreenshotOfURL(): void {
-    console.log('pressed screenshot');
-    this.emptyVideoContainer();
-  }
 
   /**
    * loads Images from the backend;
@@ -765,7 +750,6 @@ export class GeneratorComponent implements AfterViewInit {
     const ctx = this.fileCanvas.nativeElement.getContext('2d');
 
     const img = new Image();
-    console.log(this.webcamImage);
     img.src = this.webcamImage.imageAsDataUrl;
     img.onload = () => {
       ctx.drawImage(img, 0, 100, 600, 500);
@@ -795,7 +779,6 @@ export class GeneratorComponent implements AfterViewInit {
       if (this.isTemplate){
         this.memeService.setMemeServiceCurrentMeme(data.id);
         this.memeService.postTemplateStat(this.currentMeme);
-        console.log(this.memeService.currentMemeId);
       }
     });
   }
@@ -842,14 +825,14 @@ export class GeneratorComponent implements AfterViewInit {
     return Math.ceil(this.currentHeight / this.rowHeight + 0.2);
   }
 
-  memeTemplateChosen(template: { name: string, base64_string: string }): void {
+  memeTemplateChosen(template): void {
     // this.emptyVideoContainer();
     const canvas = this.fileCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
     const memeTemplate = new Image();
-    memeTemplate.src = 'data:image/png;base64,' + template.base64_string;
+    memeTemplate.src = 'data:image/png;base64,' + template[2];
     memeTemplate.onload = () => {
       const scaleFactor = memeTemplate.width / this.width;
       this.resizeCanvasHeight(memeTemplate.height / scaleFactor, memeTemplate.width / scaleFactor);
@@ -866,14 +849,14 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex--;
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
-    this.currentMeme = meme.id;
+    this.currentMeme = meme;
+    this.memeService.postTemplateStat(this.currentMeme[0]);
     this.isTemplate = true;
-    this.memeService.postTemplateStat(meme.id);
-    this.isTemplate = true;
-    this.memeTemplateChosen(meme);
+    this.memeTemplateChosen(this.currentMeme);
   }
 
   nextTemplateButtonClicked(): void {
+
     const amountOfMemeTemplates = this.memeTemplates.length;
     if (this.currentlyShownMemeTemplateIndex === -1 || this.currentlyShownMemeTemplateIndex === amountOfMemeTemplates - 1) {
       this.currentlyShownMemeTemplateIndex = 0;
@@ -881,10 +864,10 @@ export class GeneratorComponent implements AfterViewInit {
       this.currentlyShownMemeTemplateIndex++;
     }
     const meme = this.memeTemplates[this.currentlyShownMemeTemplateIndex];
-    this.memeService.postTemplateStat(meme.id);
-    this.currentMeme = meme.id;
+    this.currentMeme = meme;
+    this.memeService.postTemplateStat(this.currentMeme[0]);
     this.isTemplate = true;
-    this.memeTemplateChosen(meme);
+    this.memeTemplateChosen(this.currentMeme);
   }
 
   /**
@@ -919,7 +902,6 @@ export class GeneratorComponent implements AfterViewInit {
           this.res = response;
           // add missing data info to base64 response string
           img.src = 'data:image/png;base64, ' + this.res;
-          console.log(img.src);
           this.width = img.width;
           img.onload = () => ctx.drawImage(img, 0, 100, img.width, img.height);
         });
