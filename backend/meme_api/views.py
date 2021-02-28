@@ -386,8 +386,10 @@ class MemeCreation:
         template_name = request.GET.get('templateName')
         if template_name is None:
             return JsonResponse({'message': 'missing \'templateName\' in query params'}, status=400)
-        meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
-        if meme_template is None:
+
+        try:
+            meme_template = Template.objects.filter(title=template_name).values('image_string')[0]['image_string']
+        except:
             return JsonResponse({'message': 'meme template could not be found'}, status=400)
 
         # rp is short for request parameters
