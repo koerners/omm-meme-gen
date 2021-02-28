@@ -3,7 +3,7 @@
 - Step 1: Install requirements.txt
 - Step 2: Run migrations
 ````
-python manage.py makemigrations
+python manage.py makemigrations meme_api
 ````
 - Step 3: Migrate
 ````

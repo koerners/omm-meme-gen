@@ -29,6 +29,7 @@ export class MyMemesComponent implements OnInit {
   nextUrl: string;
   prevUrl: string;
   screenReaderText: Map<string, string>;
+  maxImg: number;
 
   // using | keyvalue: asIsOrder for iteration keeps the order
   filterOptions: Map<string, TextType> = new Map([
@@ -36,6 +37,10 @@ export class MyMemesComponent implements OnInit {
     // ['owner_id', {text: 'Username', type: 'user'}],
     ['-views', {text: 'View Count lte', type: 'number'}],
     ['views', {text: 'View Count gte', type: 'number'}],
+    ['-n_comments', {text: 'Comment Count lte', type: 'number'}],
+    ['n_comments', {text: 'Comment Count gte', type: 'number'}],
+    ['-pos_votes', {text: 'Vote Count lte', type: 'number'}],
+    ['pos_votes', {text: 'Vote Count gte', type: 'number'}],
     ['-created', {text: 'Memes created before', type: 'date'}],
     ['created', {text: 'Memes created after', type: 'date'}],
   ]);
@@ -47,7 +52,10 @@ export class MyMemesComponent implements OnInit {
     ['title', 'Title'],
     ['owner', 'Username'],
     ['views', 'View Count'],
+    ['votes', 'Vote Count'],
     ['created', 'Timestamp'],
+    ['n_comments', 'Comments'],
+    ['pos_votes', 'Votes'],
   ]);
   selectedSort: string;
   selectedOrder: string;
@@ -245,6 +253,7 @@ export class MyMemesComponent implements OnInit {
   }
 
   // VoiceRecognition and its functions //
+
   private initVoiceRecognitionCommands(): void {
     const commands = {
       'start screen reader': () => {
@@ -398,11 +407,13 @@ export class MyMemesComponent implements OnInit {
     if (this.selectedFilter){
       const type = this.selectedFilter;
       console.log(this.filterValue);
-      this.memeService.getFilteredMemesAsZip(type, 10, this.filterValue)
-        .subscribe(
+      if (this.maxImg) {
+        this.memeService.getFilteredMemesAsZip(type, this.maxImg, this.filterValue)
+          .subscribe(
             blob => {
               saveAs(blob, 'meme.zip');
             });
+      }
     }
   }
 

@@ -17,6 +17,8 @@ import {FormControl} from '@angular/forms';
 import {map} from 'rxjs/operators';
 import {interval, Subscription} from 'rxjs';
 import {ChartDataSets} from 'chart.js';
+import {SpeechService} from '../services/speech.service';
+import {VoiceRecognitionService} from '../services/voice-recognition.service';
 
 
 @Component({
@@ -64,7 +66,9 @@ export class DetailViewComponent implements OnInit {
               private route: ActivatedRoute,
               private snackBar: MatSnackBar,
               private predictionService: ObjectRecognitionService,
-              private router: Router) {
+              private router: Router,
+              private speechService: SpeechService,
+              public vRS: VoiceRecognitionService) {
     this.meme = new Meme();
   }
 
@@ -86,6 +90,7 @@ export class DetailViewComponent implements OnInit {
       this.meme = new Meme();
       this.meme.id = data.id;
       this.meme.imageString = data.image_string;
+      this.meme.textConcated = data.text_concated;
       this.meme.title = data.title;
       this.meme.upvotes = data.upvotes;
       this.meme.downvotes = data.downvotes;
@@ -197,13 +202,11 @@ export class DetailViewComponent implements OnInit {
 
 
   nextImage(): void {
-    // TODO jump to beginning at end
     this.router.navigate(['/meme/' + String(this.getNextMemeId(true).id)]);
   }
 
   prevImage(): void {
     this.router.navigate(['/meme/' + String(this.getNextMemeId(false).id)]);
-
   }
 
   downloadCanvas(): void {
@@ -265,14 +268,14 @@ export class DetailViewComponent implements OnInit {
     const chartData = [this.viewsAndVotes.view.views, this.viewsAndVotes.all_view.views__sum - this.viewsAndVotes.view.views];
     this.viewedChartData = [
       { data: chartData, label: 'View Proportion', backgroundColor: [
-        "red", "green"]},
+        'red', 'green']},
     ];
     this.viewedChartOptions = {
       responsive: false,
        maintainAspectRatio: false,
       legend: {
         labels: {
-          fontColor: "white",
+          fontColor: 'white',
           fontSize: 18
         }
       },
@@ -287,15 +290,15 @@ export class DetailViewComponent implements OnInit {
   drawVotesMemeChart(): void {
     const chartData =  [this.viewsAndVotes.vote, this.viewsAndVotes.all_vote - this.viewsAndVotes.vote];
     this.vChartData = [
-      { data: chartData, label: 'View Proportion',backgroundColor: [
-          "red", "green"] },
+      { data: chartData, label: 'View Proportion', backgroundColor: [
+          'red', 'green'] },
     ];
     this.vChartOptions = {
       responsive: false,
       maintainAspectRatio: false,
       legend: {
         labels: {
-          fontColor: "white",
+          fontColor: 'white',
           fontSize: 18
         }
       },
@@ -306,4 +309,61 @@ export class DetailViewComponent implements OnInit {
 
     this.vChartReady = true;
   }
+
+  // ScreenReader and its functions //
+  public screenReader(): void {
+    this.speechService.speak(this.screenReaderBuilder());
+  }
+
+  public stopScreenReader(): void {
+    this.speechService.stop();
+  }
+
+  private screenReaderBuilder(): string {
+    let text = '';
+
+    if (this.meme.title) {
+      text += 'This meme\'s title is ' + this.meme.title + '.    ';
+    } else {
+      text += 'This meme has no title';
+    }
+    if (this.meme.textConcated) {
+      text += 'The content of the  meme\'s is ' + this.meme.textConcated.split(this.meme.title).slice(1) + '.     ';
+    } else {
+      text += 'This meme has no text for content.';
+    }
+    if (this.predictions) {
+      text += 'This meme has  ';
+      this.predictions.forEach(elem => {
+        text +=  elem.className;
+      });
+      text += ' as predicted Image Content    ';
+    }
+
+    text += 'This meme has ' + this.meme.upvotes + ' upvotes.    ';
+
+    text += 'This meme has ' + this.meme.downvotes + ' downvotes.    ';
+
+    text += 'This meme has ' + this.meme.views + ' views.   ';
+
+    text += 'This meme was created by ' + this.meme.owner + '.    ';
+
+    text += 'This meme has ' + this.comments.length + ' comments.    ';
+
+    let commentCounter = 1;
+    this.comments.forEach(comment => {
+      text += 'Comment number ' + commentCounter + '';
+
+      text += 'Comment ' + comment.text + 'made by ' + comment.owner + ' on the ' + comment.created.slice(0, 10) + '    ';
+
+      commentCounter++;
+    });
+
+    return text;
+  }
+
+  // VoiceRecognition and its functions //
+  private configureVoiceRecognition(): void {
+  }
+
 }

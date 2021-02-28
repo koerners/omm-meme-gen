@@ -11,9 +11,12 @@
       <div class="grid-container">
         Available commands... <br />
         Navigation: 'navigate dashboard', 'navigate memes' <br />
+        Template: 'select template' + Template ID <br />
         Webcam: 'open webcam', 'close webcam', 'take picture' <br />
         Text Fields: 'title *text', 'text top *text', 'text bottom *text' <br />
-        Fonts: 'font size :fsize', 'font style :style', 'alter bold', 'alter italic', 'alter underline' <br />
+        Fonts: 'font size :fsize', 'font style :style' <br />
+        Available font styles: Arial, Verdana, Times New Roman, Courier New, Serif, Sans-Serif <br />
+        , 'alter bold', 'alter italic', 'alter underline' <br />
         Color: 'text colour :colour', 'pen colour :colour', 'background colour :color' (colour = 'black', 'white', 'red', 'yellow', 'green', 'blue') <br />
         Memes: 'save public', 'save private', 'save draft', 'download meme' <br />
         Help: 'help me', 'close help'
@@ -69,7 +72,6 @@
             <mat-menu #menu="matMenu" xPosition="before">
               <button (click)="saveCanvas()" mat-menu-item>Save to Account (Public)</button>
               <button (click)="saveCanvasPrivate()" mat-menu-item>Save to Account (Private)</button>
-              <button (click)="saveCanvasAsDraft()" mat-menu-item>Save as Draft</button>
               <div [hidden]="this.videoOn"><button (click)="downloadCanvas()" mat-menu-item>Download</button></div>
               <button (click)="clearCanvas()" mat-menu-item>Clear</button>
             </mat-menu>

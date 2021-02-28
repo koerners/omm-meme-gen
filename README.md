@@ -1,14 +1,15 @@
 # omm-meme-gen
 
+To start the backend refer to the README in the backend folder.
 
-to function it needs one manually created video_creation object, set to false
+To start the frontend refer to the README in the frontend folder.
 
 
 ## API
 
 ### Create a single image with bottom/top text
 
-example:
+####example:
 
 route: http://127.0.0.1:8000/createMeme/
 
