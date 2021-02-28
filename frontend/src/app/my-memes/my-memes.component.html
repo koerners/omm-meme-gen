@@ -15,7 +15,7 @@
     <button mat-raised-button (click)="voiceRecognitionService.closeVoiceFeedback()">Close</button>
   </div>
 </div>
-<form>
+<form style="overflow:hidden" >
   <mat-form-field appearance="fill">
     <mat-label>Sort by</mat-label>
     <mat-select [(ngModel)]="selectedSort" name="sort" (selectionChange)="submitChanged()">
@@ -65,8 +65,14 @@
                  (change)="submitChanged()">
         </mat-form-field>
       </span>
-
-  <button mat-raised-button (click)="download()">DOWNLOAD</button>
+  <span style="float:right;">
+  <mat-form-field appearance="fill">
+    <mat-label>Enter your img count to download as zip</mat-label>
+    <input matInput type="number" name="value" placeholder="type here" [(ngModel)]="maxImg"
+           (change)="submitChanged()">
+    </mat-form-field>
+    <button mat-raised-button (click)="download()">DOWNLOAD</button>
+  </span>
 </form>
 
 <mat-tab-group mat-align-tabs="center" (selectedTabChange)="onTabChanged($event);">

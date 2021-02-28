@@ -1,16 +1,15 @@
 import {AfterViewInit, Component, Input, ViewChild, ElementRef, NgZone} from '@angular/core';
-import {FormControl, Validators} from '@angular/forms';
+import {FormControl} from '@angular/forms';
 import {Router} from '@angular/router';
-import {fromEvent, Subject, Observable, pipe} from 'rxjs';
-import {pairwise, switchMap, takeUntil} from 'rxjs/operators';
+import {fromEvent, Subject, Observable} from 'rxjs';
 import {ColorEvent} from 'ngx-color';
 import {Meme} from '../Meme';
 import {MemeService} from '../services/meme.service';
 import {WebcamImage, WebcamInitError} from 'ngx-webcam';
 import {MatSelectChange} from '@angular/material/select';
-import {MatButtonToggleChange, MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatButtonToggleChange} from '@angular/material/button-toggle';
 import {Textbox} from '../Textbox';
-import {DomSanitizer, SafeResourceUrl, SafeUrl} from '@angular/platform-browser';
+import {DomSanitizer} from '@angular/platform-browser';
 import {InputUrlDialogComponent} from '../input-url-dialog/input-url-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
 import {environment} from '../../environments/environment';
@@ -142,24 +141,13 @@ export class GeneratorComponent implements AfterViewInit {
   @Input() public height = 700;
 
 
-  imageToShow: any;
-  isImageLoading = false;
-
   public errors: WebcamInitError[] = [];
-  public videoOptions: MediaTrackConstraints = {
-    width: {ideal: 1024},
-    height: {ideal: 576}
-  };
   // latest snapshot
   public webcamImage: WebcamImage = null;
 
   // webcam snapshot trigger
   private trigger: Subject<void> = new Subject<void>();
   url: string;
-  posts: any;
-  private imagesRecieved: any;
-  private randomImageIndex: number;
-  processor = null;
 
   // Map for ScreenReader Output
   private screenReaderText: Map<string, string>;
@@ -198,7 +186,6 @@ export class GeneratorComponent implements AfterViewInit {
     const ctx = canvasBackgroundEl.getContext('2d');
     ctx.fillStyle = this.colorBackground;
     ctx.fillRect(0, 0, canvasBackgroundEl.width, canvasBackgroundEl.height);
-
     const canvasFileEl: HTMLCanvasElement = this.fileCanvas.nativeElement;
     canvasFileEl.width = this.currentWidth;
     canvasFileEl.height = this.currentHeight;
@@ -304,7 +291,7 @@ export class GeneratorComponent implements AfterViewInit {
         this.videoEl.appendChild(this.sourceEl);
         const containerWidth = this.width;
         const containerHeight = this.height;
-        this.videoEl.addEventListener('loadedmetadata', function(e): void {
+        this.videoEl.addEventListener('loadedmetadata', function(): void {
           // wait till loadedmetadata to have video element's videoWidth and videoHeight
           // calculate scaleFactor to properly show in meme container
           self.currentVideoData.videoScaleFactor = Math.min(containerWidth / this.videoWidth, containerHeight / this.videoHeight);
@@ -314,7 +301,7 @@ export class GeneratorComponent implements AfterViewInit {
           self.resizeCanvasHeight(this.videoHeight * self.currentVideoData.videoScaleFactor,
             this.videoWidth * self.currentVideoData.videoScaleFactor);
           // play video after scaling
-          this.play().then(r => {
+          this.play().then(_ => {
           });
         });
       }, false);
@@ -402,9 +389,9 @@ export class GeneratorComponent implements AfterViewInit {
     ctx.font = this.getFontStyle();
     ctx.textAlign = 'center';
 
-    const textMetrics = ctx.measureText(this.yourText.value);
-    const width = textMetrics.width;
-    const baseline = textMetrics.actualBoundingBoxAscent;
+    // const textMetrics = ctx.measureText(this.yourText.value);
+    // const width = textMetrics.width;
+    // const baseline = textMetrics.actualBoundingBoxAscent;
 
     this.newTextbox = new Textbox(this.yourText.value, null, null);
   }
@@ -413,7 +400,7 @@ export class GeneratorComponent implements AfterViewInit {
     this.textChanged();
   }
 
-  deleteTextbox(textbox: Textbox): void {
+  deleteTextbox(): void {
     this.newTextbox = null;
     this.addingText = false;
 
@@ -459,7 +446,7 @@ export class GeneratorComponent implements AfterViewInit {
         this.videoEl.pause();
         this.sourceEl.setAttribute('src', environment.apiUrl + '/' + data.video_url);
         this.videoEl.load();
-        this.videoEl.play();
+        this.videoEl.play().then(_ => _);
       });
     } else {
       this.textboxes.push(textbox);
@@ -773,7 +760,7 @@ export class GeneratorComponent implements AfterViewInit {
     }
     meme.private = privateMeme;
     meme.title = this.name.value;
-    meme.textConcated = this.textTop.value + ' ' + this.textBottom.value;
+    meme.textConcated = meme.title + ' ' + this.textTop.value + ' ' + this.textBottom.value;
     if (this.textboxes) {
       this.textboxes.forEach(element => {
         meme.textConcated += ' ' + element.formControl.value;
@@ -781,7 +768,6 @@ export class GeneratorComponent implements AfterViewInit {
     }
 
     this.memeService.saveMeme(meme).subscribe(data => {
-      console.log(this.currentMeme[0]);
       if (this.isTemplate){
         this.memeService.setMemeServiceCurrentMeme(data.id);
         this.memeService.postTemplateStat(this.currentMeme[0]);
@@ -789,16 +775,9 @@ export class GeneratorComponent implements AfterViewInit {
     });
   }
 
-  saveCanvasAsDraft(): void {
-
-  }
 
   saveCanvasPrivate(): void {
     this.saveCanvas(true);
-  }
-
-  getSafeUrl(base64String: string): SafeResourceUrl {
-    return this.sanitizer.bypassSecurityTrustResourceUrl('data:image/jpg;base64,' + base64String);
   }
 
   resizeCanvasHeight(height: number, width: number): void {
@@ -1135,10 +1114,6 @@ export class GeneratorComponent implements AfterViewInit {
       'save private': () => {
         this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Save Meme (private)');
         this.saveCanvasPrivate();
-      },
-      'save draft': () => {
-        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Save Draft');
-        this.saveCanvasAsDraft();
       },
       'download meme': () => {
         this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Download Meme');

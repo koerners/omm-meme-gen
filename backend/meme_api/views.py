@@ -125,7 +125,8 @@ class Zip:
         if end_date is not None:
             q = q.filter(created__lte=end_date)
         if search is not None:
-            q = q.filter(text_concated__contains=(search))
+            if q.filter(text_concated__contains=(search)):
+                q = q.filter(text_concated__contains=(search))
         print(q)
 
         zip_archive = io.BytesIO()
@@ -133,10 +134,11 @@ class Zip:
             print(list(enumerate(q)))
             for index, meme in enumerate(q):
                 print(index, meme)
-                if index > max:
-                    break
                 base64_decoded = base64.b64decode(meme.image_string[22:])
                 zf.writestr('meme_' + str(index) + "_" + meme.title + '.png', base64_decoded)
+                if index == max-1:
+                    break
+
         #
         # # zip_archive.seek(0)
         # print(zip_archive.getvalue())

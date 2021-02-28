@@ -90,6 +90,7 @@ export class DetailViewComponent implements OnInit {
       this.meme = new Meme();
       this.meme.id = data.id;
       this.meme.imageString = data.image_string;
+      this.meme.textConcated = data.text_concated;
       this.meme.title = data.title;
       this.meme.upvotes = data.upvotes;
       this.meme.downvotes = data.downvotes;
@@ -201,7 +202,6 @@ export class DetailViewComponent implements OnInit {
 
 
   nextImage(): void {
-    // TODO jump to beginning at end
     this.router.navigate(['/meme/' + String(this.getNextMemeId(true).id)]);
   }
 
@@ -323,26 +323,38 @@ export class DetailViewComponent implements OnInit {
     let text = '';
 
     if (this.meme.title) {
-      text += 'This meme\'s title is ' + this.meme.title + '.';
+      text += 'This meme\'s title is ' + this.meme.title + '.    ';
     } else {
       text += 'This meme has no title';
     }
+    if (this.meme.textConcated) {
+      text += 'The content of the  meme\'s is ' + this.meme.textConcated.split(this.meme.title).slice(1) + '.     ';
+    } else {
+      text += 'This meme has no text for content.';
+    }
+    if (this.predictions) {
+      text += 'This meme has  ';
+      this.predictions.forEach(elem => {
+        text +=  elem.className;
+      });
+      text += ' as predicted Image Content    ';
+    }
 
-    text += 'This meme has ' + this.meme.upvotes + ' upvotes';
+    text += 'This meme has ' + this.meme.upvotes + ' upvotes.    ';
 
-    text += 'This meme has ' + this.meme.downvotes + ' downvotes';
+    text += 'This meme has ' + this.meme.downvotes + ' downvotes.    ';
 
-    text += 'This meme has ' + this.meme.views + ' view';
+    text += 'This meme has ' + this.meme.views + ' views.   ';
 
-    text += 'This meme was created by ' + this.meme.owner + '';
+    text += 'This meme was created by ' + this.meme.owner + '.    ';
 
-    text += 'This meme has ' + this.comments.length + ' comments';
+    text += 'This meme has ' + this.comments.length + ' comments.    ';
 
     let commentCounter = 1;
     this.comments.forEach(comment => {
       text += 'Comment number ' + commentCounter + '';
 
-      text += 'Comment ' + comment.text + 'made by ' + comment.owner + ' on the ' + comment.created.slice(0, 10) + '';
+      text += 'Comment ' + comment.text + 'made by ' + comment.owner + ' on the ' + comment.created.slice(0, 10) + '    ';
 
       commentCounter++;
     });

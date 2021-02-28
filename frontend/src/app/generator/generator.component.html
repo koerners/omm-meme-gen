@@ -72,7 +72,6 @@
             <mat-menu #menu="matMenu" xPosition="before">
               <button (click)="saveCanvas()" mat-menu-item>Save to Account (Public)</button>
               <button (click)="saveCanvasPrivate()" mat-menu-item>Save to Account (Private)</button>
-              <button (click)="saveCanvasAsDraft()" mat-menu-item>Save as Draft</button>
               <div [hidden]="this.videoOn"><button (click)="downloadCanvas()" mat-menu-item>Download</button></div>
               <button (click)="clearCanvas()" mat-menu-item>Clear</button>
             </mat-menu>
