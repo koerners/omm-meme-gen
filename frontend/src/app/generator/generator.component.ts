@@ -165,7 +165,7 @@ export class GeneratorComponent implements AfterViewInit {
   private screenReaderText: Map<string, string>;
   private isTemplate: boolean;
   private currentMeme: any;
-
+  numberMap: Map<string, number>;
 
   constructor(private memeService: MemeService, private sanitizer: DomSanitizer, public dialog: MatDialog,
               private ngZone: NgZone, private router: Router,
@@ -650,11 +650,13 @@ export class GeneratorComponent implements AfterViewInit {
 
   showMemeTemplates(): void {
     const memeTemplateContainer = document.getElementById('memeTemplatesContainer');
+    let text = ' Available Templates are: ';
     this.memeTemplates.forEach(template => {
       const newImg = document.createElement('img');
       newImg.className = 'memeTemplate';
       newImg.width = 80;
       newImg.height = 80;
+      text += template[1] + ' with the ID ' + template[0];
       newImg.addEventListener('click', () => {
         this.currentMeme = template;
         this.isTemplate = true;
@@ -680,6 +682,7 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.alt = 'Loading';
       memeTemplateContainer.append(newImg);
     });
+    this.screenReaderText.set('Templates', text);
   }
 
   loadFromWebcam(): void {
@@ -834,6 +837,8 @@ export class GeneratorComponent implements AfterViewInit {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
 
+    this.currentMeme = template;
+
     const memeTemplate = new Image();
     memeTemplate.src = 'data:image/png;base64,' + template[2];
     memeTemplate.onload = () => {
@@ -926,6 +931,7 @@ export class GeneratorComponent implements AfterViewInit {
   private screenReaderBuilder(): string {
     let text = '';
     text += this.screenReaderText.get('Welcome') + ' ';
+    text += this.screenReaderText.get('Templates') + ' ';
 
     if (this.name) {
       text += 'Meme title is set to ' + this.name.value + ' ';
@@ -960,7 +966,27 @@ export class GeneratorComponent implements AfterViewInit {
 
   // VoiceRecognition and its functions //
   private configureVoiceRecognition(): void {
+    this.numberMap = {
+      // @ts-ignore: next line
+      one: 0,
+      to: 1,
+      free: 2,
+      for: 3,
+      5: 4,
+      6: 5,
+      7: 6,
+      8: 7,
+      9: 8,
+      10: 9
+    };
     const commands = {
+      'select template *numberth': (numberth: string) => {
+        this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Select ' + ' Template ' + numberth);
+        this.clearCanvas();
+        console.log(this.numberMap[numberth]);
+        this.memeTemplateChosen(this.memeTemplates[this.numberMap[numberth]]);
+
+      },
       'open webcam': () => {
         this.ngZone.run(() => this.vRS.voiceActionFeedback = 'Open Webcam');
         this.loadFromWebcam();
