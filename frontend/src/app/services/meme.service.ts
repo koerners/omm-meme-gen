@@ -181,6 +181,9 @@ export class MemeService {
   loadMemeStats(id: string): any{
     return this.http.get(environment.apiUrl + '/memeStats/?meme=' + id);
   }
+  loadTemplateStats(): any{
+    return this.http.get(environment.apiUrl + '/getTemplateStats/');
+  }
 
   loadTopMemeVideo(): any{
     return this.http.get(environment.apiUrl + '/memeVideo/');
@@ -200,7 +203,6 @@ export class MemeService {
    * @param templateID the templateID
    */
   postTemplateStat(templateID: number): any{
-    console.log('Doing >>>>' + templateID);
     if (this.currentMemeId == null){
       const data = new FormData();
       data.append('t_id', templateID.toString());
