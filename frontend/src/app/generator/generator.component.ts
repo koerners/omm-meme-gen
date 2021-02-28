@@ -209,6 +209,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   selectFile(event: any): void {
+    this.clearCanvas();
     this.emptyVideoContainer();
     // An image is uploaded from the users desktop
     if (!event.target.files[0] || event.target.files[0].length === 0) {
@@ -487,6 +488,7 @@ export class GeneratorComponent implements AfterViewInit {
   }
 
   clearCanvas(): void {
+    this.cameraOn = false;
     this.emptyVideoContainer();
 
     this.addingText = false;
@@ -645,6 +647,7 @@ export class GeneratorComponent implements AfterViewInit {
       newImg.height = 80;
       text += template[1] + ' with the ID ' + template[0];
       newImg.addEventListener('click', () => {
+        this.clearCanvas();
         this.currentMeme = template;
         this.isTemplate = true;
         this.memeService.postTemplateStat(this.currentMeme[0]);
@@ -812,6 +815,7 @@ export class GeneratorComponent implements AfterViewInit {
 
   memeTemplateChosen(template): void {
     // this.emptyVideoContainer();
+    this.clearCanvas();
     const canvas = this.fileCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
