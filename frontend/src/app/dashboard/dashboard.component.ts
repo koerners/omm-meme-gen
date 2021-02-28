@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild, NgZone} from '@angular/core';
-import {map} from 'rxjs/operators';
+import {map, zip} from 'rxjs/operators';
 import {BreakpointObserver, Breakpoints} from '@angular/cdk/layout';
 import {MemeService} from '../services/meme.service';
 import { ChartDataSets } from 'chart.js';
@@ -7,6 +7,7 @@ import { Color, Label } from 'ng2-charts';
 import {environment} from '../../environments/environment';
 import {SpeechService} from '../services/speech.service';
 import {VoiceRecognitionService} from '../services/voice-recognition.service';
+import {range} from "rxjs";
 
 @Component({
   selector: 'app-dashboard',
@@ -187,7 +188,7 @@ export class DashboardComponent implements  AfterViewInit{
     this.chartReady = true;
 
     // Text for ScreenReader
-    let text = (this.topMemes.data.length > 0 ? 'The Top 5 Most viewed Memes are ' : '');
+    let text = (this.topMemes.data.length > 0 ? 'The table in the top left corner shows the Top 5 Most viewed Memes. These are ' : '');
     this.topMemes.data.forEach(element => {
       if (element.title) {
         text += element.title + ' with ' + element.view + ' view' + (element.view !== 1 ? 's' : '') + '! ';
@@ -257,7 +258,7 @@ export class DashboardComponent implements  AfterViewInit{
     this.loginChartReady = true;
 
     // Text for ScreenReader
-    let text = (this.loginData.data.length > 0 ? 'The last login date ' : '');
+    let text = (this.loginData.data.length > 0 ? 'The table in the bottom left corner shows the last login count per day. The last login date ' : '');
     this.loginData.data.forEach(element => {
       text += 'of ' + element.count + ' user' + (element.count !== 1 ? 's' : '')
         + ' was on ' + element.day + '.' + element.month + '.' + element.year + ', ';
@@ -328,6 +329,22 @@ export class DashboardComponent implements  AfterViewInit{
       },
     ];
     this.drawTemplateStatsViewedCreatedReady = true;
+
+    // Text for ScreenReader
+    const c = this.drawTemplateStatsViewedCreatedData[1].data.map((e, i) => {
+      return [e, this.drawTemplateStatsViewedCreatedData[0].data[i]];
+    });
+    const d = c.map((e, i) => {
+      return [e, this.drawTemplateStatsViewedCreatedLabels[i]];
+    });
+
+    let text = (this.drawTemplateStatsViewedCreatedData[0].data.length > 0 ? 'The table in the bottom right corner shows the View slash Created Counts per Template. ' : '');
+    d.forEach(elem => [
+      text += ('The template ' + elem[1] + ' got ' + elem[0][0] + ' times viewed and ' + elem[0][1] + ' times used for meme generation.')
+    ]);
+    //   text += (this.drawTemplateStatsViewedCreatedData[1].data[i]);
+    // }
+    this.screenReaderText.set('TemplateStats', text);
   }
 
 
@@ -343,6 +360,7 @@ export class DashboardComponent implements  AfterViewInit{
     text += this.screenReaderText.get('Welcome') + ' ';
     text += (this.screenReaderText.get('Top5') || '') + ' ';
     text += (this.screenReaderText.get('UserStat') || '') + ' ';
+    text += (this.screenReaderText.get('TemplateStats') || '') + ' ';
     return text;
   }
 
