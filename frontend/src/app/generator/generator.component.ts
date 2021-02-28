@@ -520,6 +520,36 @@ export class GeneratorComponent implements AfterViewInit {
 
     this.newTextbox = null;
   }
+  clearCanvas1(): void {
+    this.cameraOn = false;
+    this.emptyVideoContainer();
+
+    this.addingText = false;
+    this.resizeCanvasHeight(this.height, this.width);
+
+    this.colorBackground = '#FFFFFF';
+    let canvas = this.backgroundCanvas.nativeElement;
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = this.colorBackground;
+    ctx.fillRect(0, 0, this.currentWidth, this.currentHeight);
+
+    canvas = this.fileCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+
+    canvas = this.textCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+
+    canvas = this.textboxCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+
+    canvas = this.drawCanvas.nativeElement;
+    ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
+
+  }
 
   downloadCanvas(): void {
     const image = this.createImageStringFromCanvas();
@@ -815,7 +845,7 @@ export class GeneratorComponent implements AfterViewInit {
 
   memeTemplateChosen(template): void {
     // this.emptyVideoContainer();
-    this.clearCanvas();
+    this.clearCanvas1();
     const canvas = this.fileCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, this.currentWidth, this.currentHeight);
