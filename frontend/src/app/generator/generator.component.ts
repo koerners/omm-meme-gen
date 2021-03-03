@@ -804,10 +804,14 @@ export class GeneratorComponent implements AfterViewInit {
     }
 
     this.memeService.saveMeme(meme).subscribe(data => {
+
       if (this.isTemplate){
         this.memeService.setMemeServiceCurrentMeme(data.id);
         this.memeService.postTemplateStat(this.currentMeme[0]);
       }
+      this.router.navigate(['./meme/' + data.id]);
+
+
     });
   }
 

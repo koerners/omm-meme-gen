@@ -136,7 +136,7 @@ class Zip:
                 print(index, meme)
                 base64_decoded = base64.b64decode(meme.image_string[22:])
                 zf.writestr('meme_' + str(index) + "_" + meme.title + '.png', base64_decoded)
-                if index == max-1:
+                if index == max - 1:
                     break
 
         #
@@ -150,7 +150,7 @@ class Zip:
 
 
 class MemeList(viewsets.ModelViewSet):
-    queryset = Meme.objects.filter(private=False)
+    queryset = Meme.objects.all()
     serializer_class = MemeSerializer
 
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -164,6 +164,10 @@ class MemeList(viewsets.ModelViewSet):
         print("own")
         filterfield = request.GET.get("filter", "")
         filtervalue = request.GET.get("value", "")
+
+        if request.user.is_anonymous:
+            return HttpResponse('Unauthorized', status=401)
+
         self.queryset = Meme.objects.filter(owner=request.user)
 
         if filterfield == "views" and not filtervalue == "":
@@ -231,6 +235,9 @@ class MemeList(viewsets.ModelViewSet):
 
     @action(detail=False)
     def availableMemes(self, request):
+        if request.user.is_anonymous:
+            return HttpResponse('Unauthorized', status=401)
+
         available = Meme.objects.filter(Q(owner=request.user) | Q(private=False)).order_by('-created').values('id')
         return JsonResponse(list(available), safe=False)
 
@@ -601,8 +608,6 @@ class TemplateStats:
                                    .values('used', 'template_id', 'template_id__title', 'used')
                                    .annotate(_count=Count('used'))
                                    .order_by('template_id'))
-
-
 
         res = {'created': filtered_obj, 'viewed': filtered_obj_viewed}
 

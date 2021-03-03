@@ -51,7 +51,7 @@
 
             <button mat-raised-button class="butn" id="LoadFromAPI" (click)="loadFromAPI()">Load Random Image from IMGFlip</button>
           </div>
-          <div class="memeTemplatesCycle">
+          <div class="memeTemplatesCycle" style="margin-top: 20px;">
             <button mat-raised-button id="previousTemplateButton" class="previousTemplateButton" (click)="previousTemplateButtonClicked()">❮</button>
             <div id="memeTemplatesContainer" class="memeTemplatesContainer">Loading meme templates...</div>
             <button mat-raised-button id="nextTemplateButton" class="nextTemplateButton" (click)="nextTemplateButtonClicked()">❯</button>
@@ -144,7 +144,7 @@
             </mat-grid-list>
             <mat-grid-list [rowHeight]="75" cols="4">
               <mat-grid-tile aria-colspan="1" aria-rowspan="1">
-                <button (click)="createNewTextbox()">Add text</button>
+                <button mat-raised-button (click)="createNewTextbox()">Add Textbox</button>
                 <div *ngIf="this.currentVideoData != null" class="marginLeft">Total frames: {{this.currentVideoData.frames}}</div>
               </mat-grid-tile>
               <mat-grid-tile colspan="1" rowspan="1" *ngIf="this.videoOn && newTextbox">
